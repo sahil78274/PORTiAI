@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    font-size: 15px;
+  }
+
+  h1, h2, h3, h4 {
+    @apply text-ink font-semibold tracking-[-0.011em];
+  }
+
+  /* Consistent, visible focus for every interactive element. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-accent/45 ring-offset-2 ring-offset-canvas;
+  }
+
+  ::selection {
+    background: #dfe5f3;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-content px-5 sm:px-6 lg:px-8;
+  }
+
+  .card {
+    @apply rounded-md border border-line bg-surface shadow-card;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+
+  .hint {
+    @apply mt-1.5 text-xs text-muted;
+  }
+
+  .input {
+    @apply w-full rounded border border-lineStrong bg-surface px-3 py-2 text-base text-ink
+      placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20
+      disabled:cursor-not-allowed disabled:bg-canvasAlt;
+  }
+
+  .textarea {
+    @apply input min-h-[92px] resize-y leading-6;
+  }
+
+  .select {
+    @apply input cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236f7278%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[right_0.7rem_center] bg-no-repeat pr-9;
+  }
+
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded
+      px-3.5 py-[7px] text-sm font-medium transition-colors
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent text-white hover:bg-accent-hover active:bg-accent-hover;
+  }
+
+  .btn-secondary {
+    @apply btn border border-lineStrong bg-surface text-ink hover:bg-canvasAlt;
+  }
+
+  .btn-ghost {
+    @apply btn text-inkSoft hover:bg-canvasAlt hover:text-ink;
+  }
+
+  .btn-danger {
+    @apply btn border border-danger/25 bg-dangerSoft text-danger hover:bg-danger hover:text-white;
+  }
+
+  .btn-link {
+    @apply inline-flex items-center gap-1 text-sm font-medium text-accent underline-offset-2 hover:underline;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wide;
+  }
+
+  .badge-published {
+    @apply badge border-success/20 bg-successSoft text-success;
+  }
+
+  .badge-draft {
+    @apply badge border-lineStrong bg-canvasAlt text-inkSoft;
+  }
+
+  .eyebrow {
+    @apply text-2xs font-semibold uppercase tracking-[0.14em] text-accent;
+  }
+
+  .section-rule {
+    @apply border-t border-line;
+  }
+
+  .kbd {
+    @apply rounded-sm border border-lineStrong bg-canvasAlt px-1 py-px font-mono text-2xs text-inkSoft;
+  }
+}
+
+/* Thin, unobtrusive scrollbars inside editor panes. */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: #d5d1c8 transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: #d9d5cd;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

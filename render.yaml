@@ -1,0 +1,29 @@
+# Render blueprint for the PortiAI API.
+# Create a Blueprint on Render and point it at this repository, or create a
+# Web Service manually with the same settings.
+services:
+  - type: web
+    name: portiai-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # set in the Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false # set in the Render dashboard
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false # e.g. https://portiai.vercel.app
+      - key: AI_DAILY_REQUEST_CAP
+        value: "200"

@@ -1,0 +1,60 @@
+import { Route, Routes } from 'react-router-dom';
+import ScrollToTop from './components/ScrollToTop.jsx';
+import MarketingLayout from './layouts/MarketingLayout.jsx';
+import AuthLayout from './layouts/AuthLayout.jsx';
+import DashboardLayout from './layouts/DashboardLayout.jsx';
+import ProtectedRoute from './components/dashboard/ProtectedRoute.jsx';
+
+import Landing from './pages/Landing.jsx';
+import FeaturesPage from './pages/FeaturesPage.jsx';
+import TemplatesPage from './pages/TemplatesPage.jsx';
+import Privacy from './pages/Privacy.jsx';
+import Terms from './pages/Terms.jsx';
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import CreateWizard from './pages/CreateWizard.jsx';
+import Editor from './pages/Editor.jsx';
+import Analyze from './pages/Analyze.jsx';
+import Settings from './pages/Settings.jsx';
+import PublicPortfolio from './pages/PublicPortfolio.jsx';
+import NotFound from './pages/NotFound.jsx';
+
+export default function App() {
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route element={<MarketingLayout />}>
+          <Route path="/" element={<Landing />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+        </Route>
+
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+        </Route>
+
+        {/* Public portfolio pages render on their own, without app chrome. */}
+        <Route path="/p/:slug" element={<PublicPortfolio />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/create" element={<CreateWizard />} />
+            <Route path="/dashboard/portfolio/:id/edit" element={<Editor />} />
+            <Route path="/dashboard/portfolio/:id/analyze" element={<Analyze />} />
+            <Route path="/dashboard/settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+}
