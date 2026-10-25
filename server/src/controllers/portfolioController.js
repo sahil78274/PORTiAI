@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { generateUniqueSlug } from '../utils/slug.js';
 import { normalizePortfolioBody } from '../validators/portfolioInput.js';
-import { defaultPortfolioContent } from '../utils/portfolioDefaults.js';
+import { defaultPortfolioContent, TEMPLATE_IDS } from '../utils/portfolioDefaults.js';
 
 const ID_PATTERN = /^[a-f0-9]{24}$/i;
 
@@ -87,7 +87,32 @@ export const createPortfolio = asyncHandler(async (req, res) => {
   const content = defaultPortfolioContent();
 
   if (body.title) content.title = body.title;
-  if (body.templateId) content.templateId = body.templateId;
+
+  const rawTemplate = body.templateId || body.template;
+  if (rawTemplate && typeof rawTemplate === 'string') {
+    const cleanId = rawTemplate.toLowerCase().trim();
+    const mapped =
+      cleanId === 'developer-portfolio' ? 'developer' :
+      cleanId === 'modern-editorial' ? 'editorial' :
+      cleanId === 'minimal-professional' ? 'minimal' :
+      cleanId;
+    if (TEMPLATE_IDS.includes(mapped)) {
+      content.templateId = mapped;
+      const defaultAccents = {
+        minimal: '#2f4a8b',
+        developer: '#1f5c4a',
+        editorial: '#8a3a2f',
+      };
+      if (defaultAccents[mapped]) {
+        content.theme.accent = defaultAccents[mapped];
+      }
+    }
+  }
+
+  if (body.theme?.accent && /^#[0-9a-fA-F]{6}$/.test(body.theme.accent)) {
+    content.theme.accent = body.theme.accent.toLowerCase();
+  }
+
   content.profile.fullName = req.user.name;
   content.profile.contactEmail = req.user.email;
 

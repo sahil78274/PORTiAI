@@ -12,46 +12,49 @@ const LINK_GROUPS = [
     ],
   },
   {
-    title: 'Account',
+    title: 'Workspace',
     links: [
       { label: 'Sign in', to: '/login' },
       { label: 'Create account', to: '/register' },
       { label: 'Dashboard', to: '/dashboard' },
-      { label: 'Password recovery', to: '/forgot-password' },
+      { label: 'Account recovery', to: '/forgot-password' },
     ],
   },
   {
-    title: 'Legal',
+    title: 'Policies',
     links: [
-      { label: 'Privacy', to: '/privacy' },
-      { label: 'Terms', to: '/terms' },
+      { label: 'Privacy policy', to: '/privacy' },
+      { label: 'Terms of service', to: '/terms' },
     ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-line bg-canvasAlt/60">
-      <div className="container-page py-10">
-        <div className="grid gap-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer className="border-t border-line bg-surface">
+      <div className="container-page py-12 lg:py-16">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
             <Logo />
-            <p className="mt-3 max-w-xs text-sm leading-6 text-inkSoft">
-              PortiAI helps students and early-career professionals build a portfolio, review it against a documented
-              rubric and publish it at a single shareable link.
+            <p className="mt-3.5 max-w-xs text-xs leading-relaxed text-slate-600">
+              PortiAI helps students and early-career developers build, review, and publish high-quality portfolios with
+              rule-based scoring and Gemini AI assistance.
             </p>
-            <p className="mt-4 text-xs leading-5 text-muted">
-              An academic project built for BCA final-year submission. Free-tier services are used for hosting, database
-              and AI; limits apply and are documented in the project README.
+            <p className="mt-4 text-2xs leading-relaxed text-slate-400">
+              BCA final-year academic project. Built with React 19, Tailwind CSS, Express, and MongoDB. Zero paid services required.
             </p>
           </div>
+
           {LINK_GROUPS.map((group) => (
             <div key={group.title}>
-              <h2 className="text-2xs font-semibold uppercase tracking-[0.14em] text-muted">{group.title}</h2>
-              <ul className="mt-3 space-y-2">
+              <h2 className="text-2xs font-semibold uppercase tracking-[0.16em] text-slate-400">{group.title}</h2>
+              <ul className="mt-3.5 space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.label}>
-                    <Link to={link.to} className="text-sm text-inkSoft hover:text-ink hover:underline hover:underline-offset-4">
+                    <Link
+                      to={link.to}
+                      className="text-xs font-medium text-slate-600 transition-colors hover:text-ink hover:underline hover:underline-offset-4"
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -61,10 +64,10 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-9 flex flex-col gap-2 border-t border-line pt-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} PortiAI. Built as an academic project.</p>
+        <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-2xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} PortiAI. All portfolio content belongs to its respective creators.</p>
           <p>
-            Demo content on this site is sample data, not real users or customer results.
+            Demo previews show sample data to accurately illustrate layout behavior.
           </p>
         </div>
       </div>

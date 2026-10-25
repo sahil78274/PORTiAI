@@ -1,57 +1,59 @@
-import { PenLine, Wand2, Share2 } from 'lucide-react';
+import { PenLine, Wand2, Share2, ArrowRight } from 'lucide-react';
 
 const STEPS = [
   {
     number: '01',
     icon: PenLine,
-    title: 'Add your profile, education, skills and projects',
-    body: 'Work through a seven-step wizard. Optional fields stay optional, and everything you type is saved to your account as a draft as you go.',
+    title: 'Enter your profile, education & projects',
+    body: 'Complete the structured seven-step wizard. Optional fields remain optional, and every keystroke is safely persisted to your draft as you go.',
   },
   {
     number: '02',
     icon: Wand2,
-    title: 'Generate and customise your portfolio',
-    body: 'Use AI where you want help — a biography, a project rewrite, a skill tidy-up — then choose a template, accent colour, font and which sections are visible.',
+    title: 'Polish with AI & customize styling',
+    body: 'Use targeted AI assistance where you need ideas—a summary rewrite, project bullets, or skills tidy-up—then choose your template, accent, and fonts.',
   },
   {
     number: '03',
     icon: Share2,
-    title: 'Publish it and share your public link',
-    body: 'Publishing creates a stable, URL-safe address. Copy the link for a résumé, an application form or a message. Unpublish any time to take it offline.',
+    title: 'Publish and share your public link',
+    body: 'One click creates a clean, fast public portfolio URL. Paste it on LinkedIn, your résumé, or job applications. Unpublish anytime you want it offline.',
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="container-page py-16 sm:py-20" aria-labelledby="how-heading">
+    <section id="how-it-works" className="container-page py-16 sm:py-24" aria-labelledby="how-heading">
       <div className="max-w-2xl">
-        <p className="eyebrow">How it works</p>
-        <h2 id="how-heading" className="mt-2 text-2xl sm:text-3xl">
-          Three steps from notes to a shared link
+        <p className="eyebrow">Step-by-Step Workflow</p>
+        <h2 id="how-heading" className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-ink">
+          Three steps from raw notes to a live portfolio
         </h2>
-        <p className="mt-3 text-base leading-7 text-inkSoft">
-          No blank canvas. The wizard asks for the information employers look for, and the editor only exposes controls
-          that change something on the page.
+        <p className="mt-3 text-base leading-relaxed text-inkSoft">
+          No blank page anxiety. The wizard guides you through the precise details recruiters look for, and the live
+          editor shows real updates in real time.
         </p>
       </div>
 
-      <ol className="mt-9 grid gap-4 md:grid-cols-3">
+      <ol className="mt-10 grid gap-5 md:grid-cols-3">
         {STEPS.map((step, index) => {
           const Icon = step.icon;
           return (
-            <li key={step.number} className="relative card p-5">
+            <li key={step.number} className="relative card-hover p-6 bg-surface flex flex-col">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs tracking-widest text-accent">{step.number}</span>
-                <span className="flex h-8 w-8 items-center justify-center rounded border border-line bg-canvasAlt text-inkSoft">
-                  <Icon size={15} aria-hidden="true" />
+                <span className="font-mono text-xs font-bold tracking-widest text-accent bg-accent-soft px-2 py-0.5 rounded-md">
+                  {step.number}
+                </span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                  <Icon size={17} aria-hidden="true" />
                 </span>
               </div>
-              <h3 className="mt-3 text-[15px] font-semibold leading-6">{step.title}</h3>
-              <p className="mt-1.5 text-sm leading-6 text-muted">{step.body}</p>
+              <h3 className="mt-4 text-base font-semibold text-ink leading-snug">{step.title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-muted flex-1">{step.body}</p>
               {index < STEPS.length - 1 ? (
                 <span
                   aria-hidden="true"
-                  className="absolute -right-2.5 top-1/2 hidden h-px w-5 bg-lineStrong md:block"
+                  className="absolute -right-3 top-1/2 hidden h-px w-6 bg-slate-300 md:block"
                 />
               ) : null}
             </li>

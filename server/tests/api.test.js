@@ -150,11 +150,18 @@ const startGeminiStub = () =>
 const dataDir = path.join(process.cwd(), '.data', 'test-mongodb');
 await fs.mkdir(dataDir, { recursive: true });
 
-const { MongoMemoryServer } = await import('mongodb-memory-server');
-const mongod = await MongoMemoryServer.create({ instance: { dbPath: dataDir, storageEngine: 'wiredTiger' } });
-
+let mongod;
 process.env.NODE_ENV = 'development';
-process.env.MONGODB_URI = mongod.getUri('portiai_test');
+process.env.MONGOMS_RUNTIME_DOWNLOAD = 'false';
+try {
+  const { MongoMemoryServer } = await import('mongodb-memory-server');
+  mongod = await MongoMemoryServer.create({ instance: { dbPath: dataDir, storageEngine: 'wiredTiger' } });
+  process.env.MONGODB_URI = mongod.getUri('portiai_test');
+} catch (err) {
+  const { createMongodbTwinServer } = await import('@volter/twin-mongodb');
+  mongod = await createMongodbTwinServer({ port: 27019 });
+  process.env.MONGODB_URI = `${mongod.url}/portiai_test`;
+}
 process.env.PORT = String(API_PORT);
 process.env.SESSION_SECRET = 'test-secret-that-is-long-enough-for-signing';
 process.env.CLIENT_URL = 'http://localhost:5173';
@@ -492,6 +499,44 @@ await test('template switching keeps content intact', async () => {
     assert.equal(res.body.data.portfolio.projects[0].name, 'Library Lending API');
     assert.equal(res.body.data.portfolio.skills.length, 5);
   }
+});
+
+await test('template selection regression: creation, normalization, and safe fallback across all templates', async () => {
+  // Test creation with explicit registered IDs
+  for (const templateId of ['minimal', 'developer', 'editorial']) {
+    const res = await alice.post('/portfolios', { title: `Test ${templateId}`, templateId });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.data.portfolio.templateId, templateId);
+    if (templateId === 'developer') assert.equal(res.body.data.portfolio.theme.accent, '#1f5c4a');
+    if (templateId === 'editorial') assert.equal(res.body.data.portfolio.theme.accent, '#8a3a2f');
+    if (templateId === 'minimal') assert.equal(res.body.data.portfolio.theme.accent, '#2f4a8b');
+    await alice.delete(`/portfolios/${res.body.data.portfolio.id}`);
+  }
+
+  // Test aliases and casing
+  const devAlias = await alice.post('/portfolios', { templateId: 'developer-portfolio' });
+  assert.equal(devAlias.status, 201);
+  assert.equal(devAlias.body.data.portfolio.templateId, 'developer');
+  await alice.delete(`/portfolios/${devAlias.body.data.portfolio.id}`);
+
+  const edUpper = await alice.post('/portfolios', { templateId: 'EDITORIAL' });
+  assert.equal(edUpper.status, 201);
+  assert.equal(edUpper.body.data.portfolio.templateId, 'editorial');
+  await alice.delete(`/portfolios/${edUpper.body.data.portfolio.id}`);
+
+  // Test invalid templateId falls back safely to minimal without crashing
+  const invalidRes = await alice.post('/portfolios', { templateId: 'nonexistent-template-id' });
+  assert.equal(invalidRes.status, 201);
+  assert.equal(invalidRes.body.data.portfolio.templateId, 'minimal');
+  await alice.delete(`/portfolios/${invalidRes.body.data.portfolio.id}`);
+
+  // Test PUT with invalid templateId does not wipe existing valid templateId
+  const setDev = await alice.put(`/portfolios/${alicePortfolioId}`, { templateId: 'developer' });
+  assert.equal(setDev.body.data.portfolio.templateId, 'developer');
+  const setInvalid = await alice.put(`/portfolios/${alicePortfolioId}`, { title: 'Updated Title', templateId: 'completely-bogus' });
+  assert.equal(setInvalid.status, 200);
+  assert.equal(setInvalid.body.data.portfolio.templateId, 'developer');
+  await alice.put(`/portfolios/${alicePortfolioId}`, { title: 'Internship portfolio' });
 });
 
 await test('invalid portfolio ids and empty bodies return 400', async () => {

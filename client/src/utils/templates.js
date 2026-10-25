@@ -33,7 +33,21 @@ export const TEMPLATES = [
 
 export const TEMPLATE_MAP = Object.fromEntries(TEMPLATES.map((template) => [template.id, template]));
 
-export const getTemplate = (id) => TEMPLATE_MAP[id] || TEMPLATES[0];
+/**
+ * Normalises arbitrary template identifiers (handling casing, whitespace, and
+ * descriptive aliases) into a registered canonical ID. Unknown IDs safely fall
+ * back to 'minimal'.
+ */
+export const normalizeTemplateId = (id) => {
+  if (!id || typeof id !== 'string') return 'minimal';
+  const clean = id.trim().toLowerCase();
+  if (clean === 'developer' || clean === 'developer-portfolio') return 'developer';
+  if (clean === 'editorial' || clean === 'modern-editorial') return 'editorial';
+  if (clean === 'minimal' || clean === 'minimal-professional') return 'minimal';
+  return TEMPLATE_MAP[clean] ? clean : 'minimal';
+};
+
+export const getTemplate = (id) => TEMPLATE_MAP[normalizeTemplateId(id)] || TEMPLATES[0];
 
 export const ACCENT_SWATCHES = [
   { value: '#2f4a8b', label: 'Muted indigo' },

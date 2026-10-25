@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Button, Field, TextInput } from '../components/ui/Primitives.jsx';
 import PasswordInput from '../components/ui/PasswordInput.jsx';
@@ -52,18 +52,20 @@ export default function Login() {
   };
 
   return (
-    <div className="card p-5 sm:p-6">
-      <h2 className="text-xl">Sign in</h2>
-      <p className="mt-1 text-sm text-muted">Welcome back. Your portfolios are waiting.</p>
+    <div className="card p-6 sm:p-8 bg-surface shadow-raised border-line">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold tracking-tight text-ink">Welcome back</h2>
+        <p className="mt-1.5 text-xs text-muted">Sign in to your account to edit and manage your portfolios.</p>
+      </div>
 
       {error ? (
-        <div role="alert" className="mt-4 flex items-start gap-2 rounded border border-danger/25 bg-dangerSoft px-3 py-2.5 text-sm text-danger">
-          <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+          <AlertCircle size={15} className="mt-0.5 shrink-0 text-red-600" aria-hidden="true" />
           <span>{error}</span>
         </div>
       ) : null}
 
-      <form onSubmit={onSubmit} className="mt-5 space-y-4" noValidate>
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <Field label="Email" htmlFor="email" required error={fieldErrors.email}>
           <TextInput
             id="email"
@@ -81,21 +83,22 @@ export default function Login() {
           <PasswordInput id="password" name="password" value={form.password} onChange={update('password')} />
         </Field>
 
-        <div className="flex items-center justify-between">
-          <Link to="/forgot-password" className="text-xs text-accent hover:underline">
-            Forgot your password?
+        <div className="flex items-center justify-end">
+          <Link to="/forgot-password" className="text-xs font-medium text-accent hover:underline">
+            Forgot password?
           </Link>
         </div>
 
-        <Button type="submit" className="w-full py-2" loading={submitting} disabled={submitting}>
-          Sign in
+        <Button type="submit" size="lg" className="w-full mt-2" loading={submitting} disabled={submitting}>
+          <span>Sign In</span>
+          <ArrowRight size={15} aria-hidden="true" />
         </Button>
       </form>
 
-      <p className="mt-5 border-t border-line pt-4 text-sm text-inkSoft">
-        New to PortiAI?{' '}
-        <Link to="/register" className="font-medium text-accent hover:underline">
-          Create an account
+      <p className="mt-6 border-t border-line pt-4 text-center text-xs text-inkSoft">
+        Don&apos;t have an account yet?{' '}
+        <Link to="/register" className="font-semibold text-accent hover:underline">
+          Create account
         </Link>
       </p>
     </div>

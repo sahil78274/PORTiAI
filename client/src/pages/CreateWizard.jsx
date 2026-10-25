@@ -15,6 +15,7 @@ import {
   Briefcase,
   Palette,
   Eye,
+  Sparkles,
 } from 'lucide-react';
 import { Button, ProgressBar, Spinner, TextInput } from '../components/ui/Primitives.jsx';
 import PortfolioRenderer from '../templates/PortfolioRenderer.jsx';
@@ -32,7 +33,7 @@ import useUnsavedWarning from '../components/editor/useUnsavedWarning.js';
 import { draftFromPortfolio, draftToPayload, emptyDraft } from '../utils/portfolioDraft.js';
 import { portfolioService } from '../services/portfolioService.js';
 import { useToast } from '../context/ToastContext.jsx';
-import { getTemplate, TEMPLATES } from '../utils/templates.js';
+import { getTemplate, normalizeTemplateId, TEMPLATES } from '../utils/templates.js';
 
 const STEPS = [
   { id: 'profile', label: 'Profile', icon: User },
@@ -78,21 +79,41 @@ export default function CreateWizard() {
       setLoading(true);
       setError('');
       const storedId = sessionStorage.getItem(STORAGE_KEY);
+      const requestedTemplate = templateParam ? normalizeTemplateId(templateParam) : null;
       try {
         if (storedId) {
           try {
             const data = await portfolioService.get(storedId);
+            const loadedDraft = draftFromPortfolio(data.portfolio);
+            if (requestedTemplate && loadedDraft.templateId !== requestedTemplate) {
+              const templateObj = getTemplate(requestedTemplate);
+              const defaultAccents = TEMPLATES.map((t) => t.accent);
+              const shouldUpdateAccent = !loadedDraft.theme?.accent || defaultAccents.includes(loadedDraft.theme.accent);
+              const updatedDraft = {
+                ...loadedDraft,
+                templateId: requestedTemplate,
+                theme: {
+                  ...loadedDraft.theme,
+                  accent: shouldUpdateAccent ? templateObj.accent : loadedDraft.theme.accent,
+                },
+              };
+              setPortfolioId(data.portfolio.id);
+              setDraft(updatedDraft);
+              await portfolioService.update(data.portfolio.id, draftToPayload(updatedDraft));
+              return;
+            }
             setPortfolioId(data.portfolio.id);
-            setDraft(draftFromPortfolio(data.portfolio));
+            setDraft(loadedDraft);
             return;
           } catch {
             sessionStorage.removeItem(STORAGE_KEY);
           }
         }
 
+        const templateObj = requestedTemplate ? getTemplate(requestedTemplate) : TEMPLATES[0];
         const created = await portfolioService.create(
-          templateParam && TEMPLATES.some((template) => template.id === templateParam)
-            ? { templateId: templateParam }
+          requestedTemplate
+            ? { templateId: requestedTemplate, theme: { accent: templateObj.accent } }
             : {}
         );
         setPortfolioId(created.portfolio.id);
@@ -144,7 +165,7 @@ export default function CreateWizard() {
 
   const goNext = async () => {
     if (step === 0 && !draft.profile.fullName.trim()) {
-      setFieldWarning('Add your full name before continuing — it is the one field every template needs.');
+      setFieldWarning('Add your full name before continuing — it is required by every template.');
       return;
     }
     const saved = await save({ quiet: true });
@@ -161,7 +182,7 @@ export default function CreateWizard() {
       if (!saved) throw new Error('Save the draft before publishing.');
       const data = await portfolioService.setPublished(portfolioId, true);
       sessionStorage.removeItem(STORAGE_KEY);
-      toast.success('Portfolio published.', { description: 'Your public link is ready.' });
+      toast.success('Portfolio published.', { description: 'Your public link is live.' });
       navigate(`/dashboard/portfolio/${data.portfolio.id}/analyze`);
     } catch (err) {
       toast.error(err.message || 'Could not publish the portfolio.');
@@ -178,23 +199,22 @@ export default function CreateWizard() {
   };
 
   const StepIcon = STEPS[step].icon;
-  const progress = useMemo(() => ((step + 1) / STEPS.length) * 100, [step]);
 
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Spinner label="Preparing your new portfolio…" />
+        <Spinner label="Preparing your new portfolio workspace…" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="card border-danger/25 bg-dangerSoft p-6">
-        <p className="flex items-center gap-2 text-sm font-medium text-danger">
+      <div className="card border-red-200 bg-red-50 p-6 rounded-xl">
+        <p className="flex items-center gap-2 text-sm font-semibold text-red-700">
           <AlertCircle size={16} aria-hidden="true" /> {error}
         </p>
-        <Button variant="secondary" className="mt-3" onClick={() => window.location.reload()}>
+        <Button variant="secondary" size="sm" className="mt-4" onClick={() => window.location.reload()}>
           Try again
         </Button>
       </div>
@@ -202,79 +222,93 @@ export default function CreateWizard() {
   }
 
   return (
-    <div>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-5">
+      {/* Top Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5 shadow-card">
         <div>
-          <p className="eyebrow">New portfolio</p>
-          <h1 className="mt-1 text-2xl">Build your portfolio</h1>
-          <p className="mt-1 text-sm text-muted">
-            Step {step + 1} of {STEPS.length} · {STEPS[step].label}. Your progress is saved to your account when you
-            continue.
+          <div className="flex items-center gap-2">
+            <span className="eyebrow">Portfolio Wizard</span>
+            <span className="badge-draft text-2xs">Step {step + 1} of {STEPS.length}</span>
+          </div>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">
+            {STEPS[step].label} Details
+          </h1>
+          <p className="mt-0.5 text-xs text-muted">
+            All fields auto-save to your account. You can revisit and customize any step later in the full editor.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted">
+
+        <div className="flex items-center gap-2">
           {dirty ? (
-            <span className="inline-flex items-center gap-1.5 text-warning">
-              <span className="h-1.5 w-1.5 rounded-full bg-warning" aria-hidden="true" /> Unsaved changes
+            <span className="inline-flex items-center gap-1.5 text-2xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
+              Unsaved changes
             </span>
           ) : lastSaved ? (
-            <span className="inline-flex items-center gap-1.5 text-success">
-              <Check size={12} aria-hidden="true" /> Saved
+            <span className="inline-flex items-center gap-1 text-2xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+              <Check size={12} strokeWidth={2.5} aria-hidden="true" /> Saved
             </span>
           ) : null}
+
           <Button variant="secondary" size="sm" onClick={() => save()} loading={saving}>
-            <Save size={13} aria-hidden="true" /> Save draft
+            <Save size={13} aria-hidden="true" />
+            <span>Save draft</span>
           </Button>
         </div>
       </div>
 
-      <div className="mt-4">
-        <ProgressBar value={step + 1} max={STEPS.length} label={`Step ${step + 1} of ${STEPS.length}`} />
-      </div>
-
-      <ol className="mt-4 flex flex-wrap gap-1.5">
+      {/* Step Pills */}
+      <ol className="flex flex-wrap gap-1.5 rounded-xl border border-line bg-surface p-1.5 shadow-2xs">
         {STEPS.map((item, index) => {
           const Icon = item.icon;
           const done = index < step;
           const active = index === step;
           return (
-            <li key={item.id}>
+            <li key={item.id} className="flex-1 min-w-[100px]">
               <button
                 type="button"
                 onClick={() => index <= step && setStep(index)}
                 disabled={index > step}
                 aria-current={active ? 'step' : undefined}
-                className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs transition-colors ${
+                className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2 px-2 text-xs font-semibold tracking-tight transition-all ${
                   active
-                    ? 'border-accent bg-accent-soft font-medium text-accent'
+                    ? 'bg-accent text-white shadow-xs'
                     : done
-                      ? 'border-line bg-surface text-inkSoft hover:border-lineStrong'
-                      : 'border-line bg-canvasAlt/50 text-faint'
+                      ? 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+                      : 'text-slate-400 opacity-60 cursor-not-allowed'
                 }`}
               >
-                {done ? <Check size={12} aria-hidden="true" /> : <Icon size={12} aria-hidden="true" />}
-                {item.label}
+                {done ? <Check size={12} strokeWidth={2.5} aria-hidden="true" /> : <Icon size={13} aria-hidden="true" />}
+                <span>{item.label}</span>
               </button>
             </li>
           );
         })}
       </ol>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_360px]">
-        <div className="card p-4 sm:p-5">
-          <h2 className="flex items-center gap-2 text-lg">
-            <StepIcon size={17} className="text-accent" aria-hidden="true" />
-            {STEPS[step].label}
-          </h2>
+      {/* Main Content Layout */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="card p-5 sm:p-6 bg-surface shadow-card">
+          <div className="flex items-center justify-between border-b border-line pb-4 mb-5">
+            <h2 className="flex items-center gap-2.5 text-base font-bold text-ink">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                <StepIcon size={15} aria-hidden="true" />
+              </span>
+              <span>{STEPS[step].label} Information</span>
+            </h2>
+            <span className="text-2xs font-semibold uppercase tracking-wider text-muted">
+              {step + 1} / {STEPS.length}
+            </span>
+          </div>
 
           {fieldWarning ? (
-            <p role="alert" className="mt-2 flex items-start gap-1.5 rounded border border-warning/25 bg-warningSoft px-3 py-2 text-xs text-warning">
-              <AlertCircle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-              {fieldWarning}
-            </p>
+            <div role="alert" className="mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+              <AlertCircle size={14} className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" />
+              <span>{fieldWarning}</span>
+            </div>
           ) : null}
 
-          <div className="mt-4">
+          <div>
             {step === 0 ? <ProfileSection draft={draft} setDraft={updateDraft} /> : null}
             {step === 1 ? <SkillsSection draft={draft} setDraft={updateDraft} /> : null}
             {step === 2 ? <EducationSection draft={draft} setDraft={updateDraft} /> : null}
@@ -283,26 +317,25 @@ export default function CreateWizard() {
             {step === 5 ? (
               <div className="space-y-6">
                 <DesignSection draft={draft} setDraft={updateDraft} showPreview={false} />
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold text-ink">Visible sections</h3>
+                <div className="border-t border-line pt-5">
+                  <h3 className="mb-2.5 text-sm font-semibold text-ink">Section Visibility & Reordering</h3>
                   <SectionsSection draft={draft} setDraft={updateDraft} />
                 </div>
               </div>
             ) : null}
             {step === 6 ? (
               <div className="space-y-4">
-                <p className="text-sm leading-6 text-inkSoft">
-                  Review the layout below. You can change any detail later — the editor has all the same fields plus a
-                  live preview.
+                <p className="text-xs leading-relaxed text-muted">
+                  Review your portfolio layout below. You can update any field anytime from the visual editor.
                 </p>
-                <div className="rounded border border-line">
+                <div className="overflow-hidden rounded-xl border border-line bg-white shadow-card">
                   <TemplatePreviewFrame designWidth={1000} designHeight={980} label="Your portfolio preview">
                     <PortfolioRenderer portfolio={draft} />
                   </TemplatePreviewFrame>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded border border-line bg-surface p-3">
-                    <p className="text-2xs font-semibold uppercase tracking-widest text-muted">Portfolio title</p>
+                  <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Portfolio Title</p>
                     <TextInput
                       className="mt-1.5"
                       value={draft.title}
@@ -310,68 +343,74 @@ export default function CreateWizard() {
                       maxLength={120}
                       aria-label="Portfolio title"
                     />
-                    <p className="mt-1 text-2xs text-muted">Shown on your dashboard, not on the public page.</p>
+                    <p className="mt-1 text-2xs text-slate-400">Private label shown on your personal dashboard.</p>
                   </div>
-                  <div className="rounded border border-line bg-surface p-3">
-                    <p className="text-2xs font-semibold uppercase tracking-widest text-muted">Template</p>
-                    <p className="mt-1 text-sm text-ink">{getTemplate(draft.templateId).name}</p>
-                    <p className="mt-1 text-2xs text-muted">Change it in the editor without losing content.</p>
+                  <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Selected Template</p>
+                    <p className="mt-2 text-sm font-semibold text-ink">{getTemplate(draft.templateId).name}</p>
+                    <p className="mt-1 text-2xs text-slate-400">Can be switched anytime without losing data.</p>
                   </div>
                 </div>
               </div>
             ) : null}
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
-            <Button variant="secondary" onClick={goBack} disabled={step === 0}>
-              <ArrowLeft size={14} aria-hidden="true" /> Back
+          {/* Navigation Controls */}
+          <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <Button variant="secondary" size="sm" onClick={goBack} disabled={step === 0}>
+              <ArrowLeft size={14} aria-hidden="true" />
+              <span>Back</span>
             </Button>
+
             <div className="flex flex-wrap items-center gap-2">
               {step === STEPS.length - 1 ? (
                 <>
-                  <Link to="/dashboard" className="btn-ghost">
-                    Exit to dashboard
+                  <Link to="/dashboard" className="btn-ghost btn-sm text-xs font-semibold">
+                    Dashboard
                   </Link>
-                  <Button variant="secondary" onClick={() => save()} loading={saving}>
-                    <Save size={14} aria-hidden="true" /> Save as draft
+                  <Button variant="secondary" size="sm" onClick={() => save()} loading={saving}>
+                    <Save size={13} aria-hidden="true" />
+                    <span>Save Draft</span>
                   </Button>
-                  <Button variant="secondary" onClick={finishToEditor}>
-                    Continue editing <ArrowRight size={14} aria-hidden="true" />
+                  <Button variant="secondary" size="sm" onClick={finishToEditor}>
+                    <span>Continue in Editor</span>
+                    <ArrowRight size={13} aria-hidden="true" />
                   </Button>
-                  <Button onClick={publish} loading={publishing}>
-                    <Send size={14} aria-hidden="true" /> Publish
+                  <Button variant="primary" size="sm" onClick={publish} loading={publishing}>
+                    <Send size={13} aria-hidden="true" />
+                    <span>Publish Now</span>
                   </Button>
                 </>
               ) : (
-                <Button onClick={goNext} loading={saving}>
-                  Continue <ArrowRight size={14} aria-hidden="true" />
+                <Button variant="primary" size="sm" onClick={goNext} loading={saving}>
+                  <span>Continue</span>
+                  <ArrowRight size={14} aria-hidden="true" />
                 </Button>
               )}
             </div>
           </div>
         </div>
 
+        {/* Live Preview Sidebar */}
         <aside className="hidden lg:block">
-          <div className="card sticky top-[72px] overflow-hidden">
-            <div className="flex items-center justify-between border-b border-line bg-canvasAlt/60 px-3 py-2">
-              <p className="text-2xs uppercase tracking-widest text-muted">Live preview</p>
-              <span className="text-2xs text-muted">{getTemplate(draft.templateId).name}</span>
+          <div className="sticky top-[76px] overflow-hidden rounded-2xl border border-line bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-line bg-slate-50/80 px-3.5 py-2">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+                <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Preview</p>
+              </div>
+              <span className="badge-draft text-2xs">{getTemplate(draft.templateId).name}</span>
             </div>
             <TemplatePreviewFrame designWidth={900} designHeight={900} label="Live preview of your portfolio">
               <PortfolioRenderer portfolio={draft} />
             </TemplatePreviewFrame>
-            <p className="border-t border-line px-3 py-2 text-2xs text-muted">
-              Updates as you type. {draft.projects.length} project{draft.projects.length === 1 ? '' : 's'} ·{' '}
-              {draft.skills.length} skill{draft.skills.length === 1 ? '' : 's'}
-            </p>
+            <div className="border-t border-line bg-slate-50/50 px-3.5 py-2 text-2xs text-slate-500 flex justify-between items-center">
+              <span>{draft.projects.length} project{draft.projects.length === 1 ? '' : 's'}</span>
+              <span>{draft.skills.length} skill{draft.skills.length === 1 ? '' : 's'}</span>
+            </div>
           </div>
         </aside>
       </div>
-
-      <p className="mt-4 flex items-center gap-1.5 text-xs text-muted lg:hidden">
-        <Loader2 size={12} aria-hidden="true" className="animate-spin" style={{ animationDuration: '3s' }} />
-        Tip: the full live preview is available in the editor on larger screens.
-      </p>
     </div>
   );
 }

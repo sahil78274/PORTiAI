@@ -11,7 +11,9 @@ import { sanitizeText, sanitizeUrl, sanitizeStringArray } from '../utils/sanitiz
 export const createPortfolioSchema = z
   .object({
     title: z.string().trim().max(120).optional(),
-    templateId: z.enum(TEMPLATE_IDS).optional(),
+    templateId: z.string().trim().optional(),
+    template: z.string().trim().optional(),
+    theme: z.object({ accent: z.string().optional() }).optional(),
   })
   .default({});
 
@@ -70,8 +72,18 @@ export const normalizePortfolioBody = (body = {}) => {
   const out = {};
 
   if (typeof body.title === 'string') out.title = sanitizeText(body.title, 120) || 'Untitled portfolio';
-  if (typeof body.templateId === 'string' && TEMPLATE_IDS.includes(body.templateId)) {
-    out.templateId = body.templateId;
+
+  const incomingTemplate = body.templateId || body.template;
+  if (typeof incomingTemplate === 'string') {
+    const cleanId = incomingTemplate.toLowerCase().trim();
+    const mapped =
+      cleanId === 'developer-portfolio' ? 'developer' :
+      cleanId === 'modern-editorial' ? 'editorial' :
+      cleanId === 'minimal-professional' ? 'minimal' :
+      cleanId;
+    if (TEMPLATE_IDS.includes(mapped)) {
+      out.templateId = mapped;
+    }
   }
 
   if (body.profile && typeof body.profile === 'object') {

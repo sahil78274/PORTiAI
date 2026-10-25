@@ -17,6 +17,8 @@ client/dist/
 # Local development database (mongodb-memory-server data directory)
 .data/
 server/.data/
+.volter/
+server/.volter/
 *.db
 
 # Logs

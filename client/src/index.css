@@ -4,46 +4,62 @@
 
 @layer base {
   :root {
-    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --canvas: #fafafa;
+    --surface: #ffffff;
+    --line: #e2e8f0;
+    --line-strong: #cbd5e1;
+    --ink: #090d16;
+    --ink-soft: #334155;
+    --muted: #64748b;
+    --faint: #94a3b8;
+    --accent: #4f46e5;
   }
 
   html {
     -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-canvas text-ink font-sans antialiased;
-    font-feature-settings: 'cv11', 'ss01';
+    font-feature-settings: 'cv11', 'ss01', 'cv01';
     font-size: 15px;
+    letter-spacing: -0.011em;
   }
 
-  h1, h2, h3, h4 {
-    @apply text-ink font-semibold tracking-[-0.011em];
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-ink font-semibold tracking-[-0.02em];
   }
 
-  /* Consistent, visible focus for every interactive element. */
+  /* Consistent, visible, accessible focus ring */
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-    @apply outline-none ring-2 ring-accent/45 ring-offset-2 ring-offset-canvas;
+    @apply outline-none ring-2 ring-accent/35 ring-offset-2 ring-offset-canvas;
   }
 
   ::selection {
-    background: #dfe5f3;
+    background: #e0e7ff;
+    color: #1e1b4b;
   }
 }
 
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-content px-5 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-content px-4 sm:px-6 lg:px-8;
   }
 
   .card {
-    @apply rounded-md border border-line bg-surface shadow-card;
+    @apply rounded-xl border border-line bg-surface shadow-card transition-all duration-150;
+  }
+
+  .card-hover {
+    @apply card hover:border-lineStrong hover:shadow-raised;
   }
 
   .label {
-    @apply mb-1.5 block text-sm font-medium text-ink;
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700;
   }
 
   .hint {
@@ -51,59 +67,83 @@
   }
 
   .input {
-    @apply w-full rounded border border-lineStrong bg-surface px-3 py-2 text-base text-ink
-      placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20
-      disabled:cursor-not-allowed disabled:bg-canvasAlt;
+    @apply w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink
+      placeholder:text-faint transition-all duration-150
+      hover:border-lineStrong
+      focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/15
+      disabled:cursor-not-allowed disabled:bg-canvasAlt disabled:opacity-60;
   }
 
   .textarea {
-    @apply input min-h-[92px] resize-y leading-6;
+    @apply input min-h-[96px] resize-y leading-relaxed;
   }
 
   .select {
-    @apply input cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236f7278%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[right_0.7rem_center] bg-no-repeat pr-9;
+    @apply input cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[right_0.8rem_center] bg-no-repeat pr-9;
   }
 
+  /* Consistent, high-end button design system */
   .btn {
-    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded
-      px-3.5 py-[7px] text-sm font-medium transition-colors
-      disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg
+      h-9 px-3.5 text-sm font-medium tracking-tight transition-all duration-150
+      active:scale-[0.98]
+      disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+  }
+
+  .btn-sm {
+    @apply btn h-8 px-2.5 text-xs;
+  }
+
+  .btn-lg {
+    @apply btn h-11 px-5 text-base font-medium;
   }
 
   .btn-primary {
-    @apply btn bg-accent text-white hover:bg-accent-hover active:bg-accent-hover;
+    @apply btn bg-accent text-white shadow-xs
+      hover:bg-accent-hover hover:shadow
+      active:bg-accent-hover;
   }
 
   .btn-secondary {
-    @apply btn border border-lineStrong bg-surface text-ink hover:bg-canvasAlt;
+    @apply btn border border-line bg-surface text-ink shadow-xs
+      hover:border-lineStrong hover:bg-slate-50
+      active:bg-slate-100;
+  }
+
+  .btn-outline {
+    @apply btn border border-lineStrong bg-transparent text-ink
+      hover:bg-canvasAlt hover:text-ink;
   }
 
   .btn-ghost {
-    @apply btn text-inkSoft hover:bg-canvasAlt hover:text-ink;
+    @apply btn bg-transparent text-inkSoft
+      hover:bg-slate-100/80 hover:text-ink;
   }
 
   .btn-danger {
-    @apply btn border border-danger/25 bg-dangerSoft text-danger hover:bg-danger hover:text-white;
+    @apply btn border border-danger/30 bg-dangerSoft text-danger shadow-xs
+      hover:border-danger hover:bg-danger hover:text-white;
   }
 
   .btn-link {
-    @apply inline-flex items-center gap-1 text-sm font-medium text-accent underline-offset-2 hover:underline;
+    @apply inline-flex items-center gap-1.5 text-sm font-medium text-accent
+      transition-colors duration-150 hover:text-accent-hover hover:underline hover:underline-offset-4;
   }
 
   .badge {
-    @apply inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-2xs font-medium uppercase tracking-wide;
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-medium uppercase tracking-wider;
   }
 
   .badge-published {
-    @apply badge border-success/20 bg-successSoft text-success;
+    @apply badge border-success/20 bg-successSoft text-success font-semibold;
   }
 
   .badge-draft {
-    @apply badge border-lineStrong bg-canvasAlt text-inkSoft;
+    @apply badge border-lineStrong bg-canvasAlt text-muted font-medium;
   }
 
   .eyebrow {
-    @apply text-2xs font-semibold uppercase tracking-[0.14em] text-accent;
+    @apply inline-flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-[0.16em] text-accent;
   }
 
   .section-rule {
@@ -111,22 +151,28 @@
   }
 
   .kbd {
-    @apply rounded-sm border border-lineStrong bg-canvasAlt px-1 py-px font-mono text-2xs text-inkSoft;
+    @apply rounded border border-lineStrong bg-canvasAlt px-1.5 py-0.5 font-mono text-2xs text-muted shadow-2xs;
   }
 }
 
-/* Thin, unobtrusive scrollbars inside editor panes. */
+/* Thin modern scrollbars */
 .scroll-slim {
   scrollbar-width: thin;
-  scrollbar-color: #d5d1c8 transparent;
+  scrollbar-color: #cbd5e1 transparent;
 }
 .scroll-slim::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
+}
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
 }
 .scroll-slim::-webkit-scrollbar-thumb {
-  background: #d9d5cd;
-  border-radius: 8px;
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.scroll-slim::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 @media (prefers-reduced-motion: reduce) {

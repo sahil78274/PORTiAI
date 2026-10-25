@@ -156,9 +156,12 @@ portfolioSchema.index({ userId: 1, updatedAt: -1 });
 portfolioSchema.index({ userId: 1, published: 1 });
 portfolioSchema.index({ published: 1, slug: 1 });
 
-portfolioSchema.pre('validate', function ensureTitle() {
+portfolioSchema.pre('validate', function ensureDefaults() {
   if (!this.title || !this.title.trim()) {
     this.title = this.profile?.fullName ? `${this.profile.fullName}'s portfolio` : 'Untitled portfolio';
+  }
+  if (!this.templateId || !TEMPLATE_IDS.includes(this.templateId)) {
+    this.templateId = 'minimal';
   }
 });
 
@@ -169,7 +172,7 @@ portfolioSchema.methods.toOwnerJSON = function toOwnerJSON() {
     id: this._id.toString(),
     title: obj.title,
     slug: obj.slug || null,
-    templateId: obj.templateId,
+    templateId: TEMPLATE_IDS.includes(obj.templateId) ? obj.templateId : 'minimal',
     profile: obj.profile,
     skills: obj.skills,
     education: obj.education,
