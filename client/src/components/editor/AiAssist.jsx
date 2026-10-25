@@ -18,7 +18,7 @@ export default function AiAssist({
   buildInput,
   onApply,
   label = 'Generate with AI',
-  applyLabel = 'Apply',
+  applyLabel = 'Apply suggestion',
   className = '',
   applyShape = 'text',
 }) {
@@ -65,88 +65,102 @@ export default function AiAssist({
   return (
     <div className={className}>
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="secondary" size="sm" onClick={run} loading={state === 'loading'} disabled={state === 'loading'}>
-          {state === 'loading' ? null : <Sparkles size={13} aria-hidden="true" />}
-          {state === 'loading' ? 'Generating…' : label}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={run}
+          loading={state === 'loading'}
+          disabled={state === 'loading'}
+          className="border-indigo-200 text-indigo-700 hover:bg-indigo-50/70"
+        >
+          {state === 'loading' ? null : <Sparkles size={13} className="text-indigo-600" aria-hidden="true" />}
+          <span>{state === 'loading' ? 'Generating…' : label}</span>
         </Button>
+
         <label className="inline-flex items-center gap-1.5 text-2xs text-muted">
-          <span className="sr-only sm:not-sr-only">Tone</span>
+          <span className="sr-only sm:not-sr-only">Tone:</span>
           <select
             value={tone}
             onChange={(event) => setTone(event.target.value)}
             aria-label="Tone for generated text"
-            className="rounded-sm border border-lineStrong bg-surface px-1.5 py-1 text-2xs text-inkSoft"
+            className="rounded-lg border border-line bg-surface px-2 py-1 text-2xs text-slate-700 shadow-2xs focus:border-accent focus:outline-none"
           >
             <option value="professional">Professional</option>
             <option value="concise">Concise</option>
             <option value="friendly">Friendly</option>
           </select>
         </label>
-        {meta?.model ? <span className="text-2xs text-faint">Gemini · {meta.model}</span> : null}
+        {meta?.model ? <span className="text-2xs text-slate-400">Gemini · {meta.model}</span> : null}
       </div>
 
       {state === 'error' && error ? (
-        <div role="alert" className="mt-2 rounded border border-danger/25 bg-dangerSoft px-3 py-2 text-xs leading-5 text-danger">
-          <p className="flex items-start gap-1.5 font-medium">
-            <AlertCircle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-            {error.code === 'AI_DAILY_CAP_REACHED' || error.code === 'QUOTA'
-              ? 'AI quota reached'
-              : error.code === 'NOT_CONFIGURED'
-                ? 'AI is not configured'
-                : 'Generation failed'}
+        <div role="alert" className="mt-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs leading-relaxed text-red-800">
+          <p className="flex items-center gap-1.5 font-bold">
+            <AlertCircle size={14} className="shrink-0 text-red-600" aria-hidden="true" />
+            <span>
+              {error.code === 'AI_DAILY_CAP_REACHED' || error.code === 'QUOTA'
+                ? 'Daily AI quota exhausted'
+                : error.code === 'NOT_CONFIGURED'
+                  ? 'Gemini API not configured'
+                  : 'Generation failed'}
+            </span>
           </p>
-          <p className="mt-1 text-danger/90">{error.message}</p>
-          <p className="mt-1 text-danger/75">
-            You can keep writing this section yourself — saving, previewing and publishing are unaffected.
+          <p className="mt-1 text-red-700">{error.message}</p>
+          <p className="mt-1 text-red-600 text-2xs">
+            You can type or edit your content directly — portfolio saving and publishing remain fully functional.
           </p>
-          <Button variant="secondary" size="sm" className="mt-2" onClick={run}>
-            <RefreshCw size={12} aria-hidden="true" /> Retry
+          <Button variant="secondary" size="sm" className="mt-2.5 text-2xs" onClick={run}>
+            <RefreshCw size={11} aria-hidden="true" />
+            <span>Retry request</span>
           </Button>
         </div>
       ) : null}
 
       {state === 'ready' && result ? (
-        <div className="mt-2 rounded border border-accent-line bg-accent-soft/60 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-accent">
-              <Wand2 size={11} aria-hidden="true" /> AI suggestion — review before applying
+        <div className="mt-3 rounded-xl border border-indigo-200/80 bg-indigo-50/50 p-4 shadow-card">
+          <div className="flex items-center justify-between gap-2 border-b border-indigo-100 pb-2 mb-2">
+            <p className="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wider text-indigo-700">
+              <Wand2 size={12} aria-hidden="true" />
+              <span>AI Suggestion (Editable)</span>
             </p>
             {meta?.usage ? (
-              <span className="text-2xs text-muted">
-                {meta.usage.remaining}/{meta.usage.limit} AI requests left today
+              <span className="text-2xs text-slate-500">
+                {meta.usage.remaining}/{meta.usage.limit} daily calls left
               </span>
             ) : null}
           </div>
 
           {applyShape === 'skills' ? (
-            <div className="mt-2 grid gap-2 text-xs text-ink sm:grid-cols-2">
-              <div>
-                <p className="font-medium text-ink">Technical</p>
-                <p className="text-inkSoft">{result.technical?.join(', ') || '—'}</p>
+            <div className="my-2 grid gap-2 text-xs sm:grid-cols-2">
+              <div className="rounded-lg bg-white p-2.5 border border-indigo-100">
+                <p className="font-bold text-ink">Technical</p>
+                <p className="text-slate-600">{result.technical?.join(', ') || '—'}</p>
               </div>
-              <div>
-                <p className="font-medium text-ink">Soft</p>
-                <p className="text-inkSoft">{result.soft?.join(', ') || '—'}</p>
+              <div className="rounded-lg bg-white p-2.5 border border-indigo-100">
+                <p className="font-bold text-ink">Soft Skills</p>
+                <p className="text-slate-600">{result.soft?.join(', ') || '—'}</p>
               </div>
             </div>
           ) : (
             <TextArea
               value={edited}
               onChange={(event) => setEdited(event.target.value)}
-              rows={6}
-              className="mt-2 bg-surface text-sm"
+              rows={5}
+              className="mt-1 bg-white text-xs leading-relaxed"
               aria-label="Generated text (editable)"
             />
           )}
 
-          {result.notes ? <p className="mt-1.5 text-2xs text-muted">Note from the model: {result.notes}</p> : null}
+          {result.notes ? <p className="mt-2 text-2xs text-slate-500">Note: {result.notes}</p> : null}
 
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button size="sm" onClick={apply}>
-              <Check size={13} aria-hidden="true" /> {applyLabel}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" variant="primary" onClick={apply}>
+              <Check size={13} aria-hidden="true" />
+              <span>{applyLabel}</span>
             </Button>
             <Button variant="secondary" size="sm" onClick={run}>
-              <RefreshCw size={12} aria-hidden="true" /> Regenerate
+              <RefreshCw size={12} aria-hidden="true" />
+              <span>Regenerate</span>
             </Button>
             <Button
               variant="ghost"
@@ -156,7 +170,8 @@ export default function AiAssist({
                 setResult(null);
               }}
             >
-              <X size={12} aria-hidden="true" /> Discard
+              <X size={12} aria-hidden="true" />
+              <span>Discard</span>
             </Button>
           </div>
         </div>

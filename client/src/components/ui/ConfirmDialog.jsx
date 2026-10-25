@@ -31,15 +31,17 @@ export default function ConfirmDialog({
         </>
       }
     >
-      <div className="flex gap-3">
+      <div className="flex gap-3.5 items-start">
         {tone === 'danger' ? (
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-dangerSoft text-danger">
-            <AlertTriangle size={16} aria-hidden="true" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-dangerSoft text-danger ring-1 ring-danger/20">
+            <AlertTriangle size={18} aria-hidden="true" />
           </span>
         ) : null}
-        <p className="text-sm leading-6 text-inkSoft">{description}</p>
+        <div className="space-y-2 text-sm leading-relaxed text-inkSoft">
+          <p>{description}</p>
+          {children}
+        </div>
       </div>
-      {children}
     </Modal>
   );
 }

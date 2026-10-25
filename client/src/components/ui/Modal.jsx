@@ -13,7 +13,16 @@ const SIZES = {
  * Accessible dialog: focus is moved into the dialog, Escape closes it,
  * background scroll is locked and focus returns to the trigger on close.
  */
-export default function Modal({ open, onClose, title, description, children, footer, size = 'md', closeLabel = 'Close dialog' }) {
+export default function Modal({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  size = 'md',
+  closeLabel = 'Close dialog',
+}) {
   const panelRef = useRef(null);
   const previouslyFocused = useRef(null);
 
@@ -62,7 +71,7 @@ export default function Modal({ open, onClose, title, description, children, foo
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/35 p-0 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-950/50 p-0 backdrop-blur-[4px] sm:items-center sm:p-6 animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
@@ -70,27 +79,36 @@ export default function Modal({ open, onClose, title, description, children, foo
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-describedby={description ? 'modal-description' : undefined}
-        className={`relative z-10 w-full ${SIZES[size]} rounded-t-lg border border-line bg-surface shadow-raised sm:rounded-lg`}
+        className={`relative z-10 w-full ${SIZES[size]} rounded-t-2xl border border-line bg-surface shadow-float sm:rounded-2xl`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5">
-          <div>
+        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-4">
+          <div className="min-w-0">
             {title ? (
-              <h2 id="modal-title" className="text-[15px] font-semibold text-ink">
+              <h2 id="modal-title" className="text-base font-semibold text-ink">
                 {title}
               </h2>
             ) : null}
             {description ? (
-              <p id="modal-description" className="mt-0.5 text-sm text-muted">
+              <p id="modal-description" className="mt-0.5 text-xs text-muted">
                 {description}
               </p>
             ) : null}
           </div>
-          <button type="button" onClick={onClose} className="btn-ghost -mr-1 p-1.5" aria-label={closeLabel}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-ghost -mr-2 -mt-1 h-8 w-8 rounded-lg p-0 text-muted hover:text-ink"
+            aria-label={closeLabel}
+          >
             <X size={16} aria-hidden="true" />
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-4 scroll-slim">{children}</div>
-        {footer ? <div className="flex flex-wrap justify-end gap-2 border-t border-line px-5 py-3">{footer}</div> : null}
+        <div className="max-h-[72vh] overflow-y-auto px-6 py-5 scroll-slim">{children}</div>
+        {footer ? (
+          <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-line bg-canvasAlt/40 px-6 py-3.5 rounded-b-2xl">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>,
     document.body

@@ -296,8 +296,9 @@ Both suites were executed in this environment; see [`docs/TESTING.md`](docs/TEST
 commands and output.
 
 ```bash
-cd server && npm test                              # 41 HTTP checks: real Express app, real mongod, stub Gemini
-cd client && npm run build                         # production build
+cd server && npm test                              # 42 HTTP checks: real Express app, real mongod, stub Gemini
+cd client && npm test                              # 8 unit checks: template registry, normalisation, fallback
+cd client && npm run build                         # production build (passes cleanly)
 GEMINI_API_KEY=… node server/scripts/check-gemini.mjs   # one real request to Google, with translated errors
 ```
 

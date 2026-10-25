@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Copy, Check, FileQuestion, ArrowLeft, Sparkles } from 'lucide-react';
+import { Copy, Check, FileQuestion, ArrowLeft, Sparkles, ExternalLink } from 'lucide-react';
 import PortfolioRenderer from '../templates/PortfolioRenderer.jsx';
 import { portfolioService } from '../services/portfolioService.js';
 import { formatDate } from '../utils/format.js';
@@ -55,9 +55,10 @@ export default function PublicPortfolio() {
   if (state === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
-        <p className="text-sm text-muted" role="status">
-          Loading portfolio…
-        </p>
+        <div className="flex items-center gap-2.5 text-xs text-muted">
+          <span className="h-2 w-2 rounded-full bg-accent animate-ping" />
+          <span>Loading public portfolio…</span>
+        </div>
       </div>
     );
   }
@@ -65,33 +66,34 @@ export default function PublicPortfolio() {
   if (state === 'missing' || state === 'error') {
     return (
       <div className="flex min-h-screen flex-col bg-canvas">
-        <header className="border-b border-line">
+        <header className="border-b border-line bg-surface">
           <div className="container-page flex h-14 items-center justify-between">
             <Logo />
-            <Link to="/" className="text-sm text-inkSoft hover:text-ink">
+            <Link to="/" className="text-xs font-semibold text-slate-600 hover:text-ink transition-colors">
               Home
             </Link>
           </div>
         </header>
         <main className="flex flex-1 items-center">
           <div className="container-page max-w-lg py-16">
-            <span className="flex h-10 w-10 items-center justify-center rounded border border-line bg-surface text-muted">
-              <FileQuestion size={18} aria-hidden="true" />
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-line bg-surface text-slate-400 shadow-2xs">
+              <FileQuestion size={22} aria-hidden="true" />
             </span>
-            <h1 className="mt-4 text-2xl">
-              {state === 'missing' ? 'This portfolio is not available' : 'Something went wrong'}
+            <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink">
+              {state === 'missing' ? 'Portfolio not available' : 'Failed to load portfolio'}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-inkSoft">
+            <p className="mt-2 text-xs leading-relaxed text-muted">
               {state === 'missing'
-                ? 'The link may be mistyped, or the owner may have unpublished or deleted the portfolio. Only published portfolios are publicly visible.'
+                ? 'The link may be mistyped, or the creator has unpublished this portfolio. Only published portfolios are accessible on the public web.'
                 : error}
             </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link to="/" className="btn-primary">
-                <ArrowLeft size={15} aria-hidden="true" /> Back to PortiAI
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to="/" className="btn-primary btn-sm">
+                <ArrowLeft size={14} aria-hidden="true" />
+                <span>Back to PortiAI</span>
               </Link>
               {state === 'error' ? (
-                <button type="button" onClick={load} className="btn-secondary">
+                <button type="button" onClick={load} className="btn-secondary btn-sm">
                   Try again
                 </button>
               ) : null}
@@ -106,20 +108,24 @@ export default function PublicPortfolio() {
     <div className="min-h-screen bg-white">
       <a
         href="#portfolio-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:shadow-raised"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-xs focus:font-semibold focus:shadow-raised"
       >
         Skip to portfolio
       </a>
 
-      <div className="border-b border-line bg-canvas">
+      {/* Top Banner */}
+      <div className="border-b border-line bg-slate-50/80 backdrop-blur-sm sticky top-0 z-30">
         <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-2 px-4 py-2">
-          <p className="text-xs text-muted">
-            Public portfolio · {getTemplate(portfolio.templateId).name} · last updated {formatDate(portfolio.updatedAt)}
-          </p>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={copy} className="btn-secondary px-2 py-1 text-xs">
-              {copied ? <Check size={13} aria-hidden="true" /> : <Copy size={13} aria-hidden="true" />}
-              {copied ? 'Link copied' : 'Copy link'}
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <p className="text-2xs text-muted">
+              Public Portfolio · <strong className="font-semibold text-slate-700">{getTemplate(portfolio.templateId).name}</strong> · Updated {formatDate(portfolio.updatedAt)}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={copy} className="btn-secondary btn-sm !py-1 text-2xs font-semibold">
+              {copied ? <Check size={12} className="text-emerald-600" aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
+              <span>{copied ? 'Link copied' : 'Share link'}</span>
             </button>
           </div>
         </div>
@@ -129,14 +135,15 @@ export default function PublicPortfolio() {
         <PortfolioRenderer portfolio={portfolio} />
       </main>
 
-      <footer className="border-t border-line bg-canvasAlt">
-        <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-5">
-          <div className="flex items-center gap-2">
+      <footer className="border-t border-line bg-slate-50">
+        <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-6">
+          <div className="flex items-center gap-2.5">
             <Logo size="sm" />
-            <span className="text-xs text-muted">— published portfolio</span>
+            <span className="text-2xs text-muted">· Live verified student portfolio</span>
           </div>
-          <Link to="/register" className="btn-secondary px-3 py-1.5 text-xs">
-            <Sparkles size={13} aria-hidden="true" /> Build your own portfolio
+          <Link to="/register" className="btn-secondary btn-sm text-xs font-semibold">
+            <Sparkles size={13} aria-hidden="true" />
+            <span>Build your own with PortiAI</span>
           </Link>
         </div>
       </footer>

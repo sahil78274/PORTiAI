@@ -222,6 +222,13 @@ export default function DeveloperTemplate({ portfolio }) {
             return null;
           })}
 
+          {!mainSections.length ? (
+            <div className="rounded border border-dashed border-lineStrong p-8 text-center">
+              <p className="font-mono text-xs text-muted">No main content sections populated yet.</p>
+              <p className="mt-1 text-xs text-faint">Add projects, experience, or an about summary in the editor to populate this column.</p>
+            </div>
+          ) : null}
+
           <footer className="mt-12 border-t border-line pt-4 font-mono text-[11px] uppercase tracking-wider text-faint">
             {profile.fullName || 'Portfolio'} · built with PortiAI
           </footer>

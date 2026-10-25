@@ -1,39 +1,38 @@
 import { Link } from 'react-router-dom';
-import { MailX, KeyRound } from 'lucide-react';
+import { MailX, KeyRound, ArrowRight } from 'lucide-react';
 
 export default function ForgotPassword() {
   return (
-    <div className="card p-5 sm:p-6">
-      <span className="flex h-9 w-9 items-center justify-center rounded border border-warning/25 bg-warningSoft text-warning">
-        <MailX size={16} aria-hidden="true" />
+    <div className="card p-6 sm:p-8 bg-surface shadow-raised border-line">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+        <MailX size={18} aria-hidden="true" />
       </span>
-      <h2 className="mt-3 text-xl">Password recovery is not enabled</h2>
+      <h2 className="mt-4 text-2xl font-bold tracking-tight text-ink">Password recovery is not enabled</h2>
 
-      <div className="mt-3 space-y-3 text-sm leading-6 text-inkSoft">
+      <div className="mt-3.5 space-y-3 text-xs leading-relaxed text-inkSoft">
         <p>
-          Resetting a password by email requires a transactional email provider (for example Resend, SendGrid or SMTP
-          credentials) and a verified sending domain. Neither is configured in this build, so PortiAI will not pretend
-          to send a reset email that never arrives.
+          Resetting a password via email requires a third-party transactional email service (e.g. Resend, SendGrid) and
+          a verified sending domain. To keep this deployment strictly on zero-cost free tiers with zero hidden setup,
+          no email credentials are required.
         </p>
         <p>
-          <span className="font-medium text-ink">What works today:</span> sign in with the password you registered with,
-          and change it from{' '}
-          <span className="font-medium text-ink">Dashboard → Settings → Password</span>. Changing your password signs out
-          your other devices.
+          <strong className="text-ink font-semibold">Active account access:</strong> Sign in with your registered
+          password, and change it anytime from{' '}
+          <strong className="text-ink font-semibold">Dashboard → Account Settings</strong>.
         </p>
         <p>
-          <span className="font-medium text-ink">For the project demo:</span> if you have lost the password for a
-          demonstration account, an administrator can reset it directly in MongoDB Atlas. See the README section
-          “Password recovery” for the documented procedure.
+          <strong className="text-ink font-semibold">Demo reset:</strong> For academic evaluators who forgot a password,
+          an administrator can update the bcrypt hash directly in MongoDB Atlas or register a new demonstration account.
         </p>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+      <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-4">
         <Link to="/login" className="btn-primary">
-          <KeyRound size={14} aria-hidden="true" /> Back to sign in
+          <KeyRound size={14} aria-hidden="true" />
+          <span>Back to sign in</span>
         </Link>
-        <Link to="/register" className="btn-ghost">
-          Create a new account
+        <Link to="/register" className="btn-secondary">
+          <span>Create new account</span>
         </Link>
       </div>
     </div>

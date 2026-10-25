@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LayoutDashboard } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, LayoutDashboard, ArrowRight } from 'lucide-react';
 import Logo from '../ui/Logo.jsx';
-import { Button } from '../ui/Primitives.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const LINKS = [
@@ -14,6 +13,7 @@ const LINKS = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,6 +21,14 @@ export default function Navbar() {
   useEffect(() => {
     setOpen(false);
   }, [location.pathname, location.hash]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 12);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const go = (event, link) => {
     event.preventDefault();
@@ -34,7 +42,13 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur-[2px]">
+    <header
+      className={`sticky top-0 z-40 transition-all duration-200 ${
+        scrolled
+          ? 'border-b border-line/90 bg-white/85 shadow-xs backdrop-blur-md'
+          : 'border-b border-line/60 bg-white/70 backdrop-blur-sm'
+      }`}
+    >
       <div className="container-page flex h-14 items-center justify-between gap-4">
         <div className="flex items-center gap-8">
           <Logo />
@@ -44,8 +58,10 @@ export default function Navbar() {
                 key={link.label}
                 href={link.hash ? `/#${link.hash}` : link.to}
                 onClick={(event) => go(event, link)}
-                className={`rounded px-2.5 py-1.5 text-sm transition-colors ${
-                  location.pathname === link.to ? 'text-ink' : 'text-inkSoft hover:bg-canvasAlt hover:text-ink'
+                className={`rounded-md px-3 py-1.5 text-xs font-medium tracking-tight transition-all duration-150 ${
+                  location.pathname === link.to
+                    ? 'bg-slate-100 text-ink font-semibold'
+                    : 'text-slate-600 hover:bg-slate-100/70 hover:text-ink'
                 }`}
               >
                 {link.label}
@@ -56,19 +72,20 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-2 md:flex">
           {loading ? (
-            <span className="h-8 w-24 animate-pulse rounded bg-canvasAlt" aria-hidden="true" />
+            <span className="h-8 w-20 animate-pulse rounded-md bg-slate-200/70" aria-hidden="true" />
           ) : user ? (
-            <Link to="/dashboard" className="btn-primary">
-              <LayoutDashboard size={15} aria-hidden="true" />
-              Dashboard
+            <Link to="/dashboard" className="btn-primary btn-sm">
+              <LayoutDashboard size={13} aria-hidden="true" />
+              <span>Dashboard</span>
             </Link>
           ) : (
             <>
-              <Link to="/login" className="btn-ghost">
+              <Link to="/login" className="btn-ghost btn-sm text-slate-700">
                 Sign In
               </Link>
-              <Link to="/register" className="btn-primary">
-                Get Started
+              <Link to="/register" className="btn-primary btn-sm">
+                <span>Get Started</span>
+                <ArrowRight size={13} aria-hidden="true" />
               </Link>
             </>
           )}
@@ -76,7 +93,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="btn-ghost md:hidden"
+          className="btn-ghost h-8 w-8 rounded-md p-0 md:hidden"
           aria-expanded={open}
           aria-controls="mobile-nav"
           aria-label={open ? 'Close menu' : 'Open menu'}
@@ -87,30 +104,32 @@ export default function Navbar() {
       </div>
 
       {open ? (
-        <div id="mobile-nav" className="border-t border-line bg-canvas md:hidden">
-          <nav aria-label="Mobile" className="container-page flex flex-col gap-1 py-3">
+        <div id="mobile-nav" className="border-t border-line bg-white/95 px-4 py-4 shadow-raised backdrop-blur-md md:hidden animate-in fade-in duration-150">
+          <nav aria-label="Mobile" className="flex flex-col gap-1">
             {LINKS.map((link) => (
               <a
                 key={link.label}
                 href={link.hash ? `/#${link.hash}` : link.to}
                 onClick={(event) => go(event, link)}
-                className="rounded px-2 py-2 text-sm text-inkSoft hover:bg-canvasAlt hover:text-ink"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-ink"
               >
                 {link.label}
               </a>
             ))}
-            <div className="mt-2 flex flex-col gap-2 border-t border-line pt-3">
+            <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
               {user ? (
-                <Link to="/dashboard" className="btn-primary w-full">
-                  Open dashboard
+                <Link to="/dashboard" className="btn-primary w-full justify-center">
+                  <LayoutDashboard size={14} aria-hidden="true" />
+                  Open Dashboard
                 </Link>
               ) : (
                 <>
-                  <Link to="/login" className="btn-secondary w-full">
+                  <Link to="/login" className="btn-secondary w-full justify-center">
                     Sign In
                   </Link>
-                  <Link to="/register" className="btn-primary w-full">
-                    Get Started
+                  <Link to="/register" className="btn-primary w-full justify-center">
+                    Get Started Free
+                    <ArrowRight size={14} aria-hidden="true" />
                   </Link>
                 </>
               )}

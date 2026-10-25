@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, Check, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Check, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Button, Field, TextInput } from '../components/ui/Primitives.jsx';
 import PasswordInput from '../components/ui/PasswordInput.jsx';
 import { ApiError } from '../services/api.js';
 
 const rules = [
-  { id: 'length', label: 'At least 8 characters', test: (value) => value.length >= 8 },
-  { id: 'letter', label: 'Contains a letter', test: (value) => /[a-zA-Z]/.test(value) },
-  { id: 'number', label: 'Contains a number', test: (value) => /[0-9]/.test(value) },
+  { id: 'length', label: '8+ characters', test: (value) => value.length >= 8 },
+  { id: 'letter', label: 'Includes letter', test: (value) => /[a-zA-Z]/.test(value) },
+  { id: 'number', label: 'Includes number', test: (value) => /[0-9]/.test(value) },
 ];
 
 export default function Register() {
@@ -28,7 +28,9 @@ export default function Register() {
 
   const checks = useMemo(() => rules.map((rule) => ({ ...rule, passed: rule.test(form.password) })), [form.password]);
 
-  if (!loading && user && !justRegistered) return <Navigate to="/dashboard" replace />;
+  if (!loading && user && !justRegistered) {
+    return <Navigate to={template ? `/dashboard/create?template=${encodeURIComponent(template)}` : '/dashboard'} replace />;
+  }
 
   const update = (key) => (event) => {
     setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -45,7 +47,7 @@ export default function Register() {
       return;
     }
     if (!checks.every((check) => check.passed)) {
-      setError('Your password does not meet all the requirements listed below.');
+      setError('Your password does not meet all security requirements.');
       return;
     }
 
@@ -65,21 +67,23 @@ export default function Register() {
   };
 
   return (
-    <div className="card p-5 sm:p-6">
-      <h2 className="text-xl">Create your account</h2>
-      <p className="mt-1 text-sm text-muted">
-        Free to use. You can build several portfolios from one account.
-        {template ? ' The template you picked will be preselected.' : ''}
-      </p>
+    <div className="card p-6 sm:p-8 bg-surface shadow-raised border-line">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold tracking-tight text-ink">Create your account</h2>
+        <p className="mt-1.5 text-xs text-muted">
+          Free academic workspace.
+          {template ? ` Selected template (${template}) will be applied automatically.` : ''}
+        </p>
+      </div>
 
       {error ? (
-        <div role="alert" className="mt-4 flex items-start gap-2 rounded border border-danger/25 bg-dangerSoft px-3 py-2.5 text-sm text-danger">
-          <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+          <AlertCircle size={15} className="mt-0.5 shrink-0 text-red-600" aria-hidden="true" />
           <span>{error}</span>
         </div>
       ) : null}
 
-      <form onSubmit={onSubmit} className="mt-5 space-y-4" noValidate>
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <Field label="Full name" htmlFor="name" required error={fieldErrors.name}>
           <TextInput
             id="name"
@@ -92,7 +96,7 @@ export default function Register() {
           />
         </Field>
 
-        <Field label="Email" htmlFor="email" required error={fieldErrors.email} hint="Used for signing in. No marketing email is sent.">
+        <Field label="Email" htmlFor="email" required error={fieldErrors.email} hint="Used for signing in and account access.">
           <TextInput
             id="email"
             name="email"
@@ -109,35 +113,45 @@ export default function Register() {
           <PasswordInput id="password" name="password" autoComplete="new-password" value={form.password} onChange={update('password')} />
         </Field>
 
-        <ul className="grid gap-1 sm:grid-cols-3">
+        <ul className="grid grid-cols-3 gap-2 py-1">
           {checks.map((check) => (
-            <li key={check.id} className={`inline-flex items-center gap-1 text-xs ${check.passed ? 'text-success' : 'text-muted'}`}>
-              {check.passed ? <Check size={12} aria-hidden="true" /> : <X size={12} aria-hidden="true" />}
-              {check.label}
+            <li
+              key={check.id}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-medium transition-colors ${
+                check.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-500'
+              }`}
+            >
+              {check.passed ? (
+                <Check size={11} strokeWidth={2.5} className="text-emerald-600" aria-hidden="true" />
+              ) : (
+                <X size={11} className="text-slate-400" aria-hidden="true" />
+              )}
+              <span>{check.label}</span>
             </li>
           ))}
         </ul>
 
-        <Button type="submit" className="w-full py-2" loading={submitting} disabled={submitting}>
-          Create account
+        <Button type="submit" size="lg" className="w-full mt-2" loading={submitting} disabled={submitting}>
+          <span>Create Workspace</span>
+          <ArrowRight size={15} aria-hidden="true" />
         </Button>
 
-        <p className="text-xs leading-5 text-muted">
-          By creating an account you agree to the{' '}
+        <p className="text-2xs leading-relaxed text-slate-400 text-center pt-2">
+          By signing up, you agree to our{' '}
           <Link to="/terms" className="text-accent hover:underline">
             terms
           </Link>{' '}
           and{' '}
           <Link to="/privacy" className="text-accent hover:underline">
-            privacy information
-          </Link>{' '}
-          for this academic project.
+            privacy notice
+          </Link>
+          .
         </p>
       </form>
 
-      <p className="mt-5 border-t border-line pt-4 text-sm text-inkSoft">
+      <p className="mt-6 border-t border-line pt-4 text-center text-xs text-inkSoft">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium text-accent hover:underline">
+        <Link to="/login" className="font-semibold text-accent hover:underline">
           Sign in
         </Link>
       </p>

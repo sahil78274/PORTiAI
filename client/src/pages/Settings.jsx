@@ -77,7 +77,7 @@ export default function Settings() {
         newPassword: passwords.newPassword,
       });
       setPasswords({ currentPassword: '', newPassword: '', confirm: '' });
-      setPasswordDone('Password updated. Other devices have been signed out.');
+      setPasswordDone('Password updated. Other active devices have been signed out.');
       toast.success('Password updated.');
     } catch (error) {
       setPasswordError(error.message || 'Could not update your password.');
@@ -102,25 +102,31 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl">Account settings</h1>
-      <p className="mt-1 text-sm text-muted">
-        Signed in as {user?.email} · account created {formatDate(user?.createdAt)}
-      </p>
+    <div className="max-w-3xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Account Settings</h1>
+        <p className="mt-1 text-xs text-muted">
+          Signed in as <strong className="text-slate-800">{user?.email}</strong> · Member since {formatDate(user?.createdAt)}
+        </p>
+      </div>
 
-      <section className="card mt-5 p-5">
-        <h2 className="flex items-center gap-2 text-lg">
-          <User size={16} className="text-accent" aria-hidden="true" /> Profile
-        </h2>
-        <p className="mt-1 text-sm text-muted">Your name is used as the default name on new portfolios.</p>
+      {/* Profile Section */}
+      <section className="card p-6 bg-surface shadow-card">
+        <div className="flex items-center gap-2.5 border-b border-line pb-3 mb-4">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
+            <User size={15} aria-hidden="true" />
+          </span>
+          <h2 className="text-base font-bold text-ink">Personal Profile</h2>
+        </div>
+        <p className="text-xs text-muted mb-4">Your name is pre-populated as the author name on newly initialized portfolios.</p>
 
         {profileError ? (
-          <Alert tone="error" className="mt-3">
+          <Alert tone="error" className="mb-4">
             {profileError}
           </Alert>
         ) : null}
 
-        <form onSubmit={saveProfile} className="mt-4 space-y-3" noValidate>
+        <form onSubmit={saveProfile} className="space-y-4" noValidate>
           <Field label="Full name" htmlFor="settings-name" required>
             <TextInput
               id="settings-name"
@@ -130,7 +136,7 @@ export default function Settings() {
               autoComplete="name"
             />
           </Field>
-          <Field label="Headline" htmlFor="settings-headline" hint="Optional. Shown on your dashboard, e.g. “BCA final year”.">
+          <Field label="Headline" htmlFor="settings-headline" hint="Optional subtitle for internal dashboard records, e.g. 'Software Engineering Intern'.">
             <TextInput
               id="settings-headline"
               value={profile.headline}
@@ -138,35 +144,40 @@ export default function Settings() {
               maxLength={120}
             />
           </Field>
-          <Field label="Email" htmlFor="settings-email" hint="Email changes are not supported in this build.">
-            <TextInput id="settings-email" value={user?.email || ''} disabled readOnly />
+          <Field label="Email" htmlFor="settings-email" hint="Primary login credential. Locked to preserve account authenticity.">
+            <TextInput id="settings-email" value={user?.email || ''} disabled readOnly className="bg-slate-100 text-slate-500 cursor-not-allowed" />
           </Field>
-          <Button type="submit" loading={profileSaving}>
-            <Check size={14} aria-hidden="true" /> Save changes
+          <Button type="submit" variant="primary" loading={profileSaving}>
+            <Check size={14} aria-hidden="true" />
+            <span>Save Profile</span>
           </Button>
         </form>
       </section>
 
-      <section className="card mt-4 p-5">
-        <h2 className="flex items-center gap-2 text-lg">
-          <KeyRound size={16} className="text-accent" aria-hidden="true" /> Password
-        </h2>
-        <p className="mt-1 text-sm text-muted">
-          Changing your password signs out every other device using your account.
+      {/* Password Section */}
+      <section className="card p-6 bg-surface shadow-card">
+        <div className="flex items-center gap-2.5 border-b border-line pb-3 mb-4">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
+            <KeyRound size={15} aria-hidden="true" />
+          </span>
+          <h2 className="text-base font-bold text-ink">Change Password</h2>
+        </div>
+        <p className="text-xs text-muted mb-4">
+          Changing your password invalidates your existing JWT cookies across other sessions.
         </p>
 
         {passwordError ? (
-          <Alert tone="error" className="mt-3">
+          <Alert tone="error" className="mb-4">
             {passwordError}
           </Alert>
         ) : null}
         {passwordDone ? (
-          <Alert tone="success" className="mt-3">
+          <Alert tone="success" className="mb-4">
             {passwordDone}
           </Alert>
         ) : null}
 
-        <form onSubmit={savePassword} className="mt-4 space-y-3" noValidate>
+        <form onSubmit={savePassword} className="space-y-4" noValidate>
           <Field label="Current password" htmlFor="current-password" required>
             <PasswordInput
               id="current-password"
@@ -174,7 +185,7 @@ export default function Settings() {
               onChange={(event) => setPasswords({ ...passwords, currentPassword: event.target.value })}
             />
           </Field>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field label="New password" htmlFor="new-password" required>
               <PasswordInput
                 id="new-password"
@@ -193,58 +204,61 @@ export default function Settings() {
             </Field>
           </div>
           <Button type="submit" variant="secondary" loading={passwordSaving}>
-            Update password
+            <span>Update Password</span>
           </Button>
         </form>
       </section>
 
-      <section className="card mt-4 p-5">
-        <h2 className="flex items-center gap-2 text-lg">
-          <Sparkles size={16} className="text-accent" aria-hidden="true" /> AI usage
-        </h2>
-        <p className="mt-1 text-sm text-muted">
-          AI features run on the Gemini free tier. The backend enforces a per-account daily cap so one account cannot
-          exhaust the shared quota.
+      {/* AI Usage Section */}
+      <section className="card p-6 bg-surface shadow-card">
+        <div className="flex items-center gap-2.5 border-b border-line pb-3 mb-4">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200">
+            <Sparkles size={15} aria-hidden="true" />
+          </span>
+          <h2 className="text-base font-bold text-ink">AI Usage & Quota</h2>
+        </div>
+        <p className="text-xs text-muted mb-4">
+          Free-tier Gemini integrations are governed by fair-use rate limiting to guarantee equitable availability.
         </p>
         {aiStatus ? (
-          <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
-            <div className="rounded border border-line bg-canvasAlt/60 px-3 py-2">
-              <p className="text-2xs uppercase tracking-wide text-muted">Status</p>
-              <p className="mt-0.5 text-ink">{aiStatus.configured ? 'Configured' : 'Not configured'}</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Service Status</p>
+              <p className="mt-1 text-xs font-bold text-ink flex items-center gap-1.5">
+                <span className={`h-2 w-2 rounded-full ${aiStatus.configured ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                {aiStatus.configured ? 'Active' : 'Unconfigured'}
+              </p>
             </div>
-            <div className="rounded border border-line bg-canvasAlt/60 px-3 py-2">
-              <p className="text-2xs uppercase tracking-wide text-muted">Requests today</p>
-              <p className="mt-0.5 tabular-nums text-ink">
+            <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Daily Calls</p>
+              <p className="mt-1 text-sm font-bold tabular-nums text-ink">
                 {aiStatus.usage?.used ?? 0} / {aiStatus.usage?.limit ?? '—'}
               </p>
             </div>
-            <div className="rounded border border-line bg-canvasAlt/60 px-3 py-2">
-              <p className="text-2xs uppercase tracking-wide text-muted">Fallback</p>
-              <p className="mt-0.5 text-ink">Rule-based analysis</p>
+            <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Scoring Engine</p>
+              <p className="mt-1 text-xs font-semibold text-ink">100-pt Rubric Fallback</p>
             </div>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-muted">AI status could not be loaded right now.</p>
+          <p className="text-xs text-muted">Status unavailable.</p>
         )}
-        <p className="mt-3 text-xs text-muted">
-          Read the{' '}
-          <Link to="/privacy" className="text-accent hover:underline">
-            privacy information
-          </Link>{' '}
-          for what is sent to the AI provider.
-        </p>
       </section>
 
-      <section className="card mt-4 border-danger/25 p-5">
-        <h2 className="flex items-center gap-2 text-lg text-danger">
-          <ShieldAlert size={16} aria-hidden="true" /> Delete account
-        </h2>
-        <p className="mt-1 text-sm text-muted">
-          Deleting your account permanently removes your user record and every portfolio you own, including published
-          links. This cannot be undone.
+      {/* Danger Zone */}
+      <section className="card p-6 border-red-200 bg-red-50/30 shadow-card">
+        <div className="flex items-center gap-2.5 border-b border-red-200/60 pb-3 mb-4">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-100 text-red-700">
+            <ShieldAlert size={15} aria-hidden="true" />
+          </span>
+          <h2 className="text-base font-bold text-red-900">Danger Zone</h2>
+        </div>
+        <p className="text-xs text-red-900/80 mb-4 leading-relaxed">
+          Permanently delete your user credentials and all associated portfolios, drafts, and public URLs. This action cannot be reversed.
         </p>
-        <Button variant="danger" className="mt-3" onClick={() => setDeleteOpen(true)}>
-          <Trash2 size={14} aria-hidden="true" /> Delete my account
+        <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
+          <Trash2 size={13} aria-hidden="true" />
+          <span>Delete my account permanently</span>
         </Button>
       </section>
 
@@ -257,12 +271,12 @@ export default function Settings() {
         }}
         onConfirm={deleteAccount}
         busy={deleting}
-        title="Delete your account?"
-        description="This removes your account and all portfolios permanently. Enter your password to confirm."
+        title="Permanently delete your account?"
+        description="All portfolios, drafts, and public URLs will be permanently deleted from the database. Type your password to proceed."
         confirmLabel="Delete account permanently"
       >
-        <div className="mt-3">
-          <Field label="Password" htmlFor="delete-password" required error={deleteError}>
+        <div className="mt-4">
+          <Field label="Current Password" htmlFor="delete-password" required error={deleteError}>
             <PasswordInput
               id="delete-password"
               value={deletePassword}
@@ -270,8 +284,9 @@ export default function Settings() {
             />
           </Field>
           {deleteError ? (
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-danger">
-              <AlertCircle size={12} aria-hidden="true" /> {deleteError}
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-red-600">
+              <AlertCircle size={13} aria-hidden="true" />
+              <span>{deleteError}</span>
             </p>
           ) : null}
         </div>

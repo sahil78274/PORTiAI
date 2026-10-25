@@ -15,6 +15,8 @@ import {
   Globe,
   ExternalLink,
   RotateCcw,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { Button, TextInput, Spinner, Alert } from '../components/ui/Primitives.jsx';
 import Modal from '../components/ui/Modal.jsx';
@@ -38,16 +40,16 @@ import { getTemplate } from '../utils/templates.js';
 
 const TABS = [
   { id: 'content', label: 'Content' },
-  { id: 'design', label: 'Design' },
-  { id: 'sections', label: 'Sections' },
+  { id: 'design', label: 'Design & Theme' },
+  { id: 'sections', label: 'Order & Visibility' },
 ];
 
 const CONTENT_BLOCKS = [
-  { id: 'profile', label: 'Profile', Component: ProfileSection },
-  { id: 'skills', label: 'Skills', Component: SkillsSection },
-  { id: 'education', label: 'Education', Component: EducationSection },
-  { id: 'projects', label: 'Projects', Component: ProjectsSection },
-  { id: 'experience', label: 'Experience & achievements', Component: ExperienceSection },
+  { id: 'profile', label: 'Profile & Bio', Component: ProfileSection },
+  { id: 'skills', label: 'Technical Skills', Component: SkillsSection },
+  { id: 'education', label: 'Education History', Component: EducationSection },
+  { id: 'projects', label: 'Portfolio Projects', Component: ProjectsSection },
+  { id: 'experience', label: 'Experience & Achievements', Component: ExperienceSection },
 ];
 
 export default function Editor() {
@@ -172,25 +174,25 @@ export default function Editor() {
       draft.projects.length,
       draft.experience.length || draft.achievements.length,
     ].filter(Boolean).length;
-    return `${filled} of 6 core areas filled in`;
+    return `${filled} of 6 core sections complete`;
   }, [draft]);
 
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Spinner label="Loading portfolio…" />
+        <Spinner label="Loading portfolio editor…" />
       </div>
     );
   }
 
   if (notFound) {
     return (
-      <div className="card mx-auto max-w-lg p-6 text-center">
-        <h1 className="text-xl">Portfolio not found</h1>
-        <p className="mt-2 text-sm text-inkSoft">
-          This portfolio does not exist, or it belongs to another account. Portfolios are private to their owner.
+      <div className="card mx-auto max-w-lg p-8 text-center bg-surface shadow-card">
+        <h1 className="text-xl font-bold text-ink">Portfolio not found</h1>
+        <p className="mt-2 text-xs text-muted">
+          This portfolio does not exist, or it belongs to another account.
         </p>
-        <Link to="/dashboard" className="btn-primary mt-4">
+        <Link to="/dashboard" className="btn-primary mt-5">
           Back to dashboard
         </Link>
       </div>
@@ -201,8 +203,8 @@ export default function Editor() {
     return (
       <Alert tone="error" title="Could not load this portfolio">
         {loadError}
-        <div className="mt-2">
-          <Button variant="secondary" onClick={load}>
+        <div className="mt-3">
+          <Button variant="secondary" size="sm" onClick={load}>
             Try again
           </Button>
         </div>
@@ -211,33 +213,39 @@ export default function Editor() {
   }
 
   return (
-    <div>
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-3">
+    <div className="space-y-4">
+      {/* Top Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4 shadow-card">
         <div className="min-w-0">
-          <button type="button" onClick={leaveToDashboard} className="inline-flex items-center gap-1 text-xs text-muted hover:text-ink">
-            <ArrowLeft size={12} aria-hidden="true" /> Back to portfolios
+          <button
+            type="button"
+            onClick={leaveToDashboard}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-ink transition-colors"
+          >
+            <ArrowLeft size={13} aria-hidden="true" />
+            <span>Portfolios</span>
           </button>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <TextInput
+          <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+            <input
+              type="text"
               value={draft.title}
               onChange={(event) => updateDraft({ ...draft, title: event.target.value })}
               maxLength={120}
               aria-label="Portfolio title"
-              className="w-full max-w-xs !py-1 text-base font-medium"
+              className="rounded-lg border border-transparent px-2 py-0.5 text-lg font-bold tracking-tight text-ink hover:border-line focus:border-accent focus:bg-white focus:outline-none transition-all max-w-sm sm:max-w-md"
             />
             <span className={portfolio.published ? 'badge-published' : 'badge-draft'}>
               {portfolio.published ? 'Published' : 'Draft'}
             </span>
           </div>
-          <p className="mt-1 text-xs text-muted">
-            {getTemplate(draft.templateId).name} · {progressHint} ·{' '}
+          <p className="mt-1 text-2xs text-muted pl-2">
+            <span className="font-semibold text-slate-700">{getTemplate(draft.templateId).name}</span> · {progressHint} ·{' '}
             {dirty ? (
-              <span className="text-warning">unsaved changes</span>
+              <span className="font-semibold text-amber-600">● Unsaved changes</span>
             ) : lastSaved ? (
-              <span className="text-success">saved {formatRelative(lastSaved)}</span>
+              <span className="font-medium text-emerald-600">Saved {formatRelative(lastSaved)}</span>
             ) : (
-              `updated ${formatRelative(portfolio.updatedAt)}`
+              `Updated ${formatRelative(portfolio.updatedAt)}`
             )}
           </p>
         </div>
@@ -249,72 +257,98 @@ export default function Editor() {
                 href={`/p/${portfolio.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-ghost px-2 py-1 text-xs"
+                className="btn-ghost btn-sm text-xs font-semibold"
               >
-                <ExternalLink size={13} aria-hidden="true" /> Public page
+                <ExternalLink size={13} aria-hidden="true" />
+                <span>Public page</span>
               </a>
               <Button variant="ghost" size="sm" onClick={copyLink}>
-                <Copy size={13} aria-hidden="true" /> Copy link
+                <Copy size={13} aria-hidden="true" />
+                <span>Copy link</span>
               </Button>
             </>
           ) : null}
-          <Link to={`/dashboard/portfolio/${id}/analyze`} className="btn-ghost px-2.5 py-1 text-xs">
-            <Gauge size={13} aria-hidden="true" /> Analyze
+
+          <Link to={`/dashboard/portfolio/${id}/analyze`} className="btn-ghost btn-sm text-xs font-semibold">
+            <Gauge size={13} aria-hidden="true" />
+            <span>Analyze</span>
           </Link>
+
           {dirty ? (
             <Button variant="ghost" size="sm" onClick={revert}>
-              <RotateCcw size={13} aria-hidden="true" /> Revert
+              <RotateCcw size={13} aria-hidden="true" />
+              <span>Revert</span>
             </Button>
           ) : null}
+
           <Button variant="secondary" size="sm" onClick={() => setPreviewOpen(true)}>
-            <Eye size={13} aria-hidden="true" /> Preview
+            <Eye size={13} aria-hidden="true" />
+            <span>Full Preview</span>
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => save()} loading={saving} disabled={!dirty && !saving}>
-            <Save size={13} aria-hidden="true" /> {dirty ? 'Save changes' : 'Saved'}
+
+          <Button
+            variant={dirty ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => save()}
+            loading={saving}
+            disabled={!dirty && !saving}
+          >
+            <Save size={13} aria-hidden="true" />
+            <span>{dirty ? 'Save changes' : 'Saved'}</span>
           </Button>
-          <Button size="sm" onClick={togglePublish} loading={publishing}>
+
+          <Button
+            variant={portfolio.published ? 'secondary' : 'primary'}
+            size="sm"
+            onClick={togglePublish}
+            loading={publishing}
+          >
             {portfolio.published ? <Globe size={13} aria-hidden="true" /> : <Send size={13} aria-hidden="true" />}
-            {portfolio.published ? 'Unpublish' : 'Publish'}
+            <span>{portfolio.published ? 'Unpublish' : 'Publish'}</span>
           </Button>
         </div>
       </div>
 
       {dirty ? (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-warning">
-          <AlertCircle size={12} aria-hidden="true" /> Unsaved changes — use “Save changes” to store them in the database.
-        </p>
+        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-medium text-amber-800">
+          <AlertCircle size={14} className="shrink-0 text-amber-600" aria-hidden="true" />
+          <span>You have unsaved changes. Remember to click &ldquo;Save changes&rdquo; before leaving.</span>
+        </div>
       ) : null}
 
       {/* Mobile view switch */}
-      <div className="mt-3 flex lg:hidden">
-        <div className="flex w-full rounded border border-lineStrong bg-surface p-0.5">
+      <div className="flex lg:hidden">
+        <div className="flex w-full rounded-xl border border-line bg-surface p-1 shadow-2xs">
           <button
             type="button"
             onClick={() => setMobileView('edit')}
             aria-pressed={mobileView === 'edit'}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-sm px-2 py-1.5 text-xs ${
-              mobileView === 'edit' ? 'bg-canvasAlt font-medium text-ink' : 'text-muted'
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold ${
+              mobileView === 'edit' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-500'
             }`}
           >
-            <Pencil size={13} aria-hidden="true" /> Edit
+            <Pencil size={13} aria-hidden="true" />
+            <span>Edit Sections</span>
           </button>
           <button
             type="button"
             onClick={() => setMobileView('preview')}
             aria-pressed={mobileView === 'preview'}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-sm px-2 py-1.5 text-xs ${
-              mobileView === 'preview' ? 'bg-canvasAlt font-medium text-ink' : 'text-muted'
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold ${
+              mobileView === 'preview' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-500'
             }`}
           >
-            <Eye size={13} aria-hidden="true" /> Preview
+            <Eye size={13} aria-hidden="true" />
+            <span>Live Preview</span>
           </button>
         </div>
       </div>
 
-      <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+      {/* Main Grid: Left editor / Right preview */}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
         {/* Editing pane */}
         <div className={`${mobileView === 'edit' ? 'block' : 'hidden'} lg:block`}>
-          <div className="flex border-b border-line" role="tablist" aria-label="Editor panels">
+          <div className="flex rounded-xl border border-line bg-slate-100/70 p-1 mb-3" role="tablist" aria-label="Editor panels">
             {TABS.map((item) => (
               <button
                 key={item.id}
@@ -322,8 +356,10 @@ export default function Editor() {
                 type="button"
                 aria-selected={tab === item.id}
                 onClick={() => setTab(item.id)}
-                className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${
-                  tab === item.id ? 'border-accent text-ink' : 'border-transparent text-muted hover:text-ink'
+                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold tracking-tight transition-all ${
+                  tab === item.id
+                    ? 'bg-white text-ink shadow-2xs'
+                    : 'text-slate-500 hover:text-ink'
                 }`}
               >
                 {item.label}
@@ -331,27 +367,41 @@ export default function Editor() {
             ))}
           </div>
 
-          <div className="card mt-3 p-4">
+          <div className="card p-5 bg-surface shadow-card">
             {tab === 'content' ? (
               <div className="space-y-3">
                 {CONTENT_BLOCKS.map((block) => {
                   const open = openBlock === block.id;
                   const Component = block.Component;
                   return (
-                    <section key={block.id} className="rounded border border-line">
+                    <section
+                      key={block.id}
+                      className={`rounded-xl border transition-all ${
+                        open ? 'border-lineStrong bg-white shadow-xs ring-1 ring-slate-200/50' : 'border-line bg-surface hover:border-lineStrong'
+                      }`}
+                    >
                       <h2>
                         <button
                           type="button"
                           onClick={() => setOpenBlock(open ? '' : block.id)}
                           aria-expanded={open}
-                          className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium text-ink hover:bg-canvasAlt/60"
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-semibold text-ink"
                         >
-                          {block.label}
-                          <span className="text-xs text-muted">{open ? 'Hide' : 'Edit'}</span>
+                          <span className="flex items-center gap-2">
+                            {open ? (
+                              <ChevronDown size={14} className="text-accent" aria-hidden="true" />
+                            ) : (
+                              <ChevronRight size={14} className="text-slate-400" aria-hidden="true" />
+                            )}
+                            <span className="text-sm font-semibold">{block.label}</span>
+                          </span>
+                          <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full ${open ? 'bg-accent-soft text-accent' : 'bg-slate-100 text-slate-500'}`}>
+                            {open ? 'Open' : 'Edit'}
+                          </span>
                         </button>
                       </h2>
                       {open ? (
-                        <div className="border-t border-line px-3 py-3">
+                        <div className="border-t border-line px-4 py-4 animate-in fade-in duration-100">
                           <Component draft={draft} setDraft={updateDraft} />
                         </div>
                       ) : null}
@@ -369,34 +419,47 @@ export default function Editor() {
 
         {/* Live preview pane */}
         <div className={`${mobileView === 'preview' ? 'block' : 'hidden'} lg:block`}>
-          <div className="lg:sticky lg:top-[72px]">
-            <div className="flex items-center justify-between gap-2 border-b border-line pb-2">
-              <p className="text-2xs uppercase tracking-widest text-muted">Live preview</p>
-              <div className="flex items-center gap-1.5">
-                <span className="text-2xs text-muted">{getTemplate(draft.templateId).name}</span>
-                <div className="flex items-center gap-0.5 rounded border border-lineStrong bg-surface p-0.5">
+          <div className="lg:sticky lg:top-[76px]">
+            <div className="flex items-center justify-between gap-2 border-b border-line pb-2.5 mb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+                <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Live Preview Frame</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="badge-draft text-2xs">{getTemplate(draft.templateId).name}</span>
+                <div className="flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 shadow-2xs">
                   <button
                     type="button"
                     onClick={() => setDevice('desktop')}
                     aria-pressed={device === 'desktop'}
                     aria-label="Desktop preview"
-                    className={`rounded-sm p-1 ${device === 'desktop' ? 'bg-canvasAlt text-ink' : 'text-muted'}`}
+                    className={`rounded-md p-1 transition-colors ${
+                      device === 'desktop' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-400 hover:text-slate-700'
+                    }`}
                   >
-                    <Monitor size={13} aria-hidden="true" />
+                    <Monitor size={14} aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setDevice('mobile')}
                     aria-pressed={device === 'mobile'}
                     aria-label="Mobile preview"
-                    className={`rounded-sm p-1 ${device === 'mobile' ? 'bg-canvasAlt text-ink' : 'text-muted'}`}
+                    className={`rounded-md p-1 transition-colors ${
+                      device === 'mobile' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-400 hover:text-slate-700'
+                    }`}
                   >
-                    <Smartphone size={13} aria-hidden="true" />
+                    <Smartphone size={14} aria-hidden="true" />
                   </button>
                 </div>
               </div>
             </div>
-            <div className={`mt-2 overflow-hidden rounded border border-line bg-white ${device === 'mobile' ? 'mx-auto max-w-[380px]' : ''}`}>
+
+            <div
+              className={`overflow-hidden rounded-2xl border border-line bg-white shadow-raised transition-all duration-300 ${
+                device === 'mobile' ? 'mx-auto max-w-[380px]' : ''
+              }`}
+            >
               <TemplatePreviewFrame
                 designWidth={device === 'mobile' ? 390 : 1000}
                 designHeight={device === 'mobile' ? 1500 : 1400}
@@ -405,8 +468,8 @@ export default function Editor() {
                 <PortfolioRenderer portfolio={draft} />
               </TemplatePreviewFrame>
             </div>
-            <p className="mt-2 text-2xs text-muted">
-              Preview updates instantly. Saved content is what visitors see on the public page.
+            <p className="mt-2.5 text-center text-2xs text-slate-400">
+              Instant hot reload. What you see is rendered identically on the public URL.
             </p>
           </div>
         </div>
@@ -416,7 +479,11 @@ export default function Editor() {
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         title={`Preview — ${draft.title}`}
-        description={portfolio.published ? 'This is what visitors see at your public link.' : 'Draft preview. Publish to make it public.'}
+        description={
+          portfolio.published
+            ? 'This matches what visitors see at your public link.'
+            : 'Draft preview. Click Publish to make it public.'
+        }
         size="xl"
         footer={
           <>
@@ -429,18 +496,18 @@ export default function Editor() {
           </>
         }
       >
-        <div className="overflow-hidden rounded border border-line bg-white">
+        <div className="overflow-hidden rounded-xl border border-line bg-white shadow-card">
           <TemplatePreviewFrame designWidth={1050} designHeight={1300} label="Full portfolio preview">
             <PortfolioRenderer portfolio={draft} />
           </TemplatePreviewFrame>
         </div>
         {dirty ? (
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-warning">
-            <AlertCircle size={12} aria-hidden="true" /> This preview includes unsaved edits. Save before publishing.
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700">
+            <AlertCircle size={13} aria-hidden="true" /> This preview includes unsaved edits. Save before publishing.
           </p>
         ) : (
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-success">
-            <Check size={12} aria-hidden="true" /> Preview matches the saved version.
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-emerald-700">
+            <Check size={13} aria-hidden="true" /> Preview is synchronized with the saved database record.
           </p>
         )}
       </Modal>

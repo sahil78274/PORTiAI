@@ -1,6 +1,7 @@
 import MinimalTemplate from './MinimalTemplate.jsx';
 import DeveloperTemplate from './DeveloperTemplate.jsx';
 import EditorialTemplate from './EditorialTemplate.jsx';
+import { normalizeTemplateId } from '../utils/templates.js';
 
 const REGISTRY = {
   minimal: MinimalTemplate,
@@ -10,10 +11,12 @@ const REGISTRY = {
 
 /**
  * Renders the saved template for a portfolio object.
- * Unknown template ids fall back to Minimal Professional rather than breaking.
+ * Unknown or missing template ids fall back safely to Minimal Professional rather than breaking.
  */
 export default function PortfolioRenderer({ portfolio }) {
-  const Template = REGISTRY[portfolio?.templateId] || MinimalTemplate;
+  const rawId = portfolio?.templateId || portfolio?.template;
+  const canonicalId = normalizeTemplateId(rawId);
+  const Template = REGISTRY[canonicalId] || MinimalTemplate;
   return <Template portfolio={portfolio} />;
 }
 

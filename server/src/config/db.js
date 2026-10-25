@@ -15,14 +15,23 @@ let memoryServer = null;
  * MongoDB Atlas account. Production deployments must use MONGODB_URI.
  */
 async function startLocalMongo() {
-  const { MongoMemoryServer } = await import('mongodb-memory-server');
   const dbPath = path.resolve(process.cwd(), env.localMongoPath);
   await fs.mkdir(dbPath, { recursive: true });
-  memoryServer = await MongoMemoryServer.create({
-    instance: { dbPath, storageEngine: 'wiredTiger' },
-  });
-  console.log(`[db] Started local MongoDB instance (data dir: ${dbPath})`);
-  return memoryServer.getUri('portiai');
+  try {
+    const { MongoMemoryServer } = await import('mongodb-memory-server');
+    memoryServer = await MongoMemoryServer.create({
+      instance: { dbPath, storageEngine: 'wiredTiger' },
+    });
+    console.log(`[db] Started local MongoDB instance (data dir: ${dbPath})`);
+    return memoryServer.getUri('portiai');
+  } catch (error) {
+    console.warn(`[db] MongoMemoryServer unavailable (${error.message}); falling back to local MongoDB twin.`);
+    const { createMongodbTwinServer } = await import('@volter/twin-mongodb');
+    const twin = await createMongodbTwinServer({ port: 27017 });
+    memoryServer = twin;
+    console.log(`[db] Started local MongoDB twin instance at ${twin.url}`);
+    return `${twin.url}/portiai`;
+  }
 }
 
 export async function connectDatabase() {
@@ -74,7 +83,9 @@ export async function connectDatabase() {
 export async function disconnectDatabase() {
   await mongoose.connection.close();
   if (memoryServer) {
-    await memoryServer.stop();
+    if (typeof memoryServer.stop === 'function') {
+      await memoryServer.stop();
+    }
     memoryServer = null;
   }
 }

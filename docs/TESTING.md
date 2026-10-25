@@ -11,10 +11,10 @@ Environment: Linux sandbox, Node.js 20.20.2, npm 10.8.2, MongoDB `mongod` from
 
 ## 1. Backend HTTP suite — `cd server && npm test`
 
-41 checks, 41 passed. The suite boots the real Express app (`createApp()`), connects to a real MongoDB
+42 checks, 42 passed. The suite boots the real Express app (`createApp()`), connects to a real MongoDB
 instance, and uses a local HTTP stub that speaks the Gemini REST contract. No application code is
-mocked: routing, middleware, validation, persistence, authorisation, sanitisation and error mapping
-are all exercised over HTTP.
+mocked: routing, middleware, validation, persistence, authorisation, sanitisation, template selection
+normalization and error mapping are all exercised over HTTP.
 
 ```
 Health & security headers
@@ -38,6 +38,7 @@ Portfolio create, read, update, delete
   ✓ search and status filters work
   ✓ duplicate creates an independent copy without publishing it
   ✓ template switching keeps content intact
+  ✓ template selection regression: creation, normalization, and safe fallback across all templates
   ✓ invalid portfolio ids and empty bodies return 400
 
 Ownership authorisation
@@ -76,11 +77,12 @@ Account settings
 AI unavailable fallback
   ✓ without GEMINI_API_KEY the API reports 503 and analysis still works
 
-41/41 checks passed
+42/42 checks passed
 ```
 
 Notable assertions, for the report:
 
+* template selection regression tests prove all 3 templates (`minimal`, `developer`, `editorial`) persist properly across creation, update, case variations, aliases, and safe fallback for invalid IDs without crashing;
 * rubric totals exactly 100 points across 7 categories after every change;
 * `javascript:` URLs are stripped from `photoUrl` and `projectUrl`, HTML tags are removed from text;
 * a second user receives `404` (not `403`) for every private verb on someone else's portfolio;
@@ -99,6 +101,37 @@ Notable assertions, for the report:
 | `analyzeRequestSchema` not imported | `ReferenceError` at route registration | added the missing import |
 | express-rate-limit 8 IPv6 guard | server refused to boot (`ERR_ERL_KEY_GEN_IPV6`) | custom key generator now uses `ipKeyGenerator()` |
 | Test isolation | a logout test invalidated the shared user's session | logout test now uses its own account (documented in the test) |
+
+---
+
+## 1b. Frontend unit & regression suite — `cd client && npm test`
+
+8 tests, 8 passed. Uses Node's built-in test runner to verify template registries, template normalization, case/alias tolerance, safe fallback, draft translation, and payload consistency.
+
+```
+TAP version 13
+# Subtest: TEMPLATES registry contains exactly 3 documented templates
+ok 1 - TEMPLATES registry contains exactly 3 documented templates
+# Subtest: normalizeTemplateId handles canonical IDs correctly
+ok 2 - normalizeTemplateId handles canonical IDs correctly
+# Subtest: normalizeTemplateId handles casing and whitespace
+ok 3 - normalizeTemplateId handles casing and whitespace
+# Subtest: normalizeTemplateId handles template aliases
+ok 4 - normalizeTemplateId handles template aliases
+# Subtest: normalizeTemplateId safely falls back to minimal on missing or unknown input
+ok 5 - normalizeTemplateId safely falls back to minimal on missing or unknown input
+# Subtest: getTemplate returns matching template object or minimal fallback
+ok 6 - getTemplate returns matching template object or minimal fallback
+# Subtest: draftFromPortfolio preserves chosen templateId and normalises invalid ones
+ok 7 - draftFromPortfolio preserves chosen templateId and normalises invalid ones
+# Subtest: draftToPayload preserves canonical templateId in outgoing payload
+ok 8 - draftToPayload preserves canonical templateId in outgoing payload
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+```
 
 ---
 

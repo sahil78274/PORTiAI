@@ -26,17 +26,17 @@ import TemplatePreviewFrame from '../marketing/TemplatePreviewFrame.jsx';
 import { wordCount } from '../../utils/format.js';
 
 const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel = 'Remove' }) => (
-  <div className="rounded border border-line bg-surface p-3">
-    <div className="mb-2.5 flex items-center justify-between gap-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+  <div className="rounded-xl border border-line bg-surface p-4 shadow-xs">
+    <div className="mb-3 flex items-center justify-between gap-2 border-b border-line pb-2.5">
+      <p className="text-2xs font-bold uppercase tracking-wider text-muted">
         {title} {index + 1}
       </p>
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => onMove(index, -1)}
           disabled={index === 0}
-          className="rounded p-1 text-muted hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
+          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-ink disabled:opacity-30 transition-colors"
           aria-label={`Move ${title} ${index + 1} up`}
         >
           <ArrowUp size={13} aria-hidden="true" />
@@ -45,7 +45,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
           type="button"
           onClick={() => onMove(index, 1)}
           disabled={index === total - 1}
-          className="rounded p-1 text-muted hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
+          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-ink disabled:opacity-30 transition-colors"
           aria-label={`Move ${title} ${index + 1} down`}
         >
           <ArrowDown size={13} aria-hidden="true" />
@@ -53,20 +53,21 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
         <button
           type="button"
           onClick={() => onRemove(index)}
-          className="rounded p-1 text-danger hover:bg-dangerSoft"
+          className="rounded-md p-1 text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
           aria-label={`${removeLabel} ${title} ${index + 1}`}
         >
           <Trash2 size={13} aria-hidden="true" />
         </button>
       </div>
     </div>
-    <div className="space-y-3">{children}</div>
+    <div className="space-y-3.5">{children}</div>
   </div>
 );
 
 const AddButton = ({ onClick, children }) => (
-  <Button variant="secondary" size="sm" onClick={onClick} className="mt-1">
-    <Plus size={13} aria-hidden="true" /> {children}
+  <Button variant="secondary" size="sm" onClick={onClick} className="mt-2 text-xs font-semibold">
+    <Plus size={13} aria-hidden="true" />
+    <span>{children}</span>
   </Button>
 );
 
@@ -808,6 +809,20 @@ export function ExperienceSection({ draft, setDraft }) {
 export function DesignSection({ draft, setDraft, showPreview = true }) {
   const setTheme = (field, value) => setDraft({ ...draft, theme: { ...draft.theme, [field]: value } });
 
+  const handleSelectTemplate = (template) => {
+    const currentAccent = draft.theme?.accent;
+    const defaultAccents = TEMPLATES.map((t) => t.accent);
+    const shouldUpdateAccent = !currentAccent || defaultAccents.includes(currentAccent);
+    setDraft({
+      ...draft,
+      templateId: template.id,
+      theme: {
+        ...draft.theme,
+        accent: shouldUpdateAccent ? template.accent : currentAccent,
+      },
+    });
+  };
+
   return (
     <div className="space-y-4">
       <fieldset>
@@ -819,17 +834,17 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
               <button
                 key={template.id}
                 type="button"
-                onClick={() => setDraft({ ...draft, templateId: template.id })}
+                onClick={() => handleSelectTemplate(template)}
                 aria-pressed={active}
-                className={`rounded border p-2 text-left transition-colors ${
-                  active ? 'border-accent bg-accent-soft' : 'border-line bg-surface hover:border-lineStrong'
+                className={`rounded-xl border p-3.5 text-left transition-all ${
+                  active ? 'border-accent bg-accent-soft ring-1 ring-accent shadow-xs' : 'border-line bg-surface hover:border-lineStrong hover:bg-slate-50'
                 }`}
               >
                 <span className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-ink">{template.name}</span>
-                  {active ? <Check size={13} className="text-accent" aria-hidden="true" /> : null}
+                  <span className="text-xs font-bold text-ink">{template.name}</span>
+                  {active ? <Check size={14} className="text-accent" aria-hidden="true" /> : null}
                 </span>
-                <span className="mt-0.5 block text-2xs leading-4 text-muted">{template.tagline}</span>
+                <span className="mt-1 block text-2xs leading-relaxed text-muted">{template.tagline}</span>
               </button>
             );
           })}
@@ -838,7 +853,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
 
       <fieldset>
         <legend className="label">Accent colour</legend>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {ACCENT_SWATCHES.map((swatch) => (
             <button
               key={swatch.value}
@@ -847,19 +862,19 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
               aria-pressed={draft.theme.accent === swatch.value}
               aria-label={swatch.label}
               title={swatch.label}
-              className={`h-7 w-7 rounded-full border-2 ${
-                draft.theme.accent === swatch.value ? 'border-ink' : 'border-transparent'
+              className={`h-7 w-7 rounded-full transition-transform hover:scale-110 shadow-2xs ${
+                draft.theme.accent === swatch.value ? 'ring-2 ring-accent ring-offset-2 scale-105' : 'ring-1 ring-black/15'
               }`}
               style={{ backgroundColor: swatch.value }}
             />
           ))}
-          <label className="ml-1 inline-flex items-center gap-2 text-xs text-muted">
+          <label className="ml-1 inline-flex items-center gap-2 text-xs text-muted font-medium">
             Custom
             <input
               type="color"
               value={draft.theme.accent}
               onChange={(event) => setTheme('accent', event.target.value)}
-              className="h-7 w-9 cursor-pointer rounded border border-lineStrong bg-surface p-0.5"
+              className="h-7 w-9 cursor-pointer rounded-lg border border-line bg-surface p-0.5 shadow-2xs"
               aria-label="Custom accent colour"
             />
           </label>

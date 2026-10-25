@@ -1,3 +1,5 @@
+import { normalizeTemplateId } from './templates.js';
+
 export const SECTION_DEFINITIONS = [
   { id: 'about', label: 'About' },
   { id: 'skills', label: 'Skills' },
@@ -38,10 +40,11 @@ export const emptyDraft = () => ({
 export const draftFromPortfolio = (portfolio) => {
   const base = emptyDraft();
   if (!portfolio) return base;
+  const rawId = portfolio.templateId || portfolio.template;
   return {
     ...base,
     title: portfolio.title || base.title,
-    templateId: portfolio.templateId || base.templateId,
+    templateId: normalizeTemplateId(rawId || base.templateId),
     profile: { ...base.profile, ...(portfolio.profile || {}), links: portfolio.profile?.links || [] },
     skills: portfolio.skills || [],
     education: portfolio.education || [],
@@ -60,7 +63,7 @@ export const draftFromPortfolio = (portfolio) => {
 /** Payload sent to PUT /api/portfolios/:id (content fields only). */
 export const draftToPayload = (draft) => ({
   title: draft.title,
-  templateId: draft.templateId,
+  templateId: normalizeTemplateId(draft.templateId),
   profile: draft.profile,
   skills: draft.skills,
   education: draft.education,
