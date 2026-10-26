@@ -86,7 +86,7 @@ export default function MyPortfolios() {
   const debounced = useDebouncedValue(search.trim(), 300);
   const [status, setStatus] = useState(params.get('status') || 'all');
   const [sort, setSort] = useState('updated');
-  const [view, setView] = useState('grid');
+  const [view, setView] = useState('list');
   const [busyId, setBusyId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -114,6 +114,13 @@ export default function MyPortfolios() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // The dashboard search box navigates here with ?q=; adopt it when it changes.
+  useEffect(() => {
+    const incoming = params.get('q') || '';
+    setSearch((current) => (current === incoming ? current : incoming));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
 
   // Keep the URL shareable with the active filters.
   useEffect(() => {
@@ -207,7 +214,7 @@ export default function MyPortfolios() {
       />
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-white p-2.5">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-2.5">
         <div className="relative min-w-[180px] flex-1">
           <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
@@ -278,7 +285,7 @@ export default function MyPortfolios() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((index) => (
-            <div key={index} className="rounded-lg border border-line bg-white p-3">
+            <div key={index} className="rounded-lg border border-line bg-surface p-3">
               <div className="skeleton aspect-[16/10] w-full" />
               <div className="skeleton mt-4 h-4 w-32" />
               <div className="skeleton mt-2 h-3 w-48" />
@@ -323,7 +330,7 @@ export default function MyPortfolios() {
       ) : view === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {portfolios.map((portfolio) => (
-            <article key={portfolio.id} className="group flex flex-col overflow-hidden rounded-lg border border-line bg-white transition-colors hover:border-lineStrong">
+            <article key={portfolio.id} className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-colors hover:border-lineStrong">
               <button type="button" onClick={() => openPreview(portfolio)} className="text-left" aria-label={`Preview ${portfolio.title}`}>
                 <Thumbnail portfolio={portfolio} large />
               </button>
@@ -389,7 +396,7 @@ export default function MyPortfolios() {
           ))}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-line bg-white">
+        <div className="overflow-hidden rounded-lg border border-line bg-surface">
           <ul className="divide-y divide-line">
             {portfolios.map((portfolio) => (
               <li key={portfolio.id} className="flex flex-wrap items-center gap-3 p-3 transition-colors hover:bg-canvasAlt">
@@ -439,7 +446,7 @@ export default function MyPortfolios() {
       )}
 
       {!loading && portfolios.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-3 text-[11px] text-faint">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] text-faint">
           <span className="inline-flex items-center gap-1.5">
             <Globe2 size={12} aria-hidden="true" />
             Published portfolios are readable by anyone with the link. Drafts return 404 publicly.
@@ -501,7 +508,7 @@ export default function MyPortfolios() {
             <Spinner label="Loading saved portfolio…" />
           </div>
         ) : previewData ? (
-          <div className="overflow-hidden rounded-lg border border-line bg-white">
+          <div className="overflow-hidden rounded-lg border border-line bg-surface">
             <div className="h-[60vh] overflow-y-auto">
               <PortfolioRenderer
                 portfolio={previewData}

@@ -3,12 +3,14 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertCircle,
   ArrowLeft,
+  Briefcase,
   Check,
   Cloud,
   CloudOff,
   Eye,
   ExternalLink,
   Gauge,
+  Layers,
   LayoutList,
   Loader2,
   Monitor,
@@ -41,13 +43,13 @@ import { formatRelative } from '../utils/format.js';
 import { getTemplate } from '../utils/templates.js';
 
 const TABS = [
-  { id: 'profile', label: 'Profile', icon: UserRound },
-  { id: 'skills', label: 'Skills', icon: Wrench },
-  { id: 'projects', label: 'Projects', icon: LayoutList },
-  { id: 'experience', label: 'Experience', icon: LayoutList },
-  { id: 'design', label: 'Design', icon: Palette },
-  { id: 'sections', label: 'Sections', icon: LayoutList },
-  { id: 'blog', label: 'Blog', icon: Newspaper },
+  { id: 'profile', label: 'Basic Information', short: 'Profile', icon: UserRound },
+  { id: 'skills', label: 'Skills', short: 'Skills', icon: Wrench },
+  { id: 'projects', label: 'Projects', short: 'Projects', icon: LayoutList },
+  { id: 'experience', label: 'Experience & Education', short: 'Experience', icon: Briefcase },
+  { id: 'design', label: 'Appearance', short: 'Design', icon: Palette },
+  { id: 'sections', label: 'Section order', short: 'Sections', icon: Layers },
+  { id: 'blog', label: 'Blog', short: 'Blog', icon: Newspaper },
 ];
 
 const DEVICES = [
@@ -100,7 +102,7 @@ function BlogSettings({ draft, setDraft }) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-line bg-white p-4">
+      <div className="rounded-lg border border-line bg-surface p-4">
         <p className="text-sm font-medium text-ink">Writing posts</p>
         <p className="mt-1 text-xs leading-relaxed text-muted">
           Posts live in the Blog studio: draft in Markdown, use AI writing help, and publish when ready. Publishing a
@@ -382,25 +384,48 @@ export default function Editor() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,440px)_1fr]">
         {/* Editing panel */}
         <section className={`card overflow-hidden ${mobilePane === 'preview' ? 'hidden xl:block' : ''}`} aria-label="Portfolio editor">
-          <div className="flex gap-1 overflow-x-auto border-b border-line px-2 py-2 scrollbar-none" role="tablist" aria-label="Editor sections">
-            {TABS.map(({ id: tabId, label, icon: Icon }) => (
-              <button
-                key={tabId}
-                role="tab"
-                type="button"
-                aria-selected={tab === tabId}
-                onClick={() => setTab(tabId)}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
-                  tab === tabId ? 'bg-accent-soft text-ink' : 'text-muted hover:bg-canvasAlt hover:text-ink'
-                }`}
-              >
-                <Icon size={12} aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </div>
+          <div className="sm:flex">
+            {/* Vertical rail on wider screens, matching a two-panel editor. */}
+            <nav
+              className="hidden w-[168px] shrink-0 flex-col gap-0.5 border-r border-line p-2 sm:flex"
+              aria-label="Editor sections"
+            >
+              {TABS.map(({ id: tabId, label, icon: Icon }) => (
+                <button
+                  key={tabId}
+                  type="button"
+                  aria-current={tab === tabId ? 'true' : undefined}
+                  onClick={() => setTab(tabId)}
+                  className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-[12px] font-medium transition-colors ${
+                    tab === tabId ? 'bg-accent-soft text-ink ring-1 ring-inset ring-accent-line/60' : 'text-muted hover:bg-canvasAlt hover:text-ink'
+                  }`}
+                >
+                  <Icon size={13} className="shrink-0" aria-hidden="true" />
+                  <span className="leading-4">{label}</span>
+                </button>
+              ))}
+            </nav>
 
-          <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-4 scroll-slim">
+            <div className="min-w-0 flex-1">
+              <div className="flex gap-1 overflow-x-auto border-b border-line px-2 py-2 scrollbar-none sm:hidden" role="tablist" aria-label="Editor sections">
+                {TABS.map(({ id: tabId, short, icon: Icon }) => (
+                  <button
+                    key={tabId}
+                    role="tab"
+                    type="button"
+                    aria-selected={tab === tabId}
+                    onClick={() => setTab(tabId)}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                      tab === tabId ? 'bg-accent-soft text-ink' : 'text-muted hover:bg-canvasAlt hover:text-ink'
+                    }`}
+                  >
+                    <Icon size={12} aria-hidden="true" />
+                    {short}
+                  </button>
+                ))}
+              </div>
+
+              <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-4 scroll-slim">
             {tab === 'profile' ? <ProfileSection draft={draft} setDraft={setDraft} /> : null}
             {tab === 'skills' ? <SkillsSection draft={draft} setDraft={setDraft} /> : null}
             {tab === 'projects' ? <ProjectsSection draft={draft} setDraft={setDraft} /> : null}
@@ -412,7 +437,9 @@ export default function Editor() {
             ) : null}
             {tab === 'design' ? <DesignSection draft={draft} setDraft={setDraft} showPreview={false} /> : null}
             {tab === 'sections' ? <SectionsSection draft={draft} setDraft={setDraft} /> : null}
-            {tab === 'blog' ? <BlogSettings draft={draft} setDraft={setDraft} /> : null}
+                {tab === 'blog' ? <BlogSettings draft={draft} setDraft={setDraft} /> : null}
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2.5">
@@ -457,7 +484,7 @@ export default function Editor() {
       </div>
 
       {/* Mobile pane switch */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-white/95 px-4 py-2 backdrop-blur xl:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-canvas/90 px-4 py-2 backdrop-blur xl:hidden">
         {[
           { id: 'edit', label: 'Editor', icon: LayoutList },
           { id: 'preview', label: 'Preview', icon: Eye },
@@ -502,7 +529,7 @@ export default function Editor() {
           </>
         }
       >
-        <div className="overflow-hidden rounded-lg border border-line bg-white">
+        <div className="overflow-hidden rounded-lg border border-line bg-surface">
           <div className="h-[65vh] overflow-y-auto">{preview}</div>
         </div>
         {portfolio.published && publicUrl ? <p className="mt-3 truncate text-xs text-muted">{publicUrl}</p> : null}

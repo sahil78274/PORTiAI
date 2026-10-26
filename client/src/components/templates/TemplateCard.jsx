@@ -59,7 +59,7 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
               aria-pressed={device === id}
               aria-label={`${label} preview`}
               className={`rounded p-1.5 transition-colors ${
-                device === id ? 'bg-white text-ink ' : 'text-faint hover:text-ink'
+                device === id ? 'bg-surface text-ink ' : 'text-faint hover:text-ink'
               }`}
             >
               <Icon size={14} aria-hidden="true" />
@@ -69,7 +69,7 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
       </div>
 
       <div className="overflow-hidden rounded-lg border border-line bg-canvas">
-        <div className="flex items-center justify-between border-b border-line bg-white px-3 py-1.5 text-[11px] text-muted">
+        <div className="flex items-center justify-between border-b border-line bg-surface px-3 py-1.5 text-[11px] text-muted">
           <span className="font-medium text-inkSoft">{template.name}</span>
           <span className="capitalize">{device} preview · sample content</span>
         </div>
@@ -90,7 +90,7 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
 
 export default function TemplateCard({ template, selected = false, onPreview, onUse, useHref }) {
   return (
-    <article className={`overflow-hidden rounded-lg border bg-white transition-colors ${selected ? 'border-accent/50' : 'border-line hover:border-lineStrong'}`}>
+    <article className={`overflow-hidden rounded-lg border bg-surface transition-colors ${selected ? 'border-accent/50' : 'border-line hover:border-lineStrong'}`}>
       <div className="relative border-b border-line">
         <TemplateThumb template={template} designHeight={620} />
         {selected ? (

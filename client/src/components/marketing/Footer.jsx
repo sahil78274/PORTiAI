@@ -22,7 +22,7 @@ const COLUMNS = [
   {
     title: 'Account',
     links: [
-      { label: 'Create an account', to: '/register' },
+      { label: 'Create an account', to: '/signup' },
       { label: 'Login', to: '/login' },
       { label: 'Forgot password', to: '/forgot-password' },
     ],

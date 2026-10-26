@@ -505,6 +505,26 @@ link-local, private-range and `.local` targets (`400 BLOCKED_HOST`). Requests ti
 
 ---
 
+## Image uploads
+
+Stores the profile photographs used by portfolios. Images are downscaled to 512 px in the browser,
+then posted as a base64 data URL; the server verifies the real file signature before storing the bytes.
+
+### `POST /api/uploads`
+
+Auth required. Body: `{ "dataUrl": "data:image/png;base64,…" }`.
+
+* Accepted types: PNG, JPEG, WebP (checked by magic bytes, not by the declared MIME type).
+* Maximum decoded size: 500 KB. Maximum 30 stored images per account.
+* Returns `201` with `{ upload: { id, mimeType, size, createdAt }, path, url }`. `url` is absolute and
+  can be written straight into `profile.photoUrl`.
+
+### `GET /api/uploads/:id`
+
+Public. Returns the image bytes with its `Content-Type` and
+`Cache-Control: public, max-age=31536000, immutable`. Unknown ids return `404`. The read is public
+because published portfolios load these images for anonymous visitors.
+
 ## Rate limits
 
 | Scope | Limit |

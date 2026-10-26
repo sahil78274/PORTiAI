@@ -442,7 +442,7 @@ export default function BlogEditor() {
           {aiError ? (
             <Alert tone="warning" title="AI writing help unavailable">{aiError}</Alert>
           ) : (
-            <div className="rounded-lg border border-line bg-white p-4 text-[11px] leading-relaxed text-muted">
+            <div className="rounded-lg border border-line bg-surface p-4 text-[11px] leading-relaxed text-muted">
               <p className="flex items-center gap-1.5 font-medium text-inkSoft">
                 <Sparkles size={12} className="text-accent-hover" aria-hidden="true" />
                 AI writing help

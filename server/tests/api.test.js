@@ -1057,6 +1057,59 @@ await test('internal and loopback scan targets are refused', async () => {
 });
 
 /* ------------------------------------------------------------------ */
+/* Image uploads                                                       */
+/* ------------------------------------------------------------------ */
+suite('Image uploads');
+
+// Smallest valid 1x1 PNG, used as the upload payload.
+const PNG_1PX =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+await test('a signed-in user can upload a PNG and read it back', async () => {
+  const created = await alice.post('/uploads', { dataUrl: `data:image/png;base64,${PNG_1PX}` });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.data.upload.mimeType, 'image/png');
+  assert.match(created.body.data.url, /^http:\/\/\S+\/api\/uploads\/[a-f0-9]{24}$/i);
+  assert.ok(!('data' in created.body.data.upload), 'image bytes must not be returned in the metadata');
+
+  // The stored URL is accepted by the portfolio validator when saved as the photo.
+  const saved = await alice.put(`/portfolios/${alicePortfolioId}`, { profile: { photoUrl: created.body.data.url } });
+  assert.equal(saved.status, 200);
+  assert.equal(saved.body.data.portfolio.profile.photoUrl, created.body.data.url);
+
+  const image = await fetch(created.body.data.url);
+  assert.equal(image.status, 200);
+  assert.equal(image.headers.get('content-type'), 'image/png');
+  assert.ok((await image.arrayBuffer()).byteLength > 50);
+
+  // Anonymous visitors can read the image because public portfolios use it.
+  const anon = await createClient().get(created.body.data.path.replace('/api', ''));
+  assert.equal(anon.status, 200);
+});
+
+await test('uploads require a session', async () => {
+  const response = await createClient().post('/uploads', { dataUrl: `data:image/png;base64,${PNG_1PX}` });
+  assert.equal(response.status, 401);
+});
+
+await test('non-image payloads and oversized uploads are rejected', async () => {
+  const notImage = await alice.post('/uploads', { dataUrl: 'data:text/plain;base64,aGVsbG8=' });
+  assert.equal(notImage.status, 400);
+
+  const wrongType = await alice.post('/uploads', { dataUrl: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' });
+  assert.equal(wrongType.status, 400);
+
+  // Correct MIME label but text bytes: the signature check refuses it.
+  const fakePng = await alice.post('/uploads', { dataUrl: `data:image/png;base64,${Buffer.from('not a real png').toString('base64')}` });
+  assert.equal(fakePng.status, 400);
+
+  const huge = Buffer.alloc(520 * 1024, 7);
+  huge.write('\x89PNG', 0, 'latin1');
+  const tooBig = await alice.post('/uploads', { dataUrl: `data:image/png;base64,${huge.toString('base64')}` });
+  assert.ok(tooBig.status === 400 || tooBig.status === 413, `oversized upload should be rejected, got ${tooBig.status}`);
+});
+
+/* ------------------------------------------------------------------ */
 /* AI chat builder                                                     */
 /* ------------------------------------------------------------------ */
 suite('AI chat builder');

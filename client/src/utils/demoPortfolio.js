@@ -66,7 +66,7 @@ export const demoPortfolio = {
       endDate: 'Aug 2025',
       responsibilities:
         'Converted three Figma screens into responsive React components and fixed accessibility issues found in a manual audit.',
-      achievements: 'Reduced the mobile layout shift on the pricing page by removing fixed heights.',
+      achievements: 'Reduced the mobile layout shift on the event signup page by removing fixed heights.',
     },
   ],
   education: [
@@ -197,3 +197,30 @@ export const demoDashboard = [
     analysisScore: null,
   },
 ];
+
+/**
+ * The portrait owner used in the landing hero preview. Sample content only —
+ * the landing page labels it as a preview, and it is never written to the
+ * database or presented as a real customer.
+ */
+export const heroPortfolio = {
+  ...demoPortfolio,
+  title: 'Farheen — portfolio preview',
+  templateId: 'developer',
+  profile: {
+    ...demoPortfolio.profile,
+    fullName: 'Farheen',
+    title: 'Full Stack Developer',
+    summary:
+      'I build full-stack web applications with React, Node.js and MongoDB. Currently working on tools that make everyday developer work a little clearer.',
+    location: 'Hyderabad, India',
+    contactEmail: 'farheen.sample@example.com',
+  },
+  skills: [
+    { name: 'React', category: 'technical' },
+    { name: 'Node.js', category: 'technical' },
+    { name: 'MongoDB', category: 'technical' },
+    { name: 'TypeScript', category: 'technical' },
+  ],
+  theme: { accent: '#2f6bff', font: 'sans', density: 'comfortable' },
+};

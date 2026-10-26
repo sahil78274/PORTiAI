@@ -8,18 +8,18 @@
     --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --canvas: #f7f7f5;
-    --surface: #ffffff;
-    --line: #e4e4dc;
-    --ink: #1a1d21;
-    --muted: #5f6873;
-    --accent: #2563eb;
+    --canvas: #0a1020;
+    --surface: #111a2b;
+    --line: #1e2a42;
+    --ink: #eef2f8;
+    --muted: #93a1b8;
+    --accent: #2f6bff;
   }
 
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   body {
@@ -39,12 +39,12 @@
   }
 
   ::selection {
-    background: rgba(37, 99, 235, 0.16);
-    color: #1a1d21;
+    background: rgba(47, 107, 255, 0.32);
+    color: #eef2f8;
   }
 
   input, textarea, select {
-    color-scheme: light;
+    color-scheme: dark;
   }
 }
 
@@ -66,25 +66,13 @@
     @apply card transition-colors duration-200 hover:border-lineStrong;
   }
 
-  .glass {
-    @apply border border-line bg-surface;
-  }
-
   .panel {
     @apply rounded-lg border border-line bg-canvas;
-  }
-
-  .gradient-border {
-    @apply rounded-lg border border-line bg-surface;
   }
 
   /* -------------------------------------------------- Typography helpers */
   .eyebrow {
     @apply text-[11px] font-medium uppercase tracking-[0.12em] text-muted;
-  }
-
-  .gradient-text {
-    @apply text-accent;
   }
 
   .label {
@@ -97,10 +85,10 @@
 
   /* -------------------------------------------------- Forms */
   .input {
-    @apply w-full rounded-lg border border-lineStrong/80 bg-surface px-3 py-2 text-sm text-ink
+    @apply w-full rounded-md border border-line bg-canvasDeep/60 px-3 py-2 text-sm text-ink
       placeholder:text-faint transition-colors duration-150
       hover:border-lineStrong
-      focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10
+      focus:border-accent focus:bg-canvasDeep focus:outline-none focus:ring-4 focus:ring-accent/15
       disabled:cursor-not-allowed disabled:bg-canvasAlt disabled:text-muted;
   }
 
@@ -113,7 +101,7 @@
   }
 
   .checkbox {
-    @apply h-4 w-4 rounded border-lineStrong bg-surface text-accent focus:ring-accent/30;
+    @apply h-4 w-4 rounded-sm border-lineStrong bg-canvasDeep text-accent focus:ring-accent/30;
   }
 
   /* -------------------------------------------------- Buttons */
@@ -136,7 +124,7 @@
   }
 
   .btn-secondary {
-    @apply btn border border-lineStrong bg-surface text-ink hover:bg-canvasAlt;
+    @apply btn border border-lineStrong bg-surfaceRaised/60 text-ink hover:border-accent-line hover:bg-surfaceRaised;
   }
 
   .btn-outline {
@@ -144,7 +132,7 @@
   }
 
   .btn-ghost {
-    @apply btn bg-transparent text-muted hover:bg-canvasAlt hover:text-ink;
+    @apply btn bg-transparent text-muted hover:bg-surfaceRaised hover:text-ink;
   }
 
   .btn-danger {
@@ -171,7 +159,7 @@
 
   .chip {
     @apply inline-flex items-center gap-1.5 rounded border border-line bg-surface px-2.5 py-1
-      text-[12px] font-medium text-inkSoft transition-colors duration-150 hover:border-lineStrong hover:text-ink;
+      text-[12px] font-medium text-inkSoft transition-colors duration-150 hover:border-accent-line hover:text-ink;
   }
 
   .chip-active {
@@ -206,7 +194,7 @@
   .skeleton::after {
     content: '';
     @apply absolute inset-0 -translate-x-full animate-shimmer;
-    background-image: linear-gradient(90deg, transparent, rgba(26, 29, 33, 0.05), transparent);
+    background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
   }
 
   .prose-blog {
@@ -234,7 +222,7 @@
     @apply rounded bg-canvasAlt px-1.5 py-0.5 font-mono text-[13px] text-ink;
   }
   .prose-blog pre {
-    @apply my-5 overflow-x-auto rounded-lg border border-line bg-canvasAlt p-4 font-mono text-[13px] text-inkSoft;
+    @apply my-5 overflow-x-auto rounded-lg border border-line bg-canvasDeep p-4 font-mono text-[13px] text-inkSoft;
   }
   .prose-blog blockquote {
     @apply my-5 border-l-2 border-lineStrong pl-4 italic text-muted;
@@ -261,7 +249,7 @@
 /* Thin scrollbars */
 .scroll-slim {
   scrollbar-width: thin;
-  scrollbar-color: #d2d2c9 transparent;
+  scrollbar-color: #2b3a56 transparent;
 }
 .scroll-slim::-webkit-scrollbar {
   width: 8px;
@@ -271,11 +259,18 @@
   background: transparent;
 }
 .scroll-slim::-webkit-scrollbar-thumb {
-  background: #dcdcd3;
+  background: #24314a;
   border-radius: 9999px;
 }
 .scroll-slim::-webkit-scrollbar-thumb:hover {
-  background: #c6c6bb;
+  background: #33445f;
+}
+
+/* Subtle page glow behind the hero, used once on the landing page. */
+.hero-glow {
+  background:
+    radial-gradient(760px 420px at 18% 0%, rgba(47, 107, 255, 0.16), transparent 70%),
+    radial-gradient(620px 360px at 78% 12%, rgba(56, 189, 248, 0.08), transparent 72%);
 }
 
 /* Scaled-down live template previews */

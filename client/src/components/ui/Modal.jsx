@@ -71,7 +71,7 @@ export default function Modal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-[#1a1d21]/40 p-0 backdrop-blur-sm sm:items-center sm:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-[#050a14]/70 p-0 backdrop-blur-sm sm:items-center sm:p-6 animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
@@ -79,7 +79,7 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-describedby={description ? 'modal-description' : undefined}
-        className={`relative z-10 w-full ${SIZES[size]} rounded-t-xl border border-line bg-white shadow-float sm:rounded-xl`}
+        className={`relative z-10 w-full ${SIZES[size]} rounded-t-xl border border-line bg-surface shadow-float sm:rounded-xl`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5">
           <div className="min-w-0">

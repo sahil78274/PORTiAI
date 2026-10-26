@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Plus,
   Trash2,
@@ -7,6 +7,9 @@ import {
   Sparkles,
   Check,
   X,
+  ImagePlus,
+  Loader2,
+  UserRound,
 } from 'lucide-react';
 import { Button, Field, Select, Switch, TextArea, TextInput } from '../ui/Primitives.jsx';
 import AiAssist from './AiAssist.jsx';
@@ -24,9 +27,112 @@ import { ACCENT_SWATCHES, FONTS, TEMPLATES } from '../../utils/templates.js';
 import PortfolioRenderer from '../../templates/PortfolioRenderer.jsx';
 import TemplatePreviewFrame from '../marketing/TemplatePreviewFrame.jsx';
 import { wordCount } from '../../utils/format.js';
+import { uploadService } from '../../services/uploadService.js';
+import { useToast } from '../../context/ToastContext.jsx';
+
+/**
+ * Photo control: uploads a file to the API (which stores it and returns a
+ * URL), or accepts a hosted URL directly. The preview is circular so it
+ * matches how templates render the portrait.
+ */
+const PhotoField = ({ value, onChange }) => {
+  const toast = useToast();
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const preview = value && !failed ? uploadService.resolveUrl(value) : '';
+
+  const onFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    setFailed(false);
+    try {
+      const { url } = await uploadService.uploadImage(file);
+      onChange(url);
+      toast.success('Photo uploaded.', { description: 'Save the draft to keep it on this portfolio.' });
+    } catch (error) {
+      toast.error(error.message || 'The image could not be uploaded.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-line bg-surfaceRaised/40 p-3">
+      <div className="flex items-center gap-3">
+        <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-lineStrong bg-canvasAlt">
+          {preview ? (
+            <img
+              src={preview}
+              alt="Current profile photograph"
+              className="h-full w-full object-cover object-top"
+              onError={() => setFailed(true)}
+            />
+          ) : (
+            <UserRound size={22} className="text-faint" aria-hidden="true" />
+          )}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-medium text-ink">Profile photo</p>
+          <p className="mt-0.5 text-[11px] leading-5 text-muted">
+            Square images work best. PNG, JPEG or WebP, resized to 512 px before upload.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className="btn-secondary btn-sm"
+            >
+              {uploading ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <ImagePlus size={12} aria-hidden="true" />}
+              {uploading ? 'Uploading…' : 'Upload image'}
+            </button>
+            {value ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange('');
+                  setFailed(false);
+                }}
+                className="btn-ghost btn-sm"
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="sr-only"
+            onChange={onFile}
+            aria-label="Upload a profile photograph"
+          />
+        </div>
+      </div>
+
+      <label htmlFor="photoUrl" className="mt-3 block text-[11px] font-medium text-muted">
+        Or paste an image URL
+      </label>
+      <TextInput
+        id="photoUrl"
+        value={value}
+        onChange={(event) => {
+          setFailed(false);
+          onChange(event.target.value);
+        }}
+        placeholder="https://example.com/photo.jpg"
+        className="mt-1"
+      />
+    </div>
+  );
+};
 
 const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel = 'Remove' }) => (
-  <div className="rounded-lg border border-line bg-white p-4 shadow-xs">
+  <div className="rounded-lg border border-line bg-surface p-4 shadow-xs">
     <div className="mb-3 flex items-center justify-between gap-2 border-b border-line pb-2.5">
       <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">
         {title} {index + 1}
@@ -146,14 +252,7 @@ export function ProfileSection({ draft, setDraft }) {
         </Field>
       </div>
 
-      <Field label="Profile photo URL" htmlFor="photoUrl" hint="Optional. Use a direct image URL (https).">
-        <TextInput
-          id="photoUrl"
-          value={draft.profile.photoUrl}
-          onChange={(event) => setProfile('photoUrl', event.target.value)}
-          placeholder="https://example.com/photo.jpg"
-        />
-      </Field>
+      <PhotoField value={draft.profile.photoUrl} onChange={(next) => setProfile('photoUrl', next)} />
 
       <Field
         label="Professional summary"
@@ -352,7 +451,7 @@ export function SkillsSection({ draft, setDraft }) {
       {draft.skills.length ? (
         <ul className="space-y-1.5">
           {draft.skills.map((skill, index) => (
-            <li key={`${skill.name}-${index}`} className="flex items-center gap-2 rounded border border-line bg-white px-2.5 py-1.5">
+            <li key={`${skill.name}-${index}`} className="flex items-center gap-2 rounded border border-line bg-surface px-2.5 py-1.5">
               <input
                 value={skill.name}
                 onChange={(event) =>
@@ -371,8 +470,8 @@ export function SkillsSection({ draft, setDraft }) {
                     aria-pressed={skill.category === option}
                     className={`rounded-sm border px-1.5 py-0.5 text-2xs ${
                       skill.category === option
-                        ? 'border-accent bg-accent-soft text-accent'
-                        : 'border-lineStrong bg-white text-muted hover:bg-canvasAlt'
+                        ? 'border-accent bg-accent-soft text-accent-hover'
+                        : 'border-lineStrong bg-surface text-muted hover:bg-canvasAlt'
                     }`}
                   >
                     {option === 'technical' ? 'Technical' : 'Soft'}
@@ -718,7 +817,7 @@ export function ExperienceSection({ draft, setDraft }) {
                   onChange={(event) => update(index, { achievements: event.target.value })}
                   rows={2}
                   maxLength={1500}
-                  placeholder="Reduced mobile layout shift on the pricing page by removing fixed heights."
+                  placeholder="Reduced mobile layout shift on the event signup page by removing fixed heights."
                 />
               </Field>
             </ItemCard>
@@ -837,12 +936,12 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
                 onClick={() => handleSelectTemplate(template)}
                 aria-pressed={active}
                 className={`rounded-lg border p-3.5 text-left transition-colors ${
-                  active ? 'border-accent bg-accent-soft ring-1 ring-accent shadow-xs' : 'border-line bg-white hover:border-lineStrong hover:bg-canvasAlt'
+                  active ? 'border-accent bg-accent-soft ring-1 ring-accent shadow-xs' : 'border-line bg-surface hover:border-lineStrong hover:bg-canvasAlt'
                 }`}
               >
                 <span className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-ink">{template.name}</span>
-                  {active ? <Check size={14} className="text-accent" aria-hidden="true" /> : null}
+                  {active ? <Check size={14} className="text-accent-hover" aria-hidden="true" /> : null}
                 </span>
                 <span className="mt-1 block text-2xs leading-relaxed text-muted">{template.tagline}</span>
               </button>
@@ -874,7 +973,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
               type="color"
               value={draft.theme.accent}
               onChange={(event) => setTheme('accent', event.target.value)}
-              className="h-7 w-9 cursor-pointer rounded-lg border border-line bg-white p-0.5 shadow-2xs"
+              className="h-7 w-9 cursor-pointer rounded-lg border border-line bg-surface p-0.5 shadow-2xs"
               aria-label="Custom accent colour"
             />
           </label>
@@ -942,7 +1041,7 @@ export function SectionsSection({ draft, setDraft }) {
       <p className="text-xs text-muted">
         Sections without content are skipped automatically, even when they are switched on.
       </p>
-      <ul className="divide-y divide-line overflow-hidden rounded border border-line bg-white">
+      <ul className="divide-y divide-line overflow-hidden rounded border border-line bg-surface">
         {sections.map((section, index) => {
           const definition = SECTION_DEFINITIONS.find((item) => item.id === section.id);
           return (

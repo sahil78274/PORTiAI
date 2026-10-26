@@ -34,7 +34,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
 
   const useTemplate = async (template, tab) => {
     if (mode === 'marketing') {
-      navigate(`/register?template=${template.id}`);
+      navigate(`/signup?template=${template.id}`);
       return;
     }
     setCreating(true);
@@ -88,7 +88,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
               className={`rounded-md border px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
                 category === item
                   ? 'border-accent/40 bg-accent-soft text-accent-hover'
-                  : 'border-line bg-white text-muted hover:border-lineStrong hover:text-ink'
+                  : 'border-line bg-surface text-muted hover:border-lineStrong hover:text-ink'
               }`}
             >
               {item}
