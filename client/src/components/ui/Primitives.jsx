@@ -57,7 +57,7 @@ export const Field = ({ label, htmlFor, hint, error, required, children, classNa
           {label}
           {required ? <span className="text-danger" aria-hidden="true">*</span> : null}
         </span>
-        {!required ? <span className="text-2xs font-normal lowercase tracking-normal text-slate-400">optional</span> : null}
+        {!required ? <span className="text-2xs font-normal lowercase tracking-normal text-faint">optional</span> : null}
       </label>
     ) : null}
     {children}
@@ -143,7 +143,7 @@ export const Spinner = ({ label = 'Loading', size = 15, className = '' }) => (
 );
 
 export const Skeleton = ({ className = '' }) => (
-  <div className={`animate-pulse rounded-lg bg-slate-200/80 ${className}`} aria-hidden="true" />
+  <div className={`skeleton ${className}`} aria-hidden="true" />
 );
 
 export const EmptyState = ({ icon: Icon, title, description, action, className = '' }) => (
@@ -182,7 +182,7 @@ export const ProgressBar = ({ value, max = 100, className = '', tone = 'accent',
         </div>
       ) : null}
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-slate-100 ring-1 ring-line/50"
+        className="h-2 w-full overflow-hidden rounded-full bg-white/[0.07] ring-1 ring-line/60"
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -208,7 +208,7 @@ export const ScoreRing = ({ score, size = 132, label = 'Overall score' }) => {
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} role="img" aria-label={`${label}: ${score} out of 100`} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#f1f5f9" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#1c2745" strokeWidth={strokeWidth} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -250,7 +250,7 @@ export const Switch = ({ checked, onChange, label, description, id }) => {
         aria-label={label}
         onClick={() => onChange(!checked)}
         className={`relative mt-0.5 h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-          checked ? 'bg-accent' : 'bg-slate-300'
+          checked ? 'bg-accent' : 'bg-lineStrong'
         }`}
       >
         <span
@@ -276,7 +276,7 @@ export const Tabs = ({ tabs, active, onChange, className = '', ariaLabel = 'Sect
           onClick={() => onChange(tab.id)}
           className={`-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2 text-sm font-medium transition-all duration-150 ${
             isActive
-              ? 'border-accent text-accent font-semibold'
+              ? 'border-accent-hover text-accent-hover font-semibold'
               : 'border-transparent text-muted hover:border-lineStrong hover:text-ink'
           }`}
         >
@@ -285,7 +285,7 @@ export const Tabs = ({ tabs, active, onChange, className = '', ariaLabel = 'Sect
           {tab.count !== undefined ? (
             <span
               className={`rounded-full px-1.5 py-0.2 font-mono text-2xs ${
-                isActive ? 'bg-accent-soft text-accent' : 'bg-canvasAlt text-muted'
+                isActive ? 'bg-accent-soft text-accent-hover' : 'bg-white/[0.05] text-muted'
               }`}
             >
               {tab.count}

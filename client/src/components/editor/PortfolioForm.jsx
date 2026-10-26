@@ -36,7 +36,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
           type="button"
           onClick={() => onMove(index, -1)}
           disabled={index === 0}
-          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-ink disabled:opacity-30 transition-colors"
+          className="rounded-md p-1 text-faint hover:bg-white/[0.06] hover:text-ink disabled:opacity-30 transition-colors"
           aria-label={`Move ${title} ${index + 1} up`}
         >
           <ArrowUp size={13} aria-hidden="true" />
@@ -45,7 +45,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
           type="button"
           onClick={() => onMove(index, 1)}
           disabled={index === total - 1}
-          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-ink disabled:opacity-30 transition-colors"
+          className="rounded-md p-1 text-faint hover:bg-white/[0.06] hover:text-ink disabled:opacity-30 transition-colors"
           aria-label={`Move ${title} ${index + 1} down`}
         >
           <ArrowDown size={13} aria-hidden="true" />
@@ -53,7 +53,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
         <button
           type="button"
           onClick={() => onRemove(index)}
-          className="rounded-md p-1 text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
+          className="rounded-md p-1 text-danger hover:bg-danger/15 hover:text-danger transition-colors"
           aria-label={`${removeLabel} ${title} ${index + 1}`}
         >
           <Trash2 size={13} aria-hidden="true" />
@@ -837,7 +837,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
                 onClick={() => handleSelectTemplate(template)}
                 aria-pressed={active}
                 className={`rounded-xl border p-3.5 text-left transition-all ${
-                  active ? 'border-accent bg-accent-soft ring-1 ring-accent shadow-xs' : 'border-line bg-surface hover:border-lineStrong hover:bg-slate-50'
+                  active ? 'border-accent bg-accent-soft ring-1 ring-accent shadow-xs' : 'border-line bg-surface hover:border-lineStrong hover:bg-white/[0.04]'
                 }`}
               >
                 <span className="flex items-center justify-between">
@@ -863,7 +863,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
               aria-label={swatch.label}
               title={swatch.label}
               className={`h-7 w-7 rounded-full transition-transform hover:scale-110 shadow-2xs ${
-                draft.theme.accent === swatch.value ? 'ring-2 ring-accent ring-offset-2 scale-105' : 'ring-1 ring-black/15'
+                draft.theme.accent === swatch.value ? 'ring-2 ring-accent ring-offset-2 scale-105' : 'ring-1 ring-white/20'
               }`}
               style={{ backgroundColor: swatch.value }}
             />

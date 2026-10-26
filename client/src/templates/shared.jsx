@@ -1,6 +1,6 @@
-// lucide-react no longer ships brand icons, so GitHub/LinkedIn/X use neutral glyphs
-// with explicit accessible labels.
-import { Code2, Briefcase, Globe, Mail, MapPin, AtSign, ExternalLink, FileCode2 } from 'lucide-react';
+// lucide-react no longer ships brand icons, so GitHub/LinkedIn/X use neutral
+// glyphs with explicit accessible labels.
+import { Code2, Briefcase, Globe, Mail, MapPin, AtSign, ExternalLink, FileCode2, Newspaper } from 'lucide-react';
 import { fontStack } from '../utils/templates.js';
 
 export const SECTION_LABELS = {
@@ -46,9 +46,15 @@ export const sectionHasContent = (portfolio, id) => {
 export const renderableSections = (portfolio) =>
   orderedSections(portfolio).filter((section) => section.visible !== false && sectionHasContent(portfolio, section.id));
 
+/**
+ * Template style variables. Templates never rely on the app's dark tokens —
+ * they set their own surface colours so a published portfolio looks identical
+ * outside the dashboard.
+ */
 export const templateStyle = (portfolio) => ({
-  '--accent': portfolio?.theme?.accent || '#2f4a8b',
-  fontFamily: fontStack(portfolio?.theme?.font),
+  '--accent': portfolio?.theme?.accent || '#6366f1',
+  '--font-template': fontStack(portfolio?.theme?.font),
+  fontFamily: 'var(--font-template)',
 });
 
 export const dateRange = (start, end) => {
@@ -83,7 +89,7 @@ export const SocialLinks = ({ portfolio, className = '', compact = false }) => {
             href={url}
             target="_blank"
             rel="noopener noreferrer external"
-            className="group inline-flex items-center gap-1.5 text-sm text-inkSoft underline-offset-4 hover:text-[var(--accent)] hover:underline"
+            className="group inline-flex items-center gap-1.5 text-inherit opacity-80 underline-offset-4 transition-opacity hover:text-[var(--accent)] hover:opacity-100 hover:underline"
           >
             <Icon size={compact ? 13 : 14} aria-hidden="true" />
             <span>{label}</span>
@@ -94,7 +100,7 @@ export const SocialLinks = ({ portfolio, className = '', compact = false }) => {
   );
 };
 
-export const ContactDetails = ({ portfolio }) => {
+export const ContactDetails = ({ portfolio, className = '' }) => {
   const profile = portfolio?.profile || {};
   const items = [
     profile.contactEmail
@@ -106,12 +112,12 @@ export const ContactDetails = ({ portfolio }) => {
   if (!items.length) return null;
 
   return (
-    <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-inkSoft">
+    <ul className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-inherit ${className}`}>
       {items.map(({ key, label, href, Icon }) => (
-        <li key={key} className="inline-flex items-center gap-1.5">
+        <li key={key} className="inline-flex items-center gap-1.5 opacity-80">
           <Icon size={14} aria-hidden="true" />
           {href ? (
-            <a href={href} className="underline-offset-4 hover:text-[var(--accent)] hover:underline">
+            <a href={href} className="underline-offset-4 transition-opacity hover:text-[var(--accent)] hover:underline hover:opacity-100">
               {label}
             </a>
           ) : (
@@ -137,7 +143,7 @@ export const ProjectLinks = ({ project, className = '' }) => {
           href={url}
           target="_blank"
           rel="noopener noreferrer external"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
         >
           <Icon size={13} aria-hidden="true" />
           {label}
@@ -147,7 +153,7 @@ export const ProjectLinks = ({ project, className = '' }) => {
   );
 };
 
-export const Avatar = ({ portfolio, size = 88, className = '' }) => {
+export const Avatar = ({ portfolio, size = 88, className = '', rounded = 'rounded-full' }) => {
   const { fullName = '', photoUrl = '', title = '' } = portfolio?.profile || {};
   const label = (fullName || 'Portfolio').slice(0, 1).toUpperCase();
   if (photoUrl) {
@@ -155,28 +161,62 @@ export const Avatar = ({ portfolio, size = 88, className = '' }) => {
       <img
         src={photoUrl}
         alt={fullName ? `${fullName}${title ? `, ${title}` : ''}` : 'Profile photo'}
-        className={`shrink-0 rounded-full border border-line object-cover ${className}`}
+        className={`shrink-0 border object-cover ${rounded} ${className}`}
         style={{ width: size, height: size }}
         loading="lazy"
         referrerPolicy="no-referrer"
+        onError={(event) => {
+          event.currentTarget.style.display = 'none';
+        }}
       />
     );
   }
   return (
     <div
       aria-hidden="true"
-      className={`flex shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent ${className}`}
-      style={{ width: size, height: size, fontSize: size * 0.36 }}
+      className={`flex shrink-0 items-center justify-center font-semibold ${rounded} ${className}`}
+      style={{ width: size, height: size, fontSize: size * 0.36, background: 'color-mix(in srgb, var(--accent) 18%, transparent)', color: 'var(--accent)' }}
     >
       {label}
     </div>
   );
 };
 
-export const EmptyTemplateNotice = ({ compact = false }) => (
-  <div className={`flex flex-col items-center justify-center px-6 text-center ${compact ? 'py-10' : 'py-20'}`}>
-    <p className="max-w-sm text-sm text-muted">
+export const EmptyTemplateNotice = ({ compact = false, className = '' }) => (
+  <div className={`flex flex-col items-center justify-center px-6 text-center ${compact ? 'py-10' : 'py-24'} ${className}`}>
+    <Newspaper size={26} className="mb-3 opacity-40" aria-hidden="true" />
+    <p className="max-w-sm text-sm opacity-60">
       This portfolio has no visible content yet. Add a profile summary, skills or a project to see the template fill in.
     </p>
   </div>
 );
+
+/** Optional blog link shown inside a template's navigation or footer. */
+export const BlogLink = ({ href, className = '', label = 'Blog' }) =>
+  href ? (
+    <a href={href} className={`inline-flex items-center gap-1.5 text-inherit underline-offset-4 hover:text-[var(--accent)] hover:underline ${className}`}>
+      <Newspaper size={14} aria-hidden="true" />
+      {label}
+    </a>
+  ) : null;
+
+/** Splits skills into technical / soft groups. */
+export const splitSkills = (portfolio) => {
+  const skills = (portfolio?.skills || []).filter((skill) => skill?.name);
+  return {
+    technical: skills.filter((skill) => skill.category !== 'soft'),
+    soft: skills.filter((skill) => skill.category === 'soft'),
+  };
+};
+
+/** Project cover used by image-led templates. */
+export const projectImage = (project, index = 0) => {
+  if (project?.coverUrl) return project.coverUrl;
+  const fallbacks = [
+    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?auto=format&fit=crop&w=1200&q=70',
+    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=70',
+  ];
+  return fallbacks[index % fallbacks.length];
+};

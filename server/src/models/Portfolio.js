@@ -146,6 +146,12 @@ const portfolioSchema = new mongoose.Schema(
     },
     published: { type: Boolean, default: false },
     publishedAt: { type: Date, default: null },
+    /** Optional public blog attached to this portfolio. */
+    blog: {
+      enabled: { type: Boolean, default: false },
+      title: { type: String, trim: true, maxlength: 120, default: '' },
+      intro: { type: String, trim: true, maxlength: 600, default: '' },
+    },
     analysis: { type: analysisSchema, default: undefined },
   },
   { timestamps: true, versionKey: false }
@@ -184,6 +190,11 @@ portfolioSchema.methods.toOwnerJSON = function toOwnerJSON() {
     visibleSections: obj.visibleSections,
     published: obj.published,
     publishedAt: obj.publishedAt,
+    blog: {
+      enabled: Boolean(obj.blog?.enabled),
+      title: obj.blog?.title || '',
+      intro: obj.blog?.intro || '',
+    },
     analysis: obj.analysis || null,
     createdAt: obj.createdAt,
     updatedAt: obj.updatedAt,

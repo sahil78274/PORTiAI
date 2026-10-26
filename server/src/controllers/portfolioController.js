@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { generateUniqueSlug } from '../utils/slug.js';
 import { normalizePortfolioBody } from '../validators/portfolioInput.js';
-import { defaultPortfolioContent, TEMPLATE_IDS } from '../utils/portfolioDefaults.js';
+import { defaultPortfolioContent, TEMPLATE_DEFAULTS, normalizeTemplateId } from '../utils/portfolioDefaults.js';
 
 const ID_PATTERN = /^[a-f0-9]{24}$/i;
 
@@ -88,24 +88,13 @@ export const createPortfolio = asyncHandler(async (req, res) => {
 
   if (body.title) content.title = body.title;
 
-  const rawTemplate = body.templateId || body.template;
-  if (rawTemplate && typeof rawTemplate === 'string') {
-    const cleanId = rawTemplate.toLowerCase().trim();
-    const mapped =
-      cleanId === 'developer-portfolio' ? 'developer' :
-      cleanId === 'modern-editorial' ? 'editorial' :
-      cleanId === 'minimal-professional' ? 'minimal' :
-      cleanId;
-    if (TEMPLATE_IDS.includes(mapped)) {
-      content.templateId = mapped;
-      const defaultAccents = {
-        minimal: '#2f4a8b',
-        developer: '#1f5c4a',
-        editorial: '#8a3a2f',
-      };
-      if (defaultAccents[mapped]) {
-        content.theme.accent = defaultAccents[mapped];
-      }
+  const canonicalTemplate = normalizeTemplateId(body.templateId || body.template);
+  if (canonicalTemplate) {
+    content.templateId = canonicalTemplate;
+    const defaults = TEMPLATE_DEFAULTS[canonicalTemplate];
+    if (defaults) {
+      content.theme.accent = defaults.accent;
+      content.theme.font = defaults.font;
     }
   }
 

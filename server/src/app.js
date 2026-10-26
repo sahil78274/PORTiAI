@@ -10,6 +10,8 @@ import authRoutes from './routes/authRoutes.js';
 import portfolioRoutes from './routes/portfolioRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
+import analyzeRoutes from './routes/analyzeRoutes.js';
 import { isAiEnabled } from './services/geminiService.js';
 
 export const createApp = () => {
@@ -50,7 +52,8 @@ export const createApp = () => {
     })
   );
 
-  app.use(express.json({ limit: '256kb' }));
+  // 1 MB allows an uploaded HTML document (capped again in the scan validator).
+  app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
 
   app.get('/api/health', (_req, res) => {
@@ -72,6 +75,8 @@ export const createApp = () => {
   app.use('/api/portfolios', portfolioRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/public', publicRoutes);
+  app.use('/api/blog', blogRoutes);
+  app.use('/api/analyze', analyzeRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

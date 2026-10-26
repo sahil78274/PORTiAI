@@ -1,74 +1,114 @@
 import { Link } from 'react-router-dom';
+import { ArrowUpRight, Code2, Mail } from 'lucide-react';
 import Logo from '../ui/Logo.jsx';
 
-const LINK_GROUPS = [
+const GROUPS = [
   {
     title: 'Product',
     links: [
       { label: 'Features', to: '/features' },
       { label: 'Templates', to: '/templates' },
-      { label: 'How it works', to: '/#how-it-works' },
-      { label: 'FAQ', to: '/#faq' },
+      { label: 'AI builder', to: '/dashboard/builder' },
+      { label: 'Portfolio analyser', to: '/dashboard/analyzer' },
     ],
   },
   {
     title: 'Workspace',
     links: [
-      { label: 'Sign in', to: '/login' },
-      { label: 'Create account', to: '/register' },
       { label: 'Dashboard', to: '/dashboard' },
-      { label: 'Account recovery', to: '/forgot-password' },
+      { label: 'My portfolios', to: '/dashboard/portfolios' },
+      { label: 'Blog studio', to: '/dashboard/blog' },
+      { label: 'Settings', to: '/dashboard/settings' },
     ],
   },
   {
-    title: 'Policies',
+    title: 'Get started',
+    links: [
+      { label: 'Create an account', to: '/register' },
+      { label: 'Sign in', to: '/login' },
+      { label: 'Forgot password', to: '/forgot-password' },
+      { label: 'Pricing', to: '/#pricing' },
+    ],
+  },
+  {
+    title: 'Legal',
     links: [
       { label: 'Privacy policy', to: '/privacy' },
       { label: 'Terms of service', to: '/terms' },
+      { label: 'FAQ', to: '/#faq' },
     ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-line bg-surface">
-      <div className="container-page py-12 lg:py-16">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer id="footer" className="relative border-t border-white/[0.07] bg-[#050813]">
+      <div className="container-wide py-14">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_2fr]">
           <div>
-            <Logo />
-            <p className="mt-3.5 max-w-xs text-xs leading-relaxed text-slate-600">
-              PortiAI helps students and early-career developers build, review, and publish high-quality portfolios with
-              rule-based scoring and Gemini AI assistance.
+            <Logo size="lg" />
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">
+              PortiAI turns your projects, skills and experience into a polished portfolio — with AI drafting, nine design
+              templates, an honest analyser and one-link publishing.
             </p>
-            <p className="mt-4 text-2xs leading-relaxed text-slate-400">
-              BCA final-year academic project. Built with React 19, Tailwind CSS, Express, and MongoDB. Zero paid services required.
-            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              <a
+                href="https://github.com/sahil78274/PORTiAI"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-xs text-muted transition-colors hover:border-accent-line hover:text-white"
+              >
+                <Code2 size={13} aria-hidden="true" />
+                Project source
+                <ArrowUpRight size={11} aria-hidden="true" />
+              </a>
+              <p className="inline-flex items-center gap-2 text-[11px] text-faint">
+                <Mail size={11} aria-hidden="true" />
+                Email &amp; password accounts only — no social login yet.
+              </p>
+            </div>
           </div>
 
-          {LINK_GROUPS.map((group) => (
-            <div key={group.title}>
-              <h2 className="text-2xs font-semibold uppercase tracking-[0.16em] text-slate-400">{group.title}</h2>
-              <ul className="mt-3.5 space-y-2.5">
-                {group.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      to={link.to}
-                      className="text-xs font-medium text-slate-600 transition-colors hover:text-ink hover:underline hover:underline-offset-4"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+            {GROUPS.map((group) => (
+              <div key={group.title}>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">{group.title}</p>
+                <ul className="mt-3.5 space-y-2.5">
+                  {group.links.map((link) =>
+                    link.to.startsWith('/#') ? (
+                      <li key={link.label}>
+                        <a href={link.to} className="text-sm text-muted transition-colors hover:text-ink">
+                          {link.label}
+                        </a>
+                      </li>
+                    ) : (
+                      <li key={link.label}>
+                        <Link to={link.to} className="text-sm text-muted transition-colors hover:text-ink">
+                          {link.label}
+                        </Link>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-2xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} PortiAI. All portfolio content belongs to its respective creators.</p>
-          <p>
-            Demo previews show sample data to accurately illustrate layout behavior.
-          </p>
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/[0.07] pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-faint">© {new Date().getFullYear()} PortiAI. All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-faint">
+            <Link to="/privacy" className="transition-colors hover:text-ink">
+              Privacy
+            </Link>
+            <Link to="/terms" className="transition-colors hover:text-ink">
+              Terms
+            </Link>
+            <Link to="/register" className="inline-flex items-center gap-1 text-muted transition-colors hover:text-ink">
+              Start free
+              <ArrowUpRight size={12} aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

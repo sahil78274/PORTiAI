@@ -115,6 +115,39 @@ const startGeminiStub = () =>
           });
         }
 
+        if (geminiStub.mode === 'builder') {
+          return send(200, {
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        summary: 'BCA student building tested REST APIs with Node.js and Express.',
+                        bio: 'I build small, tested REST APIs. My main project is a campus events portal with JWT authentication.',
+                        skills: [
+                          { name: 'Node.js', category: 'technical' },
+                          { name: 'Express', category: 'technical' },
+                        ],
+                        projects: [
+                          {
+                            name: 'Campus events portal',
+                            description: 'A registration portal with JWT authentication and CSV export.',
+                            technologies: ['Node.js', 'MongoDB'],
+                          },
+                        ],
+                        experience: [],
+                        achievements: [],
+                      }),
+                    },
+                  ],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+          });
+        }
+
         if (geminiStub.mode === 'analysis-malformed') {
           return send(200, {
             candidates: [{ content: { parts: [{ text: '{ this is not valid json' }] }, finishReason: 'STOP' }],
@@ -797,6 +830,249 @@ await test('account deletion removes the user and their portfolios', async () =>
   assert.equal(ok.status, 200);
   assert.equal((await doomed.get('/auth/me')).status, 401);
   assert.equal((await alice.get(`/portfolios/${id}`)).status, 404);
+});
+
+/* ------------------------------------------------------------------ */
+/* Template registry (nine design systems)                             */
+/* ------------------------------------------------------------------ */
+suite('Template registry');
+
+await test('all nine template ids are accepted and normalised on create', async () => {
+  const ids = ['minimal', 'developer', 'editorial', 'obsidian', 'aurora', 'swiss', 'neon', 'editorialpro', 'executive'];
+  for (const templateId of ids) {
+    const created = await alice.post('/portfolios', { templateId, title: `Template ${templateId}` });
+    assert.equal(created.status, 201, `create failed for ${templateId}`);
+    assert.equal(created.body.data.portfolio.templateId, templateId);
+  }
+});
+
+await test('legacy template aliases map to canonical ids', async () => {
+  const created = await alice.post('/portfolios', { templateId: 'neon-terminal', title: 'Alias check' });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.data.portfolio.templateId, 'neon');
+});
+
+await test('an unknown template id falls back instead of erroring', async () => {
+  const created = await alice.post('/portfolios', { templateId: 'not-a-template', title: 'Unknown template' });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.data.portfolio.templateId, 'minimal');
+});
+
+/* ------------------------------------------------------------------ */
+/* Blog posts                                                          */
+/* ------------------------------------------------------------------ */
+suite('Blog posts');
+
+const blogPortfolioCreate = await alice.post('/portfolios', { title: 'Blog host portfolio', templateId: 'aurora' });
+const blogPortfolioId = blogPortfolioCreate.body.data.portfolio.id;
+const blogPortfolio = await alice.put(`/portfolios/${blogPortfolioId}`, {
+  profile: {
+    fullName: 'Blog Author',
+    title: 'Backend Developer',
+    summary: 'Backend developer writing about API design and testing.',
+    contactEmail: 'author@example.com',
+  },
+  skills: [{ name: 'Node.js', category: 'technical' }],
+  blog: { enabled: true, title: 'Notes', intro: 'Short posts about building things.' },
+});
+let blogPostId = null;
+let blogPostSlug = null;
+
+await test('a draft post can be created for an owned portfolio', async () => {
+  const created = await alice.post('/blog', {
+    portfolioId: blogPortfolioId,
+    title: 'How I tested my API',
+    excerpt: 'Notes on integration testing an Express API.',
+    content: '## Why test\n\nIntegration tests catch wiring bugs.',
+  });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.data.post.published, false);
+  assert.match(created.body.data.post.slug, /how-i-tested-my-api/);
+  blogPostId = created.body.data.post.id;
+  blogPostSlug = created.body.data.post.slug;
+});
+
+await test('blog posts are scoped to their owner', async () => {
+  assert.equal((await bob.get(`/blog/${blogPostId}`)).status, 404);
+  assert.equal((await bob.put(`/blog/${blogPostId}`, { title: 'Hijacked' })).status, 404);
+  assert.equal((await bob.delete(`/blog/${blogPostId}`)).status, 404);
+  const bobList = await bob.get('/blog');
+  assert.equal(bobList.body.data.posts.length, 0);
+});
+
+await test('a post cannot be attached to another users portfolio', async () => {
+  const attempt = await bob.post('/blog', { portfolioId: blogPortfolioId, title: 'Not mine' });
+  assert.equal(attempt.status, 404);
+});
+
+await test('titles are required and slugs stay unique', async () => {
+  const missing = await alice.post('/blog', { portfolioId: blogPortfolioId, title: '' });
+  assert.equal(missing.status, 400);
+
+  const duplicate = await alice.post('/blog', {
+    portfolioId: blogPortfolioId,
+    title: 'How I tested my API',
+  });
+  assert.equal(duplicate.status, 201);
+  assert.notEqual(duplicate.body.data.post.slug, blogPostSlug);
+});
+
+await test('published posts appear on the public blog only when the portfolio is published', async () => {
+  const publish = await alice.patch(`/blog/${blogPostId}/publish`, { published: true });
+  assert.equal(publish.status, 200);
+  assert.equal(publish.body.data.post.published, true);
+
+  const slug = blogPortfolio.body.data.portfolio.slug;
+  const unpublished = await fetch(`${BASE}/public/${slug}/blog`);
+  assert.equal(unpublished.status, 404);
+
+  const publishPortfolio = await alice.patch(`/portfolios/${blogPortfolioId}/publish`, { published: true });
+  assert.equal(publishPortfolio.status, 200, JSON.stringify(publishPortfolio.body));
+
+  const list = await fetch(`${BASE}/public/${slug}/blog`);
+  assert.equal(list.status, 200);
+  const listBody = await list.json();
+  assert.equal(listBody.data.posts.length, 1);
+  assert.equal(listBody.data.posts[0].slug, blogPostSlug);
+});
+
+await test('a public post is readable by its slug and 404s when unpublished', async () => {
+  const slug = blogPortfolio.body.data.portfolio.slug;
+  const post = await fetch(`${BASE}/public/${slug}/blog/${blogPostSlug}`);
+  assert.equal(post.status, 200);
+  const body = await post.json();
+  assert.equal(body.data.post.title, 'How I tested my API');
+
+  await alice.patch(`/blog/${blogPostId}/publish`, { published: false });
+  const hidden = await fetch(`${BASE}/public/${slug}/blog/${blogPostSlug}`);
+  assert.equal(hidden.status, 404);
+  await alice.patch(`/blog/${blogPostId}/publish`, { published: true });
+});
+
+await test('deleting a post removes it from the public blog', async () => {
+  const created = await alice.post('/blog', { portfolioId: blogPortfolioId, title: 'Temporary post' });
+  const id = created.body.data.post.id;
+  const removed = await alice.delete(`/blog/${id}`);
+  assert.equal(removed.status, 200);
+  assert.equal((await alice.get(`/blog/${id}`)).status, 404);
+});
+
+/* ------------------------------------------------------------------ */
+/* Website analyser                                                    */
+/* ------------------------------------------------------------------ */
+suite('Website analyser');
+
+const GOOD_HTML = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aditi Sharma — Backend Developer</title>
+    <meta name="description" content="Backend developer building tested Node.js and Express APIs, with project write-ups and contact details." />
+    <link rel="canonical" href="https://example.com/" />
+    <meta property="og:title" content="Aditi Sharma" />
+    <meta property="og:description" content="Backend developer portfolio." />
+    <meta property="og:image" content="https://example.com/og.png" />
+  </head>
+  <body>
+    <header><nav aria-label="Main"><a href="#about">About</a></nav></header>
+    <main>
+      <h1>Aditi Sharma</h1>
+      <section id="about"><h2>About</h2><p>Backend developer with two years of experience building REST APIs.</p></section>
+      <section><h2>Projects</h2>
+        <article><h3>Campus events API</h3><p>A registration API with JWT authentication and CSV export.</p></article>
+      </section>
+      <img src="/me.png" alt="Portrait of Aditi Sharma" />
+      <a href="#contact">Contact me</a>
+    </main>
+    <footer><p>Email: aditi@example.com</p></footer>
+  </body>
+</html>`;
+
+await test('uploaded HTML is scored across all six categories', async () => {
+  const scan = await alice.post('/analyze/html', { html: GOOD_HTML, filename: 'portfolio.html' });
+  assert.equal(scan.status, 200);
+  const analysis = scan.body.data.analysis;
+  assert.equal(typeof analysis.score, 'number');
+  assert.ok(analysis.score > 0 && analysis.score <= 100);
+  assert.equal(analysis.categories.length, 6);
+  assert.deepEqual(
+    analysis.categories.map((category) => category.id),
+    ['seo', 'accessibility', 'performance', 'responsive', 'code', 'design']
+  );
+  analysis.categories.forEach((category) => {
+    assert.ok(category.score >= 0 && category.score <= category.max, `${category.id} within its maximum`);
+  });
+  assert.ok(analysis.notes.length > 0, 'scan limitations are disclosed');
+  assert.equal(analysis.stats.images, 1);
+});
+
+await test('a weak page scores lower and reports concrete findings', async () => {
+  const weak = '<html><body><div><h1>Hi</h1><img src="a.png"><a href="#">click here</a></div></body></html>';
+  const scan = await alice.post('/analyze/html', { html: weak });
+  assert.equal(scan.status, 200);
+  const analysis = scan.body.data.analysis;
+  assert.ok(analysis.score < 70, `expected a low score, got ${analysis.score}`);
+  assert.ok(analysis.issues.length > 0);
+  analysis.issues.forEach((issue) => {
+    assert.ok(['high', 'medium', 'low'].includes(issue.severity));
+    assert.ok(issue.message && issue.recommendation);
+  });
+});
+
+await test('only requested categories are scored, and empty files are rejected', async () => {
+  const focused = await alice.post('/analyze/html', { html: GOOD_HTML, categories: ['seo'] });
+  assert.equal(focused.status, 200);
+  assert.equal(focused.body.data.analysis.categories.length, 1);
+
+  const empty = await alice.post('/analyze/html', { html: '' });
+  assert.equal(empty.status, 400);
+});
+
+await test('internal and loopback scan targets are refused', async () => {
+  for (const url of ['http://127.0.0.1:3000/', 'http://localhost:5000/', 'http://169.254.169.254/latest/meta-data/', 'file:///etc/passwd']) {
+    const blocked = await alice.post('/analyze/url', { url });
+    assert.ok(blocked.status >= 400 && blocked.status < 500, `${url} should be rejected, got ${blocked.status}`);
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* AI chat builder                                                     */
+/* ------------------------------------------------------------------ */
+suite('AI chat builder');
+
+await test('the builder returns validated structured content from supplied facts', async () => {
+  geminiStub.mode = 'builder';
+  try {
+    const response = await alice.post('/ai/builder', {
+      facts: {
+        fullName: 'Test Student',
+        role: 'Backend developer',
+        about: 'I build small, tested REST APIs.',
+        skills: ['Node.js', 'Express'],
+        projects: [{ name: 'Campus events portal', description: 'A registration portal.' }],
+      },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(typeof response.body.data.result.summary, 'string');
+    assert.ok(response.body.data.result.skills.length >= 1);
+    assert.equal(response.body.data.result.projects.length, 1);
+    assert.equal(response.body.data.source, 'ai');
+  } finally {
+    geminiStub.mode = 'ok';
+  }
+});
+
+await test('the builder requires authentication and some facts', async () => {
+  const anonymous = await fetch(`${BASE}/ai/builder`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ facts: { fullName: 'Nobody' } }),
+  });
+  assert.equal(anonymous.status, 401);
+
+  const empty = await alice.post('/ai/builder', { facts: {} });
+  assert.equal(empty.status, 400);
 });
 
 /* ------------------------------------------------------------------ */

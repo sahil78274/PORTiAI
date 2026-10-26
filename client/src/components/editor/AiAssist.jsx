@@ -83,14 +83,14 @@ export default function AiAssist({
             value={tone}
             onChange={(event) => setTone(event.target.value)}
             aria-label="Tone for generated text"
-            className="rounded-lg border border-line bg-surface px-2 py-1 text-2xs text-slate-700 shadow-2xs focus:border-accent focus:outline-none"
+            className="rounded-lg border border-line bg-surface px-2 py-1 text-2xs text-inkSoft shadow-2xs focus:border-accent focus:outline-none"
           >
             <option value="professional">Professional</option>
             <option value="concise">Concise</option>
             <option value="friendly">Friendly</option>
           </select>
         </label>
-        {meta?.model ? <span className="text-2xs text-slate-400">Gemini · {meta.model}</span> : null}
+        {meta?.model ? <span className="text-2xs text-faint">Gemini · {meta.model}</span> : null}
       </div>
 
       {state === 'error' && error ? (
@@ -124,7 +124,7 @@ export default function AiAssist({
               <span>AI Suggestion (Editable)</span>
             </p>
             {meta?.usage ? (
-              <span className="text-2xs text-slate-500">
+              <span className="text-2xs text-faint">
                 {meta.usage.remaining}/{meta.usage.limit} daily calls left
               </span>
             ) : null}
@@ -134,11 +134,11 @@ export default function AiAssist({
             <div className="my-2 grid gap-2 text-xs sm:grid-cols-2">
               <div className="rounded-lg bg-white p-2.5 border border-indigo-100">
                 <p className="font-bold text-ink">Technical</p>
-                <p className="text-slate-600">{result.technical?.join(', ') || '—'}</p>
+                <p className="text-inkSoft">{result.technical?.join(', ') || '—'}</p>
               </div>
               <div className="rounded-lg bg-white p-2.5 border border-indigo-100">
                 <p className="font-bold text-ink">Soft Skills</p>
-                <p className="text-slate-600">{result.soft?.join(', ') || '—'}</p>
+                <p className="text-inkSoft">{result.soft?.join(', ') || '—'}</p>
               </div>
             </div>
           ) : (
@@ -151,7 +151,7 @@ export default function AiAssist({
             />
           )}
 
-          {result.notes ? <p className="mt-2 text-2xs text-slate-500">Note: {result.notes}</p> : null}
+          {result.notes ? <p className="mt-2 text-2xs text-faint">Note: {result.notes}</p> : null}
 
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" variant="primary" onClick={apply}>

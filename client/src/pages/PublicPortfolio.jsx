@@ -1,29 +1,37 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Copy, Check, FileQuestion, ArrowLeft, Sparkles, ExternalLink } from 'lucide-react';
+import { ArrowUpRight, Loader2, Lock, RefreshCw, Sparkles } from 'lucide-react';
 import PortfolioRenderer from '../templates/PortfolioRenderer.jsx';
 import { portfolioService } from '../services/portfolioService.js';
-import { formatDate } from '../utils/format.js';
-import { getTemplate } from '../utils/templates.js';
-import Logo from '../components/ui/Logo.jsx';
+
+const setMeta = (name, content) => {
+  let tag = document.querySelector(`meta[name="${name}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute('name', name);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+};
 
 export default function PublicPortfolio() {
   const { slug } = useParams();
   const [portfolio, setPortfolio] = useState(null);
-  const [state, setState] = useState('loading');
+  const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [blogEnabled, setBlogEnabled] = useState(false);
 
   const load = useCallback(async () => {
-    setState('loading');
+    setStatus('loading');
     setError('');
     try {
       const data = await portfolioService.getPublic(slug);
       setPortfolio(data.portfolio);
-      setState('ready');
+      setBlogEnabled(Boolean(data.portfolio.blog?.enabled));
+      setStatus('ready');
     } catch (err) {
       setError(err.message || 'This portfolio could not be loaded.');
-      setState(err.status === 404 ? 'missing' : 'error');
+      setStatus(err.status === 404 ? 'missing' : 'error');
     }
   }, [slug]);
 
@@ -32,121 +40,73 @@ export default function PublicPortfolio() {
   }, [load]);
 
   useEffect(() => {
-    if (portfolio?.profile?.fullName) {
-      const template = getTemplate(portfolio.templateId);
-      document.title = `${portfolio.profile.fullName}${portfolio.profile.title ? ` — ${portfolio.profile.title}` : ''}`;
-      return () => {
-        document.title = `${template.name} · PortiAI`;
-      };
-    }
-    return undefined;
+    if (!portfolio) return;
+    const title = `${portfolio.profile?.fullName || portfolio.title}${portfolio.profile?.title ? ` — ${portfolio.profile.title}` : ''}`;
+    document.title = `${title} | PortiAI`;
+    const description =
+      portfolio.profile?.summary ||
+      portfolio.profile?.bio?.slice(0, 160) ||
+      `${portfolio.profile?.fullName || 'A professional'} portfolio built with PortiAI.`;
+    setMeta('description', description);
   }, [portfolio]);
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
-    } catch {
-      setCopied(false);
-    }
-  };
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
-  if (state === 'loading') {
+  if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="flex items-center gap-2.5 text-xs text-muted">
-          <span className="h-2 w-2 rounded-full bg-accent animate-ping" />
-          <span>Loading public portfolio…</span>
+      <div className="flex min-h-screen items-center justify-center bg-[#070b18]">
+        <div className="text-center">
+          <Loader2 size={22} className="mx-auto animate-spin text-accent-hover" aria-hidden="true" />
+          <p className="mt-3 text-xs text-muted">Loading portfolio…</p>
         </div>
       </div>
     );
   }
 
-  if (state === 'missing' || state === 'error') {
+  if (status !== 'ready' || !portfolio) {
     return (
-      <div className="flex min-h-screen flex-col bg-canvas">
-        <header className="border-b border-line bg-surface">
-          <div className="container-page flex h-14 items-center justify-between">
-            <Logo />
-            <Link to="/" className="text-xs font-semibold text-slate-600 hover:text-ink transition-colors">
-              Home
-            </Link>
-          </div>
-        </header>
-        <main className="flex flex-1 items-center">
-          <div className="container-page max-w-lg py-16">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-line bg-surface text-slate-400 shadow-2xs">
-              <FileQuestion size={22} aria-hidden="true" />
-            </span>
-            <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink">
-              {state === 'missing' ? 'Portfolio not available' : 'Failed to load portfolio'}
-            </h1>
-            <p className="mt-2 text-xs leading-relaxed text-muted">
-              {state === 'missing'
-                ? 'The link may be mistyped, or the creator has unpublished this portfolio. Only published portfolios are accessible on the public web.'
-                : error}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/" className="btn-primary btn-sm">
-                <ArrowLeft size={14} aria-hidden="true" />
-                <span>Back to PortiAI</span>
-              </Link>
-              {state === 'error' ? (
-                <button type="button" onClick={load} className="btn-secondary btn-sm">
-                  Try again
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </main>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#070b18] px-6 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-muted">
+          <Lock size={20} aria-hidden="true" />
+        </span>
+        <h1 className="mt-4 text-xl font-semibold text-white">
+          {status === 'missing' ? 'This portfolio is not available' : 'Something went wrong'}
+        </h1>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
+          {status === 'missing'
+            ? 'The link may be incorrect, or the owner has unpublished this portfolio. Published portfolios are always reachable at their exact URL.'
+            : error}
+        </p>
+        <div className="mt-5 flex gap-2">
+          {status === 'error' ? (
+            <button type="button" onClick={load} className="btn-secondary btn-sm">
+              <RefreshCw size={13} aria-hidden="true" />
+              Try again
+            </button>
+          ) : null}
+          <Link to="/" className="btn-primary btn-sm">
+            <Sparkles size={13} aria-hidden="true" />
+            Build your own with PortiAI
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <a
-        href="#portfolio-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-xs focus:font-semibold focus:shadow-raised"
-      >
-        Skip to portfolio
-      </a>
-
-      {/* Top Banner */}
-      <div className="border-b border-line bg-slate-50/80 backdrop-blur-sm sticky top-0 z-30">
-        <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-2 px-4 py-2">
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <p className="text-2xs text-muted">
-              Public Portfolio · <strong className="font-semibold text-slate-700">{getTemplate(portfolio.templateId).name}</strong> · Updated {formatDate(portfolio.updatedAt)}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={copy} className="btn-secondary btn-sm !py-1 text-2xs font-semibold">
-              {copied ? <Check size={12} className="text-emerald-600" aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
-              <span>{copied ? 'Link copied' : 'Share link'}</span>
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen">
+      <PortfolioRenderer portfolio={portfolio} blogHref={blogEnabled ? `/p/${portfolio.slug}/blog` : undefined} />
+      <div className="border-t border-black/10 bg-[#0b1020] px-4 py-5 text-center">
+        <Link
+          to="/?ref=portfolio-footer"
+          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/60 transition-colors hover:text-white"
+        >
+          Built with PortiAI
+          <ArrowUpRight size={11} aria-hidden="true" />
+        </Link>
       </div>
-
-      <main id="portfolio-content">
-        <PortfolioRenderer portfolio={portfolio} />
-      </main>
-
-      <footer className="border-t border-line bg-slate-50">
-        <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-6">
-          <div className="flex items-center gap-2.5">
-            <Logo size="sm" />
-            <span className="text-2xs text-muted">· Live verified student portfolio</span>
-          </div>
-          <Link to="/register" className="btn-secondary btn-sm text-xs font-semibold">
-            <Sparkles size={13} aria-hidden="true" />
-            <span>Build your own with PortiAI</span>
-          </Link>
-        </div>
-      </footer>
     </div>
   );
 }

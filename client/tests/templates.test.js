@@ -14,10 +14,31 @@ import {
   draftToPayload,
 } from '../src/utils/portfolioDraft.js';
 
-test('TEMPLATES registry contains exactly 3 documented templates', () => {
-  assert.equal(TEMPLATES.length, 3);
+test('TEMPLATES registry contains exactly 9 documented templates', () => {
+  assert.equal(TEMPLATES.length, 9);
   const ids = TEMPLATES.map((t) => t.id);
-  assert.deepEqual(ids, ['minimal', 'developer', 'editorial']);
+  assert.deepEqual(ids, [
+    'minimal',
+    'developer',
+    'editorial',
+    'obsidian',
+    'aurora',
+    'swiss',
+    'neon',
+    'editorialpro',
+    'executive',
+  ]);
+});
+
+test('every template declares the metadata the gallery relies on', () => {
+  TEMPLATES.forEach((template) => {
+    assert.ok(template.name, `${template.id} has a name`);
+    assert.ok(template.tagline, `${template.id} has a tagline`);
+    assert.ok(template.bestFor, `${template.id} declares bestFor`);
+    assert.match(template.accent, /^#[0-9a-f]{6}$/i, `${template.id} has a hex accent`);
+    assert.ok(Array.isArray(template.categories) && template.categories.length >= 1, `${template.id} has categories`);
+    assert.ok(['light', 'dark'].includes(template.tone), `${template.id} declares a tone`);
+  });
 });
 
 test('normalizeTemplateId handles canonical IDs correctly', () => {
@@ -36,6 +57,19 @@ test('normalizeTemplateId handles template aliases', () => {
   assert.equal(normalizeTemplateId('developer-portfolio'), 'developer');
   assert.equal(normalizeTemplateId('modern-editorial'), 'editorial');
   assert.equal(normalizeTemplateId('minimal-professional'), 'minimal');
+  assert.equal(normalizeTemplateId('obsidian-pro'), 'obsidian');
+  assert.equal(normalizeTemplateId('aurora-gradient'), 'aurora');
+  assert.equal(normalizeTemplateId('swiss-minimal'), 'swiss');
+  assert.equal(normalizeTemplateId('neon-terminal'), 'neon');
+  assert.equal(normalizeTemplateId('editorial-pro'), 'editorialpro');
+  assert.equal(normalizeTemplateId('executive-elite'), 'executive');
+});
+
+test('the nine new template ids normalise to themselves', () => {
+  ['obsidian', 'aurora', 'swiss', 'neon', 'editorialpro', 'executive'].forEach((id) => {
+    assert.equal(normalizeTemplateId(id), id);
+    assert.equal(getTemplate(id).id, id);
+  });
 });
 
 test('normalizeTemplateId safely falls back to minimal on missing or unknown input', () => {
