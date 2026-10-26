@@ -134,7 +134,7 @@ export default function PublishSuccess() {
   if (error || !portfolio) {
     return (
       <div className="card mx-auto max-w-lg p-8 text-center">
-        <h1 className="text-lg font-bold text-white">Portfolio not found</h1>
+        <h1 className="text-[18px] font-semibold text-ink">Portfolio not found</h1>
         <p className="mt-2 text-sm text-muted">{error || 'This portfolio does not exist or belongs to another account.'}</p>
         <Link to="/dashboard/portfolios" className="btn-primary mt-5">
           Back to my portfolios
@@ -147,25 +147,20 @@ export default function PublishSuccess() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="relative overflow-hidden rounded-3xl border border-line bg-surface/70 p-6 sm:p-9">
-        <div
-          className="pointer-events-none absolute inset-x-0 -top-32 h-64 opacity-70"
-          style={{ background: 'radial-gradient(ellipse 500px 240px at 50% 0%, rgba(99,102,241,0.4), transparent 70%)' }}
-          aria-hidden="true"
-        />
+      <div className="relative overflow-hidden rounded-lg border border-line bg-white p-6 sm:p-8">
 
         <div className="relative text-center">
           <span
-            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${
-              notPublished ? 'border border-warning/30 bg-warningSoft text-warning' : 'bg-brand-gradient text-white shadow-glow'
+            className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${
+              notPublished ? 'border border-warning/30 bg-warningSoft text-warning' : 'bg-successSoft text-success'
             }`}
           >
-            {notPublished ? <Undo2 size={26} aria-hidden="true" /> : <CheckCircle2 size={28} aria-hidden="true" />}
+            {notPublished ? <Undo2 size={20} aria-hidden="true" /> : <CheckCircle2 size={22} aria-hidden="true" />}
           </span>
-          <h1 className="mt-5 text-balance text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <h1 className="mt-4 text-balance text-[24px] font-semibold tracking-[-0.02em] sm:text-[28px]">
             {notPublished ? 'This portfolio is currently a draft' : 'Your portfolio is live'}
           </h1>
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-muted">
+          <p className="mx-auto mt-2 max-w-xl text-[14px] leading-6 text-muted">
             {notPublished
               ? 'Publish it from the editor to make the public link reachable. Drafts are private to your account and never indexed.'
               : `Anyone with the link can now view your portfolio. It renders from your saved content with the ${template?.name || 'selected'} template.`}
@@ -173,7 +168,7 @@ export default function PublishSuccess() {
 
           {publicUrl ? (
             <div className="mx-auto mt-5 flex max-w-xl flex-col gap-2 sm:flex-row">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-line bg-canvasDeep px-3.5 py-2.5">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-canvas px-3 py-2">
                 <Globe2 size={14} className="shrink-0 text-faint" aria-hidden="true" />
                 <span className="truncate font-mono text-xs text-inkSoft">{publicUrl}</span>
               </div>
@@ -215,13 +210,13 @@ export default function PublishSuccess() {
           </div>
         </div>
 
-        <div className="relative mt-8 grid gap-4 border-t border-line pt-6 sm:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-xl border border-line bg-canvasDeep/50 p-3">
-            <div className="w-20 shrink-0 overflow-hidden rounded-lg border border-line">
+        <div className="relative mt-7 grid gap-3 border-t border-line pt-5 sm:grid-cols-2">
+          <div className="flex items-center gap-3 rounded-lg border border-line bg-canvas px-3 py-2.5">
+            <div className="w-16 shrink-0 overflow-hidden rounded border border-line">
               <SmartImage src={portfolio.thumbnailUrl} alt="" ratio="aspect-[4/3]" fallbackSeed={portfolio.title?.length || 1} />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">{portfolio.title}</p>
+              <p className="truncate text-[13px] font-semibold text-ink">{portfolio.title}</p>
               <p className="mt-0.5 text-[11px] text-faint">
                 {template?.name} · {wordCount(portfolio.profile?.summary || '') + wordCount(portfolio.profile?.bio || '')} words of copy
               </p>
@@ -232,29 +227,29 @@ export default function PublishSuccess() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-line bg-canvasDeep/50 p-3">
+          <div className="rounded-lg border border-line bg-canvas px-3 py-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">Quick links</p>
             <ul className="mt-2 space-y-1.5 text-xs">
               <li>
-                <Link to={`/dashboard/portfolio/${id}/edit`} className="inline-flex items-center gap-1.5 text-inkSoft hover:text-white">
+                <Link to={`/dashboard/portfolio/${id}/edit`} className="inline-flex items-center gap-1.5 text-inkSoft hover:text-ink">
                   <Pencil size={11} aria-hidden="true" />
                   Edit content and design
                 </Link>
               </li>
               <li>
-                <Link to="/dashboard/blog" className="inline-flex items-center gap-1.5 text-inkSoft hover:text-white">
+                <Link to="/dashboard/blog" className="inline-flex items-center gap-1.5 text-inkSoft hover:text-ink">
                   <Newspaper size={11} aria-hidden="true" />
                   Manage blog posts
                 </Link>
               </li>
               <li>
-                <Link to="/dashboard/templates" className="inline-flex items-center gap-1.5 text-inkSoft hover:text-white">
+                <Link to="/dashboard/templates" className="inline-flex items-center gap-1.5 text-inkSoft hover:text-ink">
                   <Eye size={11} aria-hidden="true" />
                   Try a different template
                 </Link>
               </li>
               <li>
-                <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-inkSoft hover:text-white">
+                <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-inkSoft hover:text-ink">
                   <LayoutDashboard size={11} aria-hidden="true" />
                   Back to dashboard
                 </Link>
@@ -265,9 +260,9 @@ export default function PublishSuccess() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <div className="card p-5">
+        <div className="rounded-lg border border-line bg-white p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-white">Publish checklist</p>
+            <p className="text-[13px] font-semibold text-ink">Publish checklist</p>
             <span className="badge !py-0.5">{checklist.filter((item) => item.done).length}/{checklist.length} complete</span>
           </div>
           <ul className="mt-3 divide-y divide-line">
@@ -281,7 +276,7 @@ export default function PublishSuccess() {
                   {item.done ? <Check size={10} aria-hidden="true" /> : <span className="h-1 w-1 rounded-full bg-faint" aria-hidden="true" />}
                 </span>
                 <div className="min-w-0">
-                  <p className={`text-xs font-medium ${item.done ? 'text-inkSoft' : 'text-white'}`}>{item.label}</p>
+                  <p className={`text-xs font-medium ${item.done ? 'text-inkSoft' : 'text-ink'}`}>{item.label}</p>
                   <p className="mt-0.5 truncate text-[10px] text-faint">{item.detail}</p>
                 </div>
               </li>
@@ -290,26 +285,26 @@ export default function PublishSuccess() {
         </div>
 
         <div className="space-y-4">
-          <div className="card p-5">
-            <p className="text-sm font-semibold text-white">Next steps</p>
+          <div className="rounded-lg border border-line bg-white p-4">
+            <p className="text-[13px] font-semibold text-ink">Next steps</p>
             <ol className="mt-2.5 space-y-2.5 text-xs leading-relaxed text-muted">
               <li className="flex gap-2">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/[0.07] text-[9px] font-semibold text-inkSoft">1</span>
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-canvasAlt text-[9px] font-semibold text-inkSoft">1</span>
                 Add your own domain later — share the PortiAI link for now.
               </li>
               <li className="flex gap-2">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/[0.07] text-[9px] font-semibold text-inkSoft">2</span>
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-canvasAlt text-[9px] font-semibold text-inkSoft">2</span>
                 Run the analyzer and apply the high-severity fixes.
               </li>
               <li className="flex gap-2">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/[0.07] text-[9px] font-semibold text-inkSoft">3</span>
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-canvasAlt text-[9px] font-semibold text-inkSoft">3</span>
                 Publish a blog post so visitors see recent work.
               </li>
             </ol>
           </div>
 
           {portfolio.published ? (
-            <div className="rounded-xl border border-line bg-surface/50 p-4">
+            <div className="rounded-lg border border-line bg-canvas p-3.5">
               <p className="text-[11px] font-medium text-inkSoft">Need to take it down?</p>
               <p className="mt-1 text-[11px] leading-relaxed text-muted">Unpublishing removes public access immediately and keeps your content intact.</p>
               <button type="button" onClick={unpublish} disabled={unpublishing} className="btn-ghost btn-sm mt-2 text-warning hover:bg-warningSoft">
@@ -318,9 +313,9 @@ export default function PublishSuccess() {
               </button>
             </div>
           ) : (
-            <Link to={`/dashboard/portfolio/${id}/edit`} className="card flex items-center justify-between p-4 transition-colors hover:border-accent-line">
+            <Link to={`/dashboard/portfolio/${id}/edit`} className="flex items-center justify-between rounded-lg border border-line bg-white p-4 transition-colors hover:border-lineStrong">
               <div>
-                <p className="text-sm font-semibold text-white">Ready to go live?</p>
+                <p className="text-[13px] font-semibold text-ink">Ready to go live?</p>
                 <p className="mt-0.5 text-[11px] text-muted">Open the editor and press Publish.</p>
               </div>
               <ArrowRight size={15} className="text-accent-hover" aria-hidden="true" />

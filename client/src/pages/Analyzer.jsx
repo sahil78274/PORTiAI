@@ -31,7 +31,7 @@ import { getTemplate } from '../utils/templates.js';
 const SEVERITY_TONE = {
   high: { label: 'High', dot: 'bg-danger', chip: 'border-danger/30 bg-dangerSoft text-danger' },
   medium: { label: 'Medium', dot: 'bg-warning', chip: 'border-warning/30 bg-warningSoft text-warning' },
-  low: { label: 'Low', dot: 'bg-faint', chip: 'border-lineStrong bg-white/[0.04] text-muted' },
+  low: { label: 'Low', dot: 'bg-faint', chip: 'border-lineStrong bg-canvasAlt text-muted' },
 };
 
 const SCAN_CATEGORIES = [
@@ -69,8 +69,8 @@ function ScoreBars({ categories }) {
                 {category.score}/{category.max}
               </span>
             </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.07]" role="presentation">
-              <div className={`h-full rounded-full ${tone} transition-all duration-700`} style={{ width: `${pct}%` }} />
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-canvasAlt" role="presentation">
+              <div className={`h-full rounded-full ${tone} transition-colors duration-700`} style={{ width: `${pct}%` }} />
             </div>
             {category.detail ? <p className="mt-1 text-[10px] leading-relaxed text-faint">{category.detail}</p> : null}
           </li>
@@ -281,18 +281,17 @@ export default function Analyzer() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Portfolio analyzer"
-        title="Score what you built — before someone else does"
+        title="Portfolio analysis"
         description="Run the deterministic 100-point rubric on your own portfolio, or scan any live page for SEO, accessibility, responsiveness, performance and markup issues."
         actions={
           <>
-            <div className="flex items-center gap-1 rounded-lg border border-line bg-canvasDeep p-0.5" role="tablist" aria-label="Analyzer mode">
+            <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="tablist" aria-label="Analyzer mode">
               <button
                 type="button"
                 role="tab"
                 aria-selected={mode === 'portfolio'}
                 onClick={() => setMode('portfolio')}
-                className={`rounded-md px-3 py-1.5 text-[11px] font-medium ${mode === 'portfolio' ? 'bg-white/[0.09] text-white' : 'text-muted hover:text-ink'}`}
+                className={`rounded-md px-3 py-1.5 text-[11px] font-medium ${mode === 'portfolio' ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'}`}
               >
                 My portfolio
               </button>
@@ -301,7 +300,7 @@ export default function Analyzer() {
                 role="tab"
                 aria-selected={mode === 'scan'}
                 onClick={() => setMode('scan')}
-                className={`rounded-md px-3 py-1.5 text-[11px] font-medium ${mode === 'scan' ? 'bg-white/[0.09] text-white' : 'text-muted hover:text-ink'}`}
+                className={`rounded-md px-3 py-1.5 text-[11px] font-medium ${mode === 'scan' ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'}`}
               >
                 Website scan
               </button>
@@ -352,7 +351,7 @@ export default function Analyzer() {
             </div>
 
             {portfolios.length === 0 && !loadingList ? (
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-lineStrong/70 p-4">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-lineStrong/70 p-4">
                 <p className="text-sm text-muted">You need a portfolio before you can analyse one.</p>
                 <Link to="/dashboard/builder" className="btn-primary btn-sm">
                   <Sparkles size={13} aria-hidden="true" />
@@ -372,7 +371,7 @@ export default function Analyzer() {
           ) : !portfolio ? (
             <div className="card flex flex-col items-center px-6 py-14 text-center">
               <Gauge size={26} className="text-faint" aria-hidden="true" />
-              <p className="mt-3 text-sm font-medium text-white">
+              <p className="mt-3 text-sm font-medium text-ink">
                 {portfolios.length ? 'Choose a portfolio above' : 'No portfolio selected'}
               </p>
               <p className="mt-1 max-w-sm text-xs text-muted">
@@ -386,7 +385,7 @@ export default function Analyzer() {
                 <div className="card p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-white">{portfolio.title}</p>
+                      <p className="truncate text-sm font-semibold text-ink">{portfolio.title}</p>
                       <p className="text-[11px] text-muted">
                         {getTemplate(portfolio.templateId).name} · updated {formatRelative(portfolio.updatedAt)}
                       </p>
@@ -400,7 +399,7 @@ export default function Analyzer() {
                     {analysis ? (
                       <>
                         <ScoreRing score={analysis.score} label="Portfolio score" />
-                        <p className="mt-2 text-sm font-medium text-white">{analysis.grade}</p>
+                        <p className="mt-2 text-sm font-medium text-ink">{analysis.grade}</p>
                         <p className="mt-0.5 text-[11px] text-faint">
                           {analysis.source === 'hybrid' ? 'Rules + AI observations' : 'Rule-based rubric'} ·{' '}
                           {analysis.generatedAt ? formatRelative(analysis.generatedAt) : 'not dated'}
@@ -409,7 +408,7 @@ export default function Analyzer() {
                     ) : (
                       <div className="py-6 text-center">
                         <Gauge size={30} className="mx-auto text-faint" aria-hidden="true" />
-                        <p className="mt-3 text-sm font-medium text-white">No analysis for this revision yet</p>
+                        <p className="mt-3 text-sm font-medium text-ink">No analysis for this revision yet</p>
                         <p className="mt-1 max-w-[240px] text-xs text-muted">Run the analyser to score the current content.</p>
                         <Button className="mt-4" size="sm" onClick={() => runAnalysis({ force: true, useAi: true })} loading={running}>
                           <ScanLine size={13} aria-hidden="true" />
@@ -443,7 +442,7 @@ export default function Analyzer() {
 
                 {analysis ? (
                   <div className="card p-5">
-                    <p className="text-sm font-semibold text-white">Category scores</p>
+                    <p className="text-sm font-semibold text-ink">Category scores</p>
                     <div className="mt-4">
                       <ScoreBars categories={analysis.categories || []} />
                     </div>
@@ -456,7 +455,7 @@ export default function Analyzer() {
                   <>
                     <div className="card p-5">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-white">Issues</p>
+                        <p className="text-sm font-semibold text-ink">Issues</p>
                         <span className="text-[11px] text-faint">{(analysis.issues || []).length} found</span>
                       </div>
                       {analysis.issues?.length ? (
@@ -464,7 +463,7 @@ export default function Analyzer() {
                           {analysis.issues.map((issue) => {
                             const tone = SEVERITY_TONE[issue.severity] || SEVERITY_TONE.low;
                             return (
-                              <li key={issue.id} className="flex items-start gap-3 rounded-xl border border-line bg-canvasAlt/40 p-3">
+                              <li key={issue.id} className="flex items-start gap-3 rounded-lg border border-line bg-canvasAlt/40 p-3">
                                 <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${tone.dot}`} aria-hidden="true" />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-xs leading-relaxed text-inkSoft">{issue.message}</p>
@@ -479,7 +478,7 @@ export default function Analyzer() {
                           })}
                         </ul>
                       ) : (
-                        <div className="mt-4 flex items-center gap-2 rounded-xl border border-success/25 bg-successSoft p-3 text-xs text-success">
+                        <div className="mt-4 flex items-center gap-2 rounded-lg border border-success/25 bg-successSoft p-3 text-xs text-success">
                           <CheckCircle2 size={14} aria-hidden="true" />
                           No issues were detected by the rubric.
                         </div>
@@ -488,10 +487,10 @@ export default function Analyzer() {
 
                     {analysis.recommendations?.length ? (
                       <div className="card p-5">
-                        <p className="text-sm font-semibold text-white">Recommendations</p>
+                        <p className="text-sm font-semibold text-ink">Recommendations</p>
                         <ol className="mt-4 space-y-3">
                           {analysis.recommendations.map((recommendation, index) => (
-                            <li key={`${recommendation.title}-${index}`} className="rounded-xl border border-line bg-canvasAlt/40 p-3">
+                            <li key={`${recommendation.title}-${index}`} className="rounded-lg border border-line bg-canvasAlt/40 p-3">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="rounded-full border border-accent-line/50 bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-hover">
                                   {recommendation.priority === 'now' ? 'Fix first' : recommendation.priority === 'next' ? 'Next' : 'Later'}
@@ -501,7 +500,7 @@ export default function Analyzer() {
                                 </span>
                                 {recommendation.fromAi ? <span className="text-[10px] text-accent-hover">AI</span> : null}
                               </div>
-                              <p className="mt-1.5 text-xs font-medium text-white">{recommendation.title}</p>
+                              <p className="mt-1.5 text-xs font-medium text-ink">{recommendation.title}</p>
                               <p className="mt-1 text-xs leading-relaxed text-muted">{recommendation.detail}</p>
                             </li>
                           ))}
@@ -511,14 +510,14 @@ export default function Analyzer() {
 
                     {applyableExamples.length ? (
                       <div className="card p-5">
-                        <p className="text-sm font-semibold text-white">Suggested rewrites</p>
+                        <p className="text-sm font-semibold text-ink">Suggested rewrites</p>
                         <p className="mt-1 text-[11px] leading-relaxed text-muted">
                           These are structural patterns containing brackets. Apply them only if you intend to replace
                           every bracketed placeholder with your own facts.
                         </p>
                         <ul className="mt-4 space-y-3">
                           {applyableExamples.map((example) => (
-                            <li key={example.label} className="rounded-xl border border-line bg-canvasAlt/40 p-3">
+                            <li key={example.label} className="rounded-lg border border-line bg-canvasAlt/40 p-3">
                               <label className="flex items-start gap-2.5">
                                 <input
                                   type="checkbox"
@@ -531,7 +530,7 @@ export default function Analyzer() {
                                   }
                                 />
                                 <span className="min-w-0 flex-1">
-                                  <span className="block text-xs font-medium text-white">{example.label}</span>
+                                  <span className="block text-xs font-medium text-ink">{example.label}</span>
                                   <span className="mt-1 block whitespace-pre-line text-[11px] leading-relaxed text-muted">{example.after}</span>
                                   {example.note ? <span className="mt-1 block text-[10px] text-faint">{example.note}</span> : null}
                                 </span>
@@ -557,7 +556,7 @@ export default function Analyzer() {
                   </>
                 ) : (
                   <div className="card p-5">
-                    <p className="text-sm font-semibold text-white">What gets scored</p>
+                    <p className="text-sm font-semibold text-ink">What gets scored</p>
                     <ul className="mt-3 space-y-2 text-xs text-muted">
                       {[
                         'Completeness — 25 points across eight core elements',
@@ -589,13 +588,13 @@ export default function Analyzer() {
           {/* Website scan */}
           <div className="grid gap-4 lg:grid-cols-[0.95fr_1.35fr]">
             <div className="card p-5">
-              <div className="flex items-center gap-1 rounded-lg border border-line bg-canvasDeep p-0.5" role="tablist" aria-label="Scan source">
+              <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="tablist" aria-label="Scan source">
                 <button
                   type="button"
                   role="tab"
                   aria-selected={scanTab === 'url'}
                   onClick={() => setScanTab('url')}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-[11px] font-medium ${scanTab === 'url' ? 'bg-white/[0.09] text-white' : 'text-muted hover:text-ink'}`}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-[11px] font-medium ${scanTab === 'url' ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'}`}
                 >
                   <Globe2 size={11} className="mr-1 inline" aria-hidden="true" />
                   Live URL
@@ -605,7 +604,7 @@ export default function Analyzer() {
                   role="tab"
                   aria-selected={scanTab === 'file'}
                   onClick={() => setScanTab('file')}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-[11px] font-medium ${scanTab === 'file' ? 'bg-white/[0.09] text-white' : 'text-muted hover:text-ink'}`}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-[11px] font-medium ${scanTab === 'file' ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'}`}
                 >
                   <FileUp size={11} className="mr-1 inline" aria-hidden="true" />
                   HTML file
@@ -637,7 +636,7 @@ export default function Analyzer() {
                     type="file"
                     accept=".html,.htm,text/html"
                     onChange={(event) => setScanFile(event.target.files?.[0] || null)}
-                    className="block w-full cursor-pointer rounded-xl border border-line bg-canvasDeep/70 px-3 py-2 text-xs text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-white/[0.08] file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-ink"
+                    className="block w-full cursor-pointer rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-canvasAlt file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-ink"
                   />
                   <p className="hint">Single HTML document up to 600 KB. PDF and screenshot analysis is not supported.</p>
                 </div>
@@ -680,7 +679,7 @@ export default function Analyzer() {
               {scanning ? (
                 <div className="card flex flex-col items-center justify-center p-10 text-center">
                   <Loader2 size={26} className="animate-spin text-accent-hover" aria-hidden="true" />
-                  <p className="mt-3 text-sm font-medium text-white">Scanning…</p>
+                  <p className="mt-3 text-sm font-medium text-ink">Scanning…</p>
                   <p className="mt-1 text-xs text-muted">{scanLog || 'Working…'}</p>
                 </div>
               ) : null}
@@ -688,7 +687,7 @@ export default function Analyzer() {
               {!scanning && !scanResult ? (
                 <div className="card flex flex-col items-center justify-center px-6 py-14 text-center">
                   <ScanLine size={26} className="text-faint" aria-hidden="true" />
-                  <p className="mt-3 text-sm font-medium text-white">No scan yet</p>
+                  <p className="mt-3 text-sm font-medium text-ink">No scan yet</p>
                   <p className="mt-1 max-w-sm text-xs leading-relaxed text-muted">
                     Scan a live portfolio URL or upload an exported HTML page. Results include a score per category,
                     severity-ranked issues and copyable recommendations.
@@ -701,7 +700,7 @@ export default function Analyzer() {
                   <div className="card p-5">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white">Scan report</p>
+                        <p className="text-sm font-semibold text-ink">Scan report</p>
                         <p className="mt-0.5 truncate text-[11px] text-muted">{scanResult.scannedUrl || 'Uploaded document'}</p>
                         <p className="mt-1 text-[10px] text-faint">
                           Scanned {formatRelative(scanResult.generatedAt)} · {scanResult.stats.documentKb} KB ·{' '}
@@ -710,7 +709,7 @@ export default function Analyzer() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="font-display text-3xl font-bold text-white">{scanResult.score}</p>
+                          <p className="text-[32px] font-semibold tabular-nums tracking-[-0.02em] text-ink">{scanResult.score}</p>
                           <p className="text-[10px] uppercase tracking-widest text-faint">of 100</p>
                         </div>
                         <span className="badge border-accent-line/50 bg-accent-soft text-accent-hover">{scanResult.grade}</span>
@@ -724,7 +723,7 @@ export default function Analyzer() {
 
                   <div className="card p-5">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-white">Findings</p>
+                      <p className="text-sm font-semibold text-ink">Findings</p>
                       <span className="text-[11px] text-faint">{scanResult.issues.length} issues</span>
                     </div>
                     {scanResult.issues.length ? (
@@ -732,20 +731,20 @@ export default function Analyzer() {
                         {scanResult.issues.map((issue) => {
                           const tone = SEVERITY_TONE[issue.severity] || SEVERITY_TONE.low;
                           return (
-                            <li key={issue.id} className="rounded-xl border border-line bg-canvasAlt/40 p-3">
+                            <li key={issue.id} className="rounded-lg border border-line bg-canvasAlt/40 p-3">
                               <div className="flex items-start gap-2.5">
                                 <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${tone.dot}`} aria-hidden="true" />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-xs font-medium text-ink">{issue.message}</p>
                                   <p className="mt-1 text-[11px] leading-relaxed text-muted">{issue.detail}</p>
-                                  <p className="mt-1.5 rounded-lg border border-line bg-canvasDeep/40 px-2.5 py-1.5 text-[11px] leading-relaxed text-inkSoft">
-                                    <strong className="font-semibold text-white">Fix: </strong>
+                                  <p className="mt-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1.5 text-[11px] leading-relaxed text-inkSoft">
+                                    <strong className="font-semibold text-ink">Fix: </strong>
                                     {issue.recommendation}
                                   </p>
                                   <div className="mt-1.5 flex items-center gap-2 text-[10px] text-faint">
                                     <span className={`rounded-full border px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.label}</span>
                                     <span className="capitalize">{issue.category}</span>
-                                    <button type="button" onClick={() => copyText(`${issue.message}\n${issue.detail}\nFix: ${issue.recommendation}`)} className="ml-auto inline-flex items-center gap-1 text-accent-hover hover:text-white">
+                                    <button type="button" onClick={() => copyText(`${issue.message}\n${issue.detail}\nFix: ${issue.recommendation}`)} className="ml-auto inline-flex items-center gap-1 text-accent-hover hover:text-ink">
                                       <Copy size={10} aria-hidden="true" />
                                       Copy
                                     </button>
@@ -757,7 +756,7 @@ export default function Analyzer() {
                         })}
                       </ul>
                     ) : (
-                      <div className="mt-4 flex items-center gap-2 rounded-xl border border-success/25 bg-successSoft p-3 text-xs text-success">
+                      <div className="mt-4 flex items-center gap-2 rounded-lg border border-success/25 bg-successSoft p-3 text-xs text-success">
                         <CheckCircle2 size={14} aria-hidden="true" />
                         No issues detected in the delivered HTML.
                       </div>
@@ -766,7 +765,7 @@ export default function Analyzer() {
 
                   {scanResult.notes?.length ? (
                     <div className="card p-5">
-                      <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-ink">
                         <Info size={14} className="text-accent-hover" aria-hidden="true" />
                         Scan limitations
                       </p>

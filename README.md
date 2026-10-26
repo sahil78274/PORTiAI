@@ -1,14 +1,15 @@
 # PortiAI — AI-Powered Portfolio Builder and Analyzer
 
 A full-stack MERN application. Users sign up, draft a portfolio through an AI conversation (or pick one
-of nine templates), refine it in a live editor with device previews, review it against a documented
+of six templates), refine it in a live editor with device previews, review it against a documented
 rubric, optionally run a Website analyzer on any live page, write Markdown blog posts, and publish at a
 public link such as `/p/aarav-mehta`.
 
-The application is complete: real authentication, real MongoDB persistence, nine distinct templates and
-a dark design system, a conversational AI builder backed by a validated server endpoint, server-side AI
-with graceful quota handling, a deterministic analyzer that works without AI, blog publishing, a
-deterministic website scanner, and public publishing with ownership checks enforced in the backend.
+The application is complete: real authentication, real MongoDB persistence, six genuinely different
+templates on a restrained light design system, a conversational AI builder backed by a validated server
+endpoint, server-side AI with graceful quota handling, a deterministic analyzer that works without AI,
+blog publishing, a deterministic website scanner, and public publishing with ownership checks enforced
+in the backend. There is no subscription, plan or payment interface anywhere in the product.
 
 ---
 
@@ -16,14 +17,14 @@ deterministic website scanner, and public publishing with ownership checks enfor
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Design system | Done | Deep navy canvas, blue→indigo→violet gradients, Inter/Manrope, dark elevated cards, Lucide icons only, responsive and accessible |
-| Landing page at `/` | Done | Sticky nav, hero with product mockup, features, template previews, how it works, comparison, pricing, FAQ, final CTA, footer. Sample statistics are labelled illustrative |
+| Design system | Done | Off-white canvas (`#f7f7f5`), charcoal type, a single muted blue accent (`#2563eb`) reserved for primary actions and selected states, navy `#16233b` for dark panels, Inter throughout, Lucide icons only, small radii, responsive and accessible |
+| Landing page at `/` | Done | Sticky nav (logo, Features, Templates, How It Works, Login, primary CTA), hero with a reserved portrait area, How it works, Made for your work, Explore templates (six live previews), Useful features, final CTA, footer. No pricing, testimonials or invented statistics |
 | Public pages | Done | `/features`, `/templates`, `/privacy`, `/terms`, `*` not-found |
 | Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation. Email/password only — no OAuth buttons are shown |
-| Dashboard `/dashboard` | Done | Collapsible sidebar, real counts from MongoDB, quick actions, recent portfolios, activity feed, onboarding, notifications, profile menu |
+| Dashboard `/dashboard` | Done | Collapsible sidebar, real counts from MongoDB, next-step suggestion, recent portfolios, quick links, profile menu |
 | AI builder `/dashboard/builder` | Done | Chat UI with suggested prompts, validation, generation progress, preview panel, create-draft hand-off via `POST /api/ai/builder` |
-| Templates | Done | Nine design systems — Minimal Professional, Developer, Modern Editorial, Obsidian Pro, Aurora Gradient, Swiss Minimal, Neon Terminal, Editorial Pro, Executive Elite — each with its own layout |
-| Template gallery | Done | Search, category filters, selected indicator, live rendered previews with desktop/tablet/mobile modes, Use-template action |
+| Templates | Done | Six design systems — Minimal Developer, Dark Professional, Creative Designer, Student, Modern Freelancer, Executive — each with its own layout, typography and section treatment |
+| Template gallery | Done | Search, category filters, in-use indicator, live rendered previews at desktop/tablet/mobile widths, Use-template action |
 | Editor | Done | Seven tabs, debounced autosave with status, desktop/tablet/mobile previews, accent/font/density, section order and visibility, blog settings, publish |
 | My Portfolios | Done | Grid/list views, search + status filters + sort, thumbnails, preview, duplicate, share, delete with confirmation, analysis score |
 | Portfolio analyzer | Done | Portfolio rubric (7 categories, 100 points) and a website scanner (6 categories) for a live URL or uploaded HTML; severity-grouped findings; apply selected rewrites |
@@ -56,8 +57,8 @@ Things that are deliberately **not** implemented, and the UI says so instead of 
   buttons are not shown rather than being mocked.
 * **Automatic AI content on every save** — AI is opt-in per field so the shared free-tier quota is not
   consumed by background requests.
-* **Paid plans and billing** — the pricing section describes what the product would charge; no payment
-  provider is connected and no plan is enforced.
+* **Paid plans and billing** — there is no pricing page, plan, upgrade prompt or payment provider. The
+  product has no commercial tier; the frontend contains no billing interface at all.
 * **Custom domains and PDF export** — neither is implemented.
 
 ---
@@ -97,8 +98,8 @@ portiai/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ui/             # Primitives, Kit, Modal, ConfirmDialog, Logo, PasswordInput
-│   │   │   ├── marketing/      # Navbar, Footer, HeroMockup, TemplatePreviewFrame
-│   │   │   ├── templates/      # TemplateCard, TemplateGallery
+│   │   │   ├── marketing/      # Navbar, Footer, HeroPortrait, TemplatePreviewFrame
+│   │   │   ├── templates/      # TemplateCard, TemplateGallery, TemplateThumb
 │   │   │   ├── dashboard/      # ProtectedRoute
 │   │   │   └── editor/         # PortfolioForm sections, AiAssist, useUnsavedWarning
 │   │   ├── context/            # AuthContext, ToastContext
@@ -109,7 +110,7 @@ portiai/
 │   │   │                       # BlogStudio, BlogEditor, PublishSuccess, Settings, PublicPortfolio,
 │   │   │                       # PublicBlog, StartProject, Privacy, Terms, NotFound
 │   │   ├── services/           # api.js (fetch wrapper), authService, portfolioService, blogService, scanService
-│   │   ├── templates/          # nine templates + shared.jsx + PortfolioRenderer
+│   │   ├── templates/          # six templates + shared.jsx + PortfolioRenderer
 │   │   ├── utils/              # format, templates metadata, draft helpers, markdown, demo content
 │   │   ├── App.jsx
 │   │   ├── main.jsx
@@ -208,9 +209,9 @@ exactly as it does behind a reverse proxy.
 ### 4.4 First run
 
 1. Open <http://localhost:5173> — the landing page loads at `/`.
-2. Click **Start Building with AI**, register, and you land on the dashboard.
+2. Click **Create Your Portfolio**, register, and you land on the dashboard.
 3. Choose **AI Builder** to draft content through the conversation, or **Templates** to start from one
-   of the nine designs. Both end in the editor at `/dashboard/portfolio/:id/edit`.
+   of the six designs. Both end in the editor at `/dashboard/portfolio/:id/edit`.
 4. Edit any tab; changes autosave after a short pause (the toolbar shows the save state).
 5. Press **Publish** — the success page at `/dashboard/publish/:id` shows the live URL, copy and share
    actions. Open the public page, then run **Analyzer** to review the content score.

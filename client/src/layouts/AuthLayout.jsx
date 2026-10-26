@@ -1,107 +1,69 @@
 import { Link, Outlet } from 'react-router-dom';
-import { ArrowLeft, Check, Gauge, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import Logo from '../components/ui/Logo.jsx';
 
 const POINTS = [
-  { icon: Sparkles, title: 'Conversational AI builder', desc: 'Answer a few questions and get structured, editable portfolio copy.' },
-  { icon: Wand2, title: 'Nine distinctive templates', desc: 'Switch design any time without rewriting a word.' },
-  { icon: Gauge, title: 'Honest quality analysis', desc: 'A documented 100-point rubric plus clearly-labelled AI suggestions.' },
+  'Six portfolio templates that can be previewed before you choose.',
+  'A structured editor with a live preview at three screen sizes.',
+  'Publish to a public link, and unpublish whenever you want.',
 ];
-
-const FACTS = ['Free to start', 'No card required', 'You own your data'];
 
 export default function AuthLayout() {
   return (
     <div className="min-h-screen bg-canvas">
       <a
         href="#auth-form"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink focus:shadow-raised"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:text-ink focus:shadow-raised"
       >
         Skip to form
       </a>
 
-      <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid min-h-screen lg:grid-cols-[0.9fr_1fr]">
         {/* Brand panel */}
-        <aside className="relative hidden overflow-hidden border-r border-white/[0.07] lg:flex lg:flex-col lg:justify-between">
-          <div className="absolute inset-0 bg-[#050813]" aria-hidden="true" />
-          <div
-            className="absolute inset-0"
-            aria-hidden="true"
-            style={{
-              background:
-                'radial-gradient(ellipse 700px 480px at 30% 12%, rgba(99,102,241,0.32), transparent 65%), radial-gradient(ellipse 620px 420px at 82% 78%, rgba(168,85,247,0.26), transparent 65%)',
-            }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.15]"
-            aria-hidden="true"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, rgba(255,255,255,0.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.35) 1px, transparent 1px)',
-              backgroundSize: '64px 64px',
-              maskImage: 'radial-gradient(ellipse at 40% 30%, black, transparent 75%)',
-            }}
-          />
+        <aside className="hidden border-r border-line bg-[#16233b] px-10 py-9 lg:flex lg:flex-col lg:justify-between">
+          <Link to="/" aria-label="PortiAI home" className="text-white">
+            <Logo size="lg" tone="light" />
+          </Link>
 
-          <div className="relative px-10 py-9">
-            <Logo size="lg" />
-          </div>
-
-          <div className="relative px-10 pb-8">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-inkSoft">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent-hover" aria-hidden="true" />
-              AI portfolio studio
-            </span>
-            <h1 className="mt-5 max-w-lg text-4xl font-bold leading-[1.1] tracking-tight text-white text-balance">
-              A portfolio that shows your work{' '}
-              <span className="gradient-text">the way it deserves.</span>
+          <div className="max-w-md">
+            <h1 className="text-[30px] font-semibold leading-[1.2] tracking-[-0.02em] text-white">
+              A portfolio that shows your work properly.
             </h1>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
-              Build, refine and publish a professional portfolio with an AI assistant that stays grounded in your real
-              experience.
+            <p className="mt-3 text-[14px] leading-6 text-white/65">
+              PortiAI is a portfolio builder for developers, designers, students and freelancers. Pick a layout, add your
+              details, publish when it is ready.
             </p>
 
-            <ul className="mt-9 max-w-md space-y-4">
-              {POINTS.map(({ icon: Icon, title, desc }) => (
-                <li key={title} className="flex gap-3.5">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
-                    <Icon size={15} aria-hidden="true" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{title}</p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-muted">{desc}</p>
-                  </div>
+            <ul className="mt-7 space-y-2.5">
+              {POINTS.map((point) => (
+                <li key={point} className="flex items-start gap-2.5 text-[13px] leading-6 text-white/70">
+                  <Check size={14} className="mt-1 shrink-0 text-white/50" aria-hidden="true" />
+                  {point}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="relative border-t border-white/[0.07] px-10 py-5">
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-faint">
-              {FACTS.map((fact) => (
-                <span key={fact} className="inline-flex items-center gap-1.5">
-                  <Check size={11} className="text-success" aria-hidden="true" />
-                  {fact}
-                </span>
-              ))}
-            </div>
-          </div>
+          <p className="text-[12px] text-white/40">© {new Date().getFullYear()} PortiAI</p>
         </aside>
 
         {/* Form panel */}
-        <main id="auth-form" className="flex flex-col">
+        <main id="auth-form" className="flex flex-col bg-white">
           <header className="flex items-center justify-between px-5 py-5 sm:px-8">
             <div className="lg:hidden">
               <Logo />
             </div>
-            <Link to="/" className="ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-muted transition-colors hover:text-ink">
+            <Link
+              to="/"
+              className="ml-auto inline-flex items-center gap-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
+            >
               <ArrowLeft size={13} aria-hidden="true" />
               Back to home
             </Link>
           </header>
 
-          <div className="flex flex-1 items-center justify-center px-5 pb-12 pt-2 sm:px-8">
-            <div className="w-full max-w-[420px] animate-fadeUp">
+          <div className="flex flex-1 items-center justify-center px-5 pb-14 pt-2 sm:px-8">
+            <div className="w-full max-w-[380px]">
               <Outlet />
             </div>
           </div>

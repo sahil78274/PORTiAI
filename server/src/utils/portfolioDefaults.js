@@ -20,29 +20,34 @@ export const SECTION_IDS = SECTION_DEFINITIONS.map((section) => section.id);
  * the gallery, and the ids must stay in sync with
  * client/src/utils/templates.js (verified by the template test suite).
  */
-export const TEMPLATE_IDS = [
+export const TEMPLATE_IDS = ['developer', 'dark', 'designer', 'student', 'freelancer', 'executive'];
+
+/**
+ * Ids shipped by earlier releases. They are kept in the database enum so that
+ * existing documents still save, and normalizeTemplateId maps them onto the
+ * current six designs.
+ */
+export const LEGACY_TEMPLATE_IDS = [
   'minimal',
-  'developer',
   'editorial',
   'obsidian',
   'aurora',
   'swiss',
   'neon',
   'editorialpro',
-  'executive',
 ];
+
+/** Every id the database may contain. */
+export const ALL_TEMPLATE_IDS = [...new Set([...TEMPLATE_IDS, ...LEGACY_TEMPLATE_IDS])];
 
 /** Default accent + font for each template, applied when one is first chosen. */
 export const TEMPLATE_DEFAULTS = {
-  minimal: { accent: '#2f4a8b', font: 'serif' },
-  developer: { accent: '#1f5c4a', font: 'mono' },
-  editorial: { accent: '#8a3a2f', font: 'serif' },
-  obsidian: { accent: '#8b5cf6', font: 'sans' },
-  aurora: { accent: '#6366f1', font: 'sans' },
-  swiss: { accent: '#111111', font: 'sans' },
-  neon: { accent: '#22d3ee', font: 'mono' },
-  editorialpro: { accent: '#b45309', font: 'serif' },
-  executive: { accent: '#0f2a52', font: 'serif' },
+  developer: { accent: '#2563eb', font: 'sans' },
+  dark: { accent: '#8ab4f8', font: 'sans' },
+  designer: { accent: '#8a4b32', font: 'serif' },
+  student: { accent: '#2f6f8f', font: 'sans' },
+  freelancer: { accent: '#215b7a', font: 'sans' },
+  executive: { accent: '#8a6a3b', font: 'serif' },
 };
 
 export const FONT_IDS = ['sans', 'serif', 'mono'];
@@ -57,7 +62,7 @@ export const defaultVisibleSections = () =>
 
 export const defaultPortfolioContent = () => ({
   title: 'Untitled portfolio',
-  templateId: 'minimal',
+  templateId: 'developer',
   profile: {
     fullName: '',
     title: '',
@@ -74,26 +79,43 @@ export const defaultPortfolioContent = () => ({
   experience: [],
   achievements: [],
   socialLinks: { github: '', linkedin: '', twitter: '', website: '' },
-  theme: { accent: '#2f4a8b', font: 'sans', density: 'comfortable' },
+  theme: { accent: '#2563eb', font: 'sans', density: 'comfortable' },
   visibleSections: defaultVisibleSections(),
   blog: { enabled: false, title: '', intro: '' },
 });
 
-/** Accepts legacy/descriptive aliases and returns a canonical template id. */
+/**
+ * Accepts legacy ids and descriptive slugs and returns a canonical template id.
+ * Returns null when the input is empty or unrecognised, so callers can decide
+ * whether to fall back or reject.
+ */
+const TEMPLATE_ALIASES = {
+  'minimal-professional': 'student',
+  minimal: 'student',
+  editorial: 'designer',
+  'modern-editorial': 'designer',
+  obsidian: 'dark',
+  'obsidian-pro': 'dark',
+  aurora: 'designer',
+  'aurora-gradient': 'designer',
+  swiss: 'executive',
+  'swiss-minimal': 'executive',
+  neon: 'dark',
+  'neon-terminal': 'dark',
+  editorialpro: 'designer',
+  'editorial-pro': 'designer',
+  'executive-elite': 'executive',
+  'developer-portfolio': 'developer',
+  'dark-professional': 'dark',
+  'creative-designer': 'designer',
+  'student-portfolio': 'student',
+  'modern-freelancer': 'freelancer',
+  'executive-portfolio': 'executive',
+};
+
 export const normalizeTemplateId = (raw) => {
   if (!raw || typeof raw !== 'string') return null;
   const clean = raw.toLowerCase().trim();
-  const aliases = {
-    'minimal-professional': 'minimal',
-    'developer-portfolio': 'developer',
-    'modern-editorial': 'editorial',
-    'obsidian-pro': 'obsidian',
-    'aurora-gradient': 'aurora',
-    'swiss-minimal': 'swiss',
-    'neon-terminal': 'neon',
-    'editorial-pro': 'editorialpro',
-    'executive-elite': 'executive',
-  };
-  const mapped = aliases[clean] || clean;
+  const mapped = TEMPLATE_ALIASES[clean] || clean;
   return TEMPLATE_IDS.includes(mapped) ? mapped : null;
 };

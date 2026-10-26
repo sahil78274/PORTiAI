@@ -57,10 +57,35 @@ export const templateStyle = (portfolio) => ({
   fontFamily: 'var(--font-template)',
 });
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * Dates are stored as free text ("2022", "Mar 2022", "2022-03-01"), so parse
+ * what we can and otherwise show exactly what the user typed.
+ */
+export const formatDate = (value) => {
+  if (!value) return '';
+  const text = String(value).trim();
+  if (!text) return '';
+  if (/^\d{4}$/.test(text)) return text;
+  const iso = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(text);
+  if (iso) {
+    const monthIndex = Number(iso[2]) - 1;
+    return MONTHS[monthIndex] ? `${MONTHS[monthIndex]} ${iso[1]}` : iso[1];
+  }
+  const parsed = new Date(text);
+  if (!Number.isNaN(parsed.getTime()) && /\d{4}/.test(text)) {
+    return `${MONTHS[parsed.getMonth()]} ${parsed.getFullYear()}`;
+  }
+  return text;
+};
+
 export const dateRange = (start, end) => {
-  if (!start && !end) return '';
-  if (start && end) return `${start} — ${end}`;
-  return start || end;
+  const from = formatDate(start);
+  const to = formatDate(end);
+  if (!from && !to) return '';
+  if (from && to) return `${from} — ${to}`;
+  return from || to;
 };
 
 export const SocialLinks = ({ portfolio, className = '', compact = false }) => {

@@ -27,9 +27,8 @@ export default function TemplatesWorkspace() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Template gallery"
-        title="Pick the design language for your work"
-        description="Nine complete design systems with their own typography, spacing and section treatment. Preview with sample content, then create a draft in one click."
+        title="Templates"
+        description="Six complete design systems with their own typography, spacing and section treatment. Preview each with sample content, then create a draft in one click."
         actions={
           <>
             <Link to="/dashboard/portfolios" className="btn-secondary btn-sm">
@@ -49,7 +48,7 @@ export default function TemplatesWorkspace() {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="card overflow-hidden p-4">
+            <div key={index} className="rounded-lg border border-line bg-white p-3">
               <div className="skeleton aspect-[16/11] w-full" />
               <div className="skeleton mt-4 h-4 w-32" />
               <div className="skeleton mt-2 h-3 w-48" />

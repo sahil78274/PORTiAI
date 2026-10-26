@@ -61,7 +61,7 @@ const createEmptyFacts = () => ({
   achievements: [],
   contactEmail: '',
   socialLinks: { github: '', linkedin: '', website: '', twitter: '' },
-  templateId: 'obsidian',
+  templateId: 'developer',
   tone: 'professional',
   wantsBlog: false,
 });
@@ -589,8 +589,7 @@ export default function Builder() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="AI builder"
-        title="Describe your work. Get a portfolio."
+        title="AI builder"
         description="A guided conversation collects your real experience, then the AI drafts editable portfolio copy. Nothing is invented, and every answer can be edited before you save."
         actions={
           <span className="badge border-accent-line/60 bg-accent-soft text-accent-hover">
@@ -605,11 +604,11 @@ export default function Builder() {
         <section className="card flex min-h-[640px] flex-col overflow-hidden" aria-label="AI builder conversation">
           <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white">
                 <Wand2 size={15} aria-hidden="true" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-white">PortiAI Builder</p>
+                <p className="text-sm font-semibold text-ink">PortiAI Builder</p>
                 <p className="text-[11px] text-muted">
                   Step {Math.min(stepIndex + 1, STEPS.length)} of {STEPS.length} · {step.id === 'generate' ? 'Ready to generate' : 'Collecting details'}
                 </p>
@@ -626,7 +625,7 @@ export default function Builder() {
               <div key={message.id} className={`flex gap-2.5 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <span
                   className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${
-                    message.role === 'assistant' ? 'bg-brand-gradient text-white' : 'border border-white/10 bg-white/[0.06] text-inkSoft'
+                    message.role === 'assistant' ? 'bg-accent text-white' : 'border border-line bg-canvasAlt text-inkSoft'
                   }`}
                   aria-hidden="true"
                 >
@@ -634,14 +633,14 @@ export default function Builder() {
                 </span>
                 <div className={`max-w-[85%] ${message.role === 'user' ? 'text-right' : ''}`}>
                   <div
-                    className={`inline-block whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-left text-sm leading-relaxed ${
+                    className={`inline-block whitespace-pre-line rounded-lg px-3.5 py-2.5 text-left text-sm leading-relaxed ${
                       message.role === 'user'
-                        ? 'rounded-br-md bg-brand-gradient text-white'
+                        ? 'rounded-br-md bg-accent text-white'
                         : message.variant === 'error'
                           ? 'rounded-bl-md border border-danger/25 bg-dangerSoft text-danger'
                           : message.variant === 'success'
                             ? 'rounded-bl-md border border-success/25 bg-successSoft text-success'
-                            : 'rounded-bl-md border border-line bg-white/[0.035] text-inkSoft'
+                            : 'rounded-bl-md border border-line bg-canvasAlt text-inkSoft'
                     }`}
                   >
                     {message.text}
@@ -661,14 +660,14 @@ export default function Builder() {
 
             {typing ? (
               <div className="flex gap-2.5">
-                <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient text-white" aria-hidden="true">
+                <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-white" aria-hidden="true">
                   <Sparkles size={13} />
                 </span>
-                <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-line bg-white/[0.035] px-3.5 py-3">
+                <div className="flex items-center gap-1 rounded-lg rounded-bl-md border border-line bg-canvasAlt px-3.5 py-3">
                   {[0, 1, 2].map((dot) => (
                     <span
                       key={dot}
-                      className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted"
+                      className="h-1.5 w-1.5 animate-pulse rounded-full bg-faint"
                       style={{ animationDelay: `${dot * 120}ms` }}
                     />
                   ))}
@@ -678,8 +677,8 @@ export default function Builder() {
             ) : null}
 
             {generating ? (
-              <div className="rounded-xl border border-accent-line/40 bg-accent-soft/50 p-4">
-                <div className="flex items-center gap-2.5 text-sm font-medium text-white">
+              <div className="rounded-lg border border-accent-line/40 bg-accent-soft p-4">
+                <div className="flex items-center gap-2.5 text-sm font-medium text-ink">
                   <Loader2 size={15} className="animate-spin text-accent-hover" aria-hidden="true" />
                   Drafting your portfolio content…
                 </div>
@@ -717,7 +716,7 @@ export default function Builder() {
           {/* Composer */}
           <div className="border-t border-line p-3 sm:p-4">
             {step.id === 'template' ? (
-              <div className="rounded-xl border border-line bg-canvasDeep/50 p-3">
+              <div className="rounded-lg border border-line bg-canvas p-3">
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">Template</p>
                 <div className="flex flex-wrap gap-1.5">
                   {TEMPLATES.map((template) => (
@@ -805,7 +804,7 @@ export default function Builder() {
                 />
                 <button
                   type="submit"
-                  className="btn-primary h-[52px] w-[52px] shrink-0 rounded-xl p-0"
+                  className="btn-primary h-[52px] w-[52px] shrink-0 rounded-lg p-0"
                   aria-label="Send answer"
                   disabled={!input.trim() || thinking}
                 >
@@ -824,15 +823,15 @@ export default function Builder() {
           <section className="card overflow-hidden">
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-white">Collected details</p>
-                <span className="badge border-lineStrong bg-white/[0.04] text-faint">
+                <p className="text-sm font-semibold text-ink">Collected details</p>
+                <span className="badge border-lineStrong bg-canvasAlt text-faint">
                   {readiness.checks.filter((check) => check.ok).length}/{readiness.checks.length}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setEditMode((value) => !value)}
-                className="inline-flex items-center gap-1 text-2xs font-semibold text-accent-hover hover:text-white"
+                className="inline-flex items-center gap-1 text-2xs font-semibold text-accent-hover hover:text-ink"
               >
                 <Pencil size={11} aria-hidden="true" />
                 {editMode ? 'Done' : 'Edit'}
@@ -912,7 +911,7 @@ export default function Builder() {
                       </div>
                     ))}
                   </div>
-                  <p className="rounded-lg border border-line bg-canvasDeep/40 p-2.5 text-[11px] leading-relaxed text-faint">
+                  <p className="rounded-lg border border-line bg-canvas p-2.5 text-[11px] leading-relaxed text-faint">
                     Projects, experience and education can be edited in full in the portfolio editor after you create
                     the draft.
                   </p>
@@ -936,7 +935,7 @@ export default function Builder() {
                     <div className="mt-3 space-y-1.5 border-t border-line pt-3">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">Projects</p>
                       {facts.projects.map((project, index) => (
-                        <div key={`${project.name}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border border-line bg-canvasDeep/40 px-2.5 py-1.5">
+                        <div key={`${project.name}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border border-line bg-canvas px-2.5 py-1.5">
                           <span className="truncate text-[11px] text-inkSoft">{project.name}</span>
                           <button
                             type="button"
@@ -956,7 +955,7 @@ export default function Builder() {
                       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">Skills</p>
                       <div className="flex flex-wrap gap-1">
                         {facts.skills.slice(0, 14).map((skill) => (
-                          <span key={skill} className="rounded-full border border-line bg-white/[0.03] px-2 py-0.5 text-[10px] text-inkSoft">
+                          <span key={skill} className="rounded-full border border-line bg-canvasAlt px-2 py-0.5 text-[10px] text-inkSoft">
                             {skill}
                           </span>
                         ))}
@@ -1019,9 +1018,9 @@ export default function Builder() {
             <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
               <div className="flex items-center gap-2">
                 <Eye size={14} className="text-accent-hover" aria-hidden="true" />
-                <p className="text-sm font-semibold text-white">{generated ? 'Draft preview' : 'Template preview'}</p>
+                <p className="text-sm font-semibold text-ink">{generated ? 'Draft preview' : 'Template preview'}</p>
               </div>
-              <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvasDeep p-0.5">
+              <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvas p-0.5">
                 {[
                   { id: 'desktop', Icon: Monitor },
                   { id: 'mobile', Icon: Smartphone },
@@ -1032,14 +1031,14 @@ export default function Builder() {
                     onClick={() => setPreviewDevice(id)}
                     aria-pressed={previewDevice === id}
                     aria-label={`${id} preview`}
-                    className={`rounded p-1.5 ${previewDevice === id ? 'bg-white/[0.09] text-white' : 'text-faint hover:text-ink'}`}
+                    className={`rounded p-1.5 ${previewDevice === id ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
                   >
                     <Icon size={13} aria-hidden="true" />
                   </button>
                 ))}
               </div>
             </div>
-            <div className="bg-[#050813] p-2">
+            <div className="border-t border-line bg-canvasAlt p-2">
               <div
                 className="mx-auto overflow-hidden rounded-lg border border-line"
                 style={{ maxWidth: previewDevice === 'mobile' ? 320 : '100%' }}
@@ -1064,7 +1063,7 @@ export default function Builder() {
           </section>
 
           {lastGenerated?.usedAi ? (
-            <p className="flex items-start gap-2 rounded-xl border border-accent-line/30 bg-accent-soft/40 px-3.5 py-2.5 text-[11px] leading-relaxed text-muted">
+            <p className="flex items-start gap-2 rounded-lg border border-accent-line/30 bg-accent-soft/40 px-3.5 py-2.5 text-[11px] leading-relaxed text-muted">
               <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
               Content written by the AI model from your answers ({lastGenerated.model}). Review every claim before
               publishing.

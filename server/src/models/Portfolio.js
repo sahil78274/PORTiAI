@@ -2,9 +2,11 @@ import mongoose from 'mongoose';
 import {
   SECTION_IDS,
   TEMPLATE_IDS,
+  ALL_TEMPLATE_IDS,
   FONT_IDS,
   defaultVisibleSections,
   defaultPortfolioContent,
+  normalizeTemplateId,
 } from '../utils/portfolioDefaults.js';
 
 const linkSchema = new mongoose.Schema(
@@ -98,7 +100,7 @@ const portfolioSchema = new mongoose.Schema(
     },
     title: { type: String, required: true, trim: true, maxlength: 120, default: 'Untitled portfolio' },
     slug: { type: String, trim: true, lowercase: true, minlength: 3, maxlength: 72 },
-    templateId: { type: String, enum: TEMPLATE_IDS, default: 'minimal' },
+    templateId: { type: String, enum: ALL_TEMPLATE_IDS, default: 'developer' },
     profile: {
       fullName: { type: String, trim: true, maxlength: 120, default: '' },
       title: { type: String, trim: true, maxlength: 160, default: '' },
@@ -166,8 +168,8 @@ portfolioSchema.pre('validate', function ensureDefaults() {
   if (!this.title || !this.title.trim()) {
     this.title = this.profile?.fullName ? `${this.profile.fullName}'s portfolio` : 'Untitled portfolio';
   }
-  if (!this.templateId || !TEMPLATE_IDS.includes(this.templateId)) {
-    this.templateId = 'minimal';
+  if (!this.templateId || !ALL_TEMPLATE_IDS.includes(this.templateId)) {
+    this.templateId = 'developer';
   }
 });
 
@@ -178,7 +180,7 @@ portfolioSchema.methods.toOwnerJSON = function toOwnerJSON() {
     id: this._id.toString(),
     title: obj.title,
     slug: obj.slug || null,
-    templateId: TEMPLATE_IDS.includes(obj.templateId) ? obj.templateId : 'minimal',
+    templateId: TEMPLATE_IDS.includes(obj.templateId) ? obj.templateId : normalizeTemplateId(obj.templateId) || 'developer',
     profile: obj.profile,
     skills: obj.skills,
     education: obj.education,

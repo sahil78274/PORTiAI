@@ -148,7 +148,7 @@ export const Skeleton = ({ className = '' }) => (
 
 export const EmptyState = ({ icon: Icon, title, description, action, className = '' }) => (
   <div
-    className={`flex flex-col items-center justify-center rounded-2xl border border-dashed border-lineStrong/80 bg-surface/70 px-6 py-14 text-center ${className}`}
+    className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-lineStrong/80 bg-white px-6 py-14 text-center ${className}`}
   >
     {Icon ? (
       <span className="mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent ring-1 ring-accent-line/60">
@@ -182,7 +182,7 @@ export const ProgressBar = ({ value, max = 100, className = '', tone = 'accent',
         </div>
       ) : null}
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-white/[0.07] ring-1 ring-line/60"
+        className="h-2 w-full overflow-hidden rounded-full bg-canvasAlt ring-1 ring-line/60"
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -190,7 +190,7 @@ export const ProgressBar = ({ value, max = 100, className = '', tone = 'accent',
         aria-label={label || 'Progress'}
       >
         <div
-          className={`h-full rounded-full transition-all duration-500 ease-out ${barTone}`}
+          className={`h-full rounded-full transition-colors duration-500 ease-out ${barTone}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -218,11 +218,11 @@ export const ScoreRing = ({ score, size = 132, label = 'Overall score' }) => {
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={`${dash} ${circumference}`}
-          className="transition-all duration-700 ease-out"
+          className="transition-colors duration-700 ease-out"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold tracking-tight tabular-nums text-ink">{score}</span>
+        <span className="text-[28px] font-semibold tabular-nums tracking-tight text-ink">{score}</span>
         <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">of 100</span>
       </div>
     </div>
@@ -274,7 +274,7 @@ export const Tabs = ({ tabs, active, onChange, className = '', ariaLabel = 'Sect
           type="button"
           aria-selected={isActive}
           onClick={() => onChange(tab.id)}
-          className={`-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2 text-sm font-medium transition-all duration-150 ${
+          className={`-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2 text-sm font-medium transition-colors duration-150 ${
             isActive
               ? 'border-accent-hover text-accent-hover font-semibold'
               : 'border-transparent text-muted hover:border-lineStrong hover:text-ink'
@@ -285,7 +285,7 @@ export const Tabs = ({ tabs, active, onChange, className = '', ariaLabel = 'Sect
           {tab.count !== undefined ? (
             <span
               className={`rounded-full px-1.5 py-0.2 font-mono text-2xs ${
-                isActive ? 'bg-accent-soft text-accent-hover' : 'bg-white/[0.05] text-muted'
+                isActive ? 'bg-accent-soft text-accent-hover' : 'bg-canvasAlt text-muted'
               }`}
             >
               {tab.count}

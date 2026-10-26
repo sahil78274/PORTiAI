@@ -525,7 +525,7 @@ await test('duplicate creates an independent copy without publishing it', async 
 });
 
 await test('template switching keeps content intact', async () => {
-  for (const templateId of ['minimal', 'editorial', 'developer']) {
+  for (const templateId of ['student', 'designer', 'developer', 'dark', 'freelancer', 'executive']) {
     const res = await alice.put(`/portfolios/${alicePortfolioId}`, { templateId });
     assert.equal(res.status, 200);
     assert.equal(res.body.data.portfolio.templateId, templateId);
@@ -535,14 +535,20 @@ await test('template switching keeps content intact', async () => {
 });
 
 await test('template selection regression: creation, normalization, and safe fallback across all templates', async () => {
-  // Test creation with explicit registered IDs
-  for (const templateId of ['minimal', 'developer', 'editorial']) {
+  // Test creation with explicit registered IDs, each applying its own default accent
+  const expectedAccents = {
+    developer: '#2563eb',
+    dark: '#8ab4f8',
+    designer: '#8a4b32',
+    student: '#2f6f8f',
+    freelancer: '#215b7a',
+    executive: '#8a6a3b',
+  };
+  for (const [templateId, accent] of Object.entries(expectedAccents)) {
     const res = await alice.post('/portfolios', { title: `Test ${templateId}`, templateId });
     assert.equal(res.status, 201);
     assert.equal(res.body.data.portfolio.templateId, templateId);
-    if (templateId === 'developer') assert.equal(res.body.data.portfolio.theme.accent, '#1f5c4a');
-    if (templateId === 'editorial') assert.equal(res.body.data.portfolio.theme.accent, '#8a3a2f');
-    if (templateId === 'minimal') assert.equal(res.body.data.portfolio.theme.accent, '#2f4a8b');
+    assert.equal(res.body.data.portfolio.theme.accent, accent);
     await alice.delete(`/portfolios/${res.body.data.portfolio.id}`);
   }
 
@@ -552,15 +558,15 @@ await test('template selection regression: creation, normalization, and safe fal
   assert.equal(devAlias.body.data.portfolio.templateId, 'developer');
   await alice.delete(`/portfolios/${devAlias.body.data.portfolio.id}`);
 
-  const edUpper = await alice.post('/portfolios', { templateId: 'EDITORIAL' });
+  const edUpper = await alice.post('/portfolios', { templateId: 'DESIGNER' });
   assert.equal(edUpper.status, 201);
-  assert.equal(edUpper.body.data.portfolio.templateId, 'editorial');
+  assert.equal(edUpper.body.data.portfolio.templateId, 'designer');
   await alice.delete(`/portfolios/${edUpper.body.data.portfolio.id}`);
 
-  // Test invalid templateId falls back safely to minimal without crashing
+  // Test invalid templateId falls back safely to the default without crashing
   const invalidRes = await alice.post('/portfolios', { templateId: 'nonexistent-template-id' });
   assert.equal(invalidRes.status, 201);
-  assert.equal(invalidRes.body.data.portfolio.templateId, 'minimal');
+  assert.equal(invalidRes.body.data.portfolio.templateId, 'developer');
   await alice.delete(`/portfolios/${invalidRes.body.data.portfolio.id}`);
 
   // Test PUT with invalid templateId does not wipe existing valid templateId
@@ -833,12 +839,12 @@ await test('account deletion removes the user and their portfolios', async () =>
 });
 
 /* ------------------------------------------------------------------ */
-/* Template registry (nine design systems)                             */
+/* Template registry (six design systems)                              */
 /* ------------------------------------------------------------------ */
 suite('Template registry');
 
-await test('all nine template ids are accepted and normalised on create', async () => {
-  const ids = ['minimal', 'developer', 'editorial', 'obsidian', 'aurora', 'swiss', 'neon', 'editorialpro', 'executive'];
+await test('all six template ids are accepted and normalised on create', async () => {
+  const ids = ['developer', 'dark', 'designer', 'student', 'freelancer', 'executive'];
   for (const templateId of ids) {
     const created = await alice.post('/portfolios', { templateId, title: `Template ${templateId}` });
     assert.equal(created.status, 201, `create failed for ${templateId}`);
@@ -847,15 +853,29 @@ await test('all nine template ids are accepted and normalised on create', async 
 });
 
 await test('legacy template aliases map to canonical ids', async () => {
-  const created = await alice.post('/portfolios', { templateId: 'neon-terminal', title: 'Alias check' });
-  assert.equal(created.status, 201);
-  assert.equal(created.body.data.portfolio.templateId, 'neon');
+  const pairs = {
+    'neon-terminal': 'dark',
+    'obsidian-pro': 'dark',
+    'minimal': 'student',
+    'minimal-professional': 'student',
+    'editorial': 'designer',
+    'aurora-gradient': 'designer',
+    'swiss-minimal': 'executive',
+    'executive-elite': 'executive',
+    'developer-portfolio': 'developer',
+    'modern-freelancer': 'freelancer',
+  };
+  for (const [legacy, canonical] of Object.entries(pairs)) {
+    const created = await alice.post('/portfolios', { templateId: legacy, title: `Alias ${legacy}` });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.data.portfolio.templateId, canonical, `${legacy} should map to ${canonical}`);
+  }
 });
 
 await test('an unknown template id falls back instead of erroring', async () => {
   const created = await alice.post('/portfolios', { templateId: 'not-a-template', title: 'Unknown template' });
   assert.equal(created.status, 201);
-  assert.equal(created.body.data.portfolio.templateId, 'minimal');
+  assert.equal(created.body.data.portfolio.templateId, 'developer');
 });
 
 /* ------------------------------------------------------------------ */
@@ -863,7 +883,7 @@ await test('an unknown template id falls back instead of erroring', async () => 
 /* ------------------------------------------------------------------ */
 suite('Blog posts');
 
-const blogPortfolioCreate = await alice.post('/portfolios', { title: 'Blog host portfolio', templateId: 'aurora' });
+const blogPortfolioCreate = await alice.post('/portfolios', { title: 'Blog host portfolio', templateId: 'designer' });
 const blogPortfolioId = blogPortfolioCreate.body.data.portfolio.id;
 const blogPortfolio = await alice.put(`/portfolios/${blogPortfolioId}`, {
   profile: {

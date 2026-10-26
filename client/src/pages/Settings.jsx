@@ -32,9 +32,9 @@ const PASSWORD_RULES = [
 ];
 
 const THEMES = [
-  { id: 'dark', label: 'Midnight (default)', description: 'The dark studio theme PortiAI is designed around.', icon: Moon, available: true },
-  { id: 'light', label: 'Daylight', description: 'A light dashboard theme is on the roadmap — the current build is dark-only.', icon: Sun, available: false },
-  { id: 'system', label: 'Follow system', description: 'Automatically switch with your operating system.', icon: Monitor, available: false },
+  { id: 'light', label: 'Light (default)', description: 'The single dashboard theme in this build.', icon: Sun, available: true },
+  { id: 'dark', label: 'Dark', description: 'Not implemented — no dark dashboard theme ships today.', icon: Moon, available: false },
+  { id: 'system', label: 'Follow system', description: 'Needs a second theme to switch between, so it is disabled.', icon: Monitor, available: false },
 ];
 
 const NOTIFICATION_ROWS = [
@@ -58,7 +58,7 @@ export default function Settings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('portiai-theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('portiai-theme') || 'light');
   const [notifications, setNotifications] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('portiai-notifications') || 'null') || Object.fromEntries(NOTIFICATION_ROWS.map((row) => [row.id, row.defaultOn]));
@@ -134,7 +134,7 @@ export default function Settings() {
 
   const updateTheme = (id, available) => {
     if (!available) {
-      toast.info('That theme is not available yet.', { description: 'The current build ships with the dark studio theme only.' });
+      toast.info('That theme is not available.', { description: 'This build ships with one light dashboard theme.' });
       return;
     }
     setTheme(id);
@@ -168,7 +168,6 @@ export default function Settings() {
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <PageHeader
-        eyebrow="Settings"
         title="Account and preferences"
         description="Manage your PortiAI profile, password and local preferences. Appearance and notification choices are stored in this browser."
         actions={
@@ -179,13 +178,13 @@ export default function Settings() {
       />
 
       {/* Profile */}
-      <form onSubmit={saveProfile} className="card p-5">
+      <form onSubmit={saveProfile} className="rounded-lg border border-line bg-white p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
             <User size={16} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-sm font-semibold text-white">Profile</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Profile</h2>
             <p className="mt-0.5 text-xs text-muted">Your display name appears in the dashboard. Your email is used to sign in.</p>
           </div>
         </div>
@@ -244,13 +243,13 @@ export default function Settings() {
       </form>
 
       {/* Password */}
-      <form onSubmit={savePassword} className="card p-5">
+      <form onSubmit={savePassword} className="rounded-lg border border-line bg-white p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
             <KeyRound size={16} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-sm font-semibold text-white">Password</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Password</h2>
             <p className="mt-0.5 text-xs text-muted">Changing your password signs out every other device.</p>
           </div>
         </div>
@@ -324,14 +323,14 @@ export default function Settings() {
       </form>
 
       {/* Appearance */}
-      <div className="card p-5">
+      <div className="rounded-lg border border-line bg-white p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
             <Palette size={16} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-sm font-semibold text-white">Appearance</h2>
-            <p className="mt-0.5 text-xs text-muted">Dashboard theme preference for this browser. Portfolio templates have their own design systems.</p>
+            <h2 className="text-[14px] font-semibold text-ink">Appearance</h2>
+            <p className="mt-0.5 text-xs text-muted">PortiAI uses one light dashboard theme. Portfolio templates keep their own palettes, independent of this setting.</p>
           </div>
         </div>
         <div className="mt-4 grid gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Dashboard theme">
@@ -342,15 +341,15 @@ export default function Settings() {
               role="radio"
               aria-checked={theme === id}
               onClick={() => updateTheme(id, available)}
-              className={`rounded-xl border p-3.5 text-left transition-colors ${
-                theme === id ? 'border-accent-line bg-accent-soft' : 'border-line bg-canvasDeep/40 hover:border-lineStrong'
+              className={`rounded-lg border p-3.5 text-left transition-colors ${
+                theme === id ? 'border-accent-line bg-accent-soft' : 'border-line bg-canvas hover:border-lineStrong'
               } ${available ? '' : 'opacity-70'}`}
             >
               <span className="flex items-center justify-between">
                 <Icon size={15} className={theme === id ? 'text-accent-hover' : 'text-faint'} aria-hidden="true" />
                 {!available ? <span className="badge !py-0 text-[9px]">Soon</span> : theme === id ? <Check size={13} className="text-accent-hover" aria-hidden="true" /> : null}
               </span>
-              <p className="mt-2 text-xs font-semibold text-white">{label}</p>
+              <p className="mt-2 text-xs font-semibold text-ink">{label}</p>
               <p className="mt-0.5 text-[10px] leading-relaxed text-muted">{description}</p>
             </button>
           ))}
@@ -358,13 +357,13 @@ export default function Settings() {
       </div>
 
       {/* Notifications */}
-      <div className="card p-5">
+      <div className="rounded-lg border border-line bg-white p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
             <Bell size={16} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-sm font-semibold text-white">Notifications</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Notifications</h2>
             <p className="mt-0.5 text-xs text-muted">
               PortiAI does not send email or push notifications yet. These preferences store your intent locally and are used for
               in-app toasts.
@@ -375,7 +374,7 @@ export default function Settings() {
           {NOTIFICATION_ROWS.map((row) => (
             <li key={row.id} className="flex items-start justify-between gap-4 py-3">
               <div>
-                <p className="text-xs font-medium text-white">{row.label}</p>
+                <p className="text-xs font-medium text-ink">{row.label}</p>
                 <p className="mt-0.5 text-[11px] text-muted">{row.description}</p>
               </div>
               <button
@@ -385,7 +384,7 @@ export default function Settings() {
                 aria-label={row.label}
                 onClick={() => toggleNotification(row.id)}
                 className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors ${
-                  notifications[row.id] ? 'bg-accent' : 'bg-white/[0.12]'
+                  notifications[row.id] ? 'bg-accent' : 'bg-canvasAlt'
                 }`}
               >
                 <span
@@ -402,11 +401,11 @@ export default function Settings() {
       {/* Account / danger */}
       <div className="card border-danger/25 p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-danger/25 bg-dangerSoft text-danger">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-danger/25 bg-dangerSoft text-danger">
             <AlertTriangle size={16} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-sm font-semibold text-white">Danger zone</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Danger zone</h2>
             <p className="mt-0.5 text-xs text-muted">
               Deleting your account permanently removes every portfolio, blog post and analysis result. Published links stop
               working immediately. This cannot be undone.
@@ -457,7 +456,7 @@ export default function Settings() {
       </ConfirmDialog>
 
       {deleting ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvasDeep/70">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30">
           <Loader2 size={22} className="animate-spin text-accent-hover" aria-hidden="true" />
           <span className="sr-only">Deleting account</span>
         </div>

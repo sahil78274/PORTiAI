@@ -82,7 +82,7 @@ AI unavailable fallback
 
 Notable assertions, for the report:
 
-* template selection regression tests prove all 3 templates (`minimal`, `developer`, `editorial`) persist properly across creation, update, case variations, aliases, and safe fallback for invalid IDs without crashing;
+* template selection regression tests prove the canonical templates persist properly across creation, update, case variations, aliases and safe fallback for invalid IDs without crashing;
 * rubric totals exactly 100 points across 7 categories after every change;
 * `javascript:` URLs are stripped from `photoUrl` and `projectUrl`, HTML tags are removed from text;
 * a second user receives `404` (not `403`) for every private verb on someone else's portfolio;
@@ -97,7 +97,7 @@ Notable assertions, for the report:
 
 ```
 Template registry
-  ✓ all nine template ids are accepted and normalised on create
+  ✓ all six template ids are accepted and normalised on create
   ✓ legacy template aliases map to canonical ids
   ✓ an unknown template id falls back instead of erroring
 
@@ -134,32 +134,32 @@ AI chat builder
 
 ## 1b. Frontend unit & regression suite — `cd client && npm test`
 
-10 tests, 10 passed. Uses Node's built-in test runner to verify the nine-template registry, per-template
-gallery metadata, normalization, case/alias tolerance, safe fallback, draft translation, and payload
-consistency.
+10 tests, 10 passed. Uses Node's built-in test runner to verify the six-template registry, per-template
+gallery metadata, unique accents, category coverage, normalization, case/alias tolerance, safe fallback,
+draft translation, and payload consistency.
 
 ```
 TAP version 13
-# Subtest: TEMPLATES registry contains exactly 9 documented templates
-ok 1 - TEMPLATES registry contains exactly 9 documented templates
+# Subtest: TEMPLATES registry contains exactly the six documented templates
+ok 1 - TEMPLATES registry contains exactly the six documented templates
 # Subtest: every template declares the metadata the gallery relies on
 ok 2 - every template declares the metadata the gallery relies on
-# Subtest: normalizeTemplateId handles canonical IDs correctly
-ok 3 - normalizeTemplateId handles canonical IDs correctly
-# Subtest: normalizeTemplateId handles casing and whitespace
-ok 4 - normalizeTemplateId handles casing and whitespace
-# Subtest: normalizeTemplateId handles template aliases
-ok 5 - normalizeTemplateId handles template aliases
-# Subtest: the nine new template ids normalise to themselves
-ok 6 - the nine new template ids normalise to themselves
-# Subtest: normalizeTemplateId safely falls back to minimal on missing or unknown input
-ok 7 - normalizeTemplateId safely falls back to minimal on missing or unknown input
-# Subtest: getTemplate returns matching template object or minimal fallback
-ok 8 - getTemplate returns matching template object or minimal fallback
+# Subtest: every template category is offered as a filter
+ok 3 - every template category is offered as a filter
+# Subtest: template accents are distinct and readable on their own canvas
+ok 4 - template accents are distinct and readable on their own canvas
+# Subtest: normalizeTemplateId handles canonical IDs, casing and whitespace
+ok 5 - normalizeTemplateId handles canonical IDs, casing and whitespace
+# Subtest: normalizeTemplateId maps legacy ids onto the current six
+ok 6 - normalizeTemplateId maps legacy ids onto the current six
+# Subtest: normalizeTemplateId safely falls back to the default template
+ok 7 - normalizeTemplateId safely falls back to the default template
+# Subtest: getTemplate returns the matching template or the default fallback
+ok 8 - getTemplate returns the matching template or the default fallback
 # Subtest: draftFromPortfolio preserves chosen templateId and normalises invalid ones
 ok 9 - draftFromPortfolio preserves chosen templateId and normalises invalid ones
-# Subtest: draftToPayload preserves canonical templateId in outgoing payload
-ok 10 - draftToPayload preserves canonical templateId in outgoing payload
+# Subtest: draftToPayload preserves the canonical templateId in the outgoing payload
+ok 10 - draftToPayload preserves the canonical templateId in the outgoing payload
 1..10
 # tests 10
 # suites 0
@@ -194,9 +194,10 @@ shows the quota message and the rule-based analyzer keeps working.
 
 ---
 
-## 3. Redesign verification (2026-10-26)
+## 3. Dark redesign verification (2026-10-26) — superseded by section 3c
 
-The dark redesign (nine templates, chat builder, blog studio, website scanner, publishing pages) was
+The earlier dark redesign (nine templates at the time, chat builder, blog studio, website scanner,
+publishing pages) was
 verified in three ways. No headless browser was available in this build environment, so the screenshot
 pass described in section 3b still refers to the previous UI and was **not** re-run here.
 
@@ -287,7 +288,8 @@ overflow home: 0    public: 0        (horizontal overflow in px at 390×844)
 console/page errors: none
 ```
 
-Screenshot checklist reviewed (images kept in `docs/screenshots/`):
+Screenshot checklist reviewed (images kept in `docs/screenshots/`; these files document the earlier
+build described in this section and do not match the current light interface):
 
 | Screen | Screenshot | Result |
 | --- | --- | --- |
@@ -330,20 +332,91 @@ Bugs found and fixed during this pass:
 
 ---
 
+## 3c. Light "human-crafted" redesign verification (2026-10-26)
+
+The interface was rebuilt on a restrained light system: off-white canvas, charcoal type, one muted blue
+accent reserved for primary actions and selected states, navy panels, small radii and no decorative
+gradients or glow. Results below were produced in this build environment.
+
+**a. Production build**
+
+```bash
+cd client && npx vite build
+# ✓ 2025 modules transformed.
+# dist/index.html                   1.42 kB │ gzip:   0.65 kB
+# dist/assets/index-*.css          70.62 kB │ gzip:  11.92 kB
+# dist/assets/index-*.js          634.74 kB │ gzip: 171.54 kB
+# ✓ built in 4.74s
+```
+
+The only warning is Vite's 500 kB chunk-size notice (single-bundle SPA); it is not an error.
+
+**b. Suites**
+
+```
+cd server && npm test                  -> 58/58 checks passed
+cd client && node --test tests/       -> 10/10
+```
+
+**c. Server-side rendering checks (no headless browser available)**
+
+`renderToString` was used to execute every template and the public marketing pages, which catches the
+runtime errors a build cannot see:
+
+```
+developer: 9744 chars   dark: 11768 chars   designer: 9976 chars
+student: 10018 chars    freelancer: 11172 chars   executive: 9402 chars
+empty-profile fallback: 738 chars   unknown template id: 737 chars
+Landing: 22975 chars    Features: 15419 chars   Privacy: 8434 chars
+Terms: 5113 chars       NotFound: 3819 chars
+```
+
+This pass found and fixed two real defects: ISO dates were printed verbatim (`2022-01-01` instead of
+`Jan 2022`) and the designer/freelancer project counters said "1 projects".
+
+**d. Live HTTP smoke run**
+
+`server` (`USE_LOCAL_MONGO=true`, port 5000) and the Vite dev server (port 5173, `/api` proxied) were
+started together and driven with `curl`:
+
+```
+GET  /                                   -> 200 (SPA shell)
+GET  /api/health                         -> 200
+POST /api/auth/register                  -> 200, HTTP-only portiai_session cookie set
+POST /api/portfolios {templateId:designer} -> 201, templateId "designer", own accent applied
+PUT  /api/portfolios/:id                 -> 200, profile, 3 skills, 1 project, 1 degree
+PATCH /api/portfolios/:id/publish        -> 200, published
+GET  /api/public/:slug                   -> 200, saved content and template, no account data
+```
+
+**e. Subscription sweep**
+
+`grep -ri "pricing|upgrade|premium|billing|subscription" client/src` returns no interface code, and there
+is no pricing route, plan badge, payment CTA or upgrade modal. The remaining matches were sample project
+copy in the demo portfolio and legal text, both reworded.
+
+**f. Manual review limits**
+
+No headless browser or screenshot tool exists in this environment, so pixel-level visual QA (mobile
+drawer animation, focus rings, contrast measurements) was reviewed in code and in the rendered HTML
+only. Run the app locally for a final visual pass.
+
+---
+
 ## 4. Production build
 
 ```bash
 cd client && npm run build
 vite v5.4.11 building for production...
-✓ 2014 modules transformed.
-dist/index.html                   0.73 kB │ gzip:   0.43 kB
-dist/assets/index-*.css          42.87 kB │ gzip:   7.98 kB
-dist/assets/index-*.js          492.83 kB │ gzip: 138.33 kB
-✓ built in 4.86s
+✓ 2025 modules transformed.
+dist/index.html                   1.42 kB │ gzip:   0.65 kB
+dist/assets/index-*.css          70.62 kB │ gzip:  11.92 kB
+dist/assets/index-*.js          634.74 kB │ gzip: 171.54 kB
+✓ built in 4.74s
 ```
 
 No warnings about missing exports or unresolved imports. The single bundle is intentional (no route
-splitting yet); gzip size is ~138 kB.
+splitting yet); gzip size is ~172 kB.
 
 ---
 

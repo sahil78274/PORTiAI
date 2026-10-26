@@ -88,7 +88,7 @@ export default function Terms() {
         Back to home
       </Link>
       <p className="eyebrow mt-6">Terms</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">Terms of use</h1>
+      <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.03em] text-ink sm:text-[36px]">Terms of use</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
         The rules for using PortiAI, written plainly. Last updated{' '}
         {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
@@ -105,7 +105,7 @@ export default function Terms() {
       <div className="mt-9 space-y-8">
         {SECTIONS.map(({ id, title, body }) => (
           <section key={id} id={id} className="scroll-mt-24">
-            <h2 className="text-base font-semibold text-white">{title}</h2>
+            <h2 className="text-base font-semibold text-ink">{title}</h2>
             <div className="mt-2 text-sm leading-7 text-inkSoft">{body}</div>
           </section>
         ))}

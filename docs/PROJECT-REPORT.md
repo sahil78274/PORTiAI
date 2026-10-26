@@ -45,7 +45,7 @@ unique, URL-safe public link and unpublished at will. The application is built o
 | Aspect | Existing approach (résumé / static page / link-in-bio) | PortiAI |
 | --- | --- | --- |
 | Content structure | Free-form, easy to leave incomplete | Guided fields covering what employers look for |
-| Design effort | Manual, often inconsistent | Three designed templates, consistent by construction |
+| Design effort | Manual, often inconsistent | Six designed templates, consistent by construction |
 | Writing help | None, or generic advice | Section-level AI drafting constrained to supplied facts |
 | Feedback | None | Documented rubric with issues and prioritised fixes |
 | Sharing | File attachments | Stable public URL, revocable |
@@ -101,7 +101,7 @@ MongoDB (users, portfolios, ai usages)
 | `userId` | ObjectId → users | required, indexed |
 | `title` | String | dashboard label |
 | `slug` | String | unique (partial index), URL-safe |
-| `templateId` | String | `minimal` / `developer` / `editorial` |
+| `templateId` | String | one of `developer`, `dark`, `designer`, `student`, `freelancer`, `executive` (legacy ids normalised) |
 | `profile` | Object | fullName, title, bio, summary, location, contactEmail, photoUrl, links[] |
 | `skills[]` | Object | name, category (`technical` / `soft`) |
 | `education[]` | Object | institution, degree, field, dates, grade, achievements |
@@ -217,9 +217,10 @@ account settings, password change and account deletion.
 
 ## 13. Suggested viva demonstration order
 
-1. Landing page — hero, product tour, template gallery, analyzer sample, FAQ.
-2. Register a new account; arrive at the wizard; complete two steps and show the draft is saved after
-   a reload.
+1. Landing page — hero with the reserved portrait area, How it works, Made for your work, the six live template
+   previews and the feature list.
+2. Register a new account; arrive on the dashboard; open the AI builder, complete two steps and show the
+   draft is saved after a reload.
 3. Jump to **Design**, switch templates, change accent and font; show the live preview.
 4. Publish; the analyzer opens.
 5. Run the analysis; walk through category scores, issues and one recommendation.
