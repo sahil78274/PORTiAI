@@ -1,27 +1,29 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-  ArrowLeft,
-  Save,
-  Send,
-  Eye,
-  Pencil,
-  Monitor,
-  Smartphone,
-  Copy,
-  Gauge,
-  Check,
   AlertCircle,
-  Globe,
+  ArrowLeft,
+  Check,
+  Cloud,
+  CloudOff,
+  Eye,
   ExternalLink,
-  RotateCcw,
-  ChevronDown,
-  ChevronRight,
+  Gauge,
+  LayoutList,
+  Loader2,
+  Monitor,
+  Newspaper,
+  Palette,
+  Rocket,
+  Save,
+  Smartphone,
+  Tablet,
+  UserRound,
+  Wrench,
 } from 'lucide-react';
-import { Button, TextInput, Spinner, Alert } from '../components/ui/Primitives.jsx';
+import { Alert, Button, Spinner, Switch, TextArea, TextInput } from '../components/ui/Primitives.jsx';
 import Modal from '../components/ui/Modal.jsx';
 import PortfolioRenderer from '../templates/PortfolioRenderer.jsx';
-import TemplatePreviewFrame from '../components/marketing/TemplatePreviewFrame.jsx';
 import {
   ProfileSection,
   SkillsSection,
@@ -39,21 +41,90 @@ import { formatRelative } from '../utils/format.js';
 import { getTemplate } from '../utils/templates.js';
 
 const TABS = [
-  { id: 'content', label: 'Content' },
-  { id: 'design', label: 'Design & Theme' },
-  { id: 'sections', label: 'Order & Visibility' },
+  { id: 'profile', label: 'Profile', icon: UserRound },
+  { id: 'skills', label: 'Skills', icon: Wrench },
+  { id: 'projects', label: 'Projects', icon: LayoutList },
+  { id: 'experience', label: 'Experience', icon: LayoutList },
+  { id: 'design', label: 'Design', icon: Palette },
+  { id: 'sections', label: 'Sections', icon: LayoutList },
+  { id: 'blog', label: 'Blog', icon: Newspaper },
 ];
 
-const CONTENT_BLOCKS = [
-  { id: 'profile', label: 'Profile & Bio', Component: ProfileSection },
-  { id: 'skills', label: 'Technical Skills', Component: SkillsSection },
-  { id: 'education', label: 'Education History', Component: EducationSection },
-  { id: 'projects', label: 'Portfolio Projects', Component: ProjectsSection },
-  { id: 'experience', label: 'Experience & Achievements', Component: ExperienceSection },
+const DEVICES = [
+  { id: 'desktop', label: 'Desktop', icon: Monitor, width: '100%' },
+  { id: 'tablet', label: 'Tablet', icon: Tablet, width: '834px' },
+  { id: 'mobile', label: 'Mobile', icon: Smartphone, width: '430px' },
 ];
+
+function BlogSettings({ draft, setDraft }) {
+  const enabled = Boolean(draft.blog?.enabled);
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-line bg-canvasAlt/60 p-4">
+        <Switch
+          checked={enabled}
+          onChange={(value) => setDraft({ ...draft, blog: { ...draft.blog, enabled: value } })}
+          label="Enable a public blog on this portfolio"
+          description="Adds a blog link and listing page to your public portfolio. Only published posts are visible to visitors."
+        />
+      </div>
+
+      <div className={enabled ? 'space-y-4' : 'space-y-4 opacity-50'}>
+        <div>
+          <label htmlFor="blog-title" className="label">
+            Blog title
+          </label>
+          <TextInput
+            id="blog-title"
+            value={draft.blog?.title || ''}
+            maxLength={120}
+            disabled={!enabled}
+            placeholder={`${draft.profile?.fullName || 'Your name'} — Blog`}
+            onChange={(event) => setDraft({ ...draft, blog: { ...draft.blog, title: event.target.value } })}
+          />
+        </div>
+        <div>
+          <label htmlFor="blog-intro" className="label">
+            Short introduction
+          </label>
+          <TextArea
+            id="blog-intro"
+            value={draft.blog?.intro || ''}
+            maxLength={600}
+            rows={4}
+            disabled={!enabled}
+            placeholder="What do you write about? One or two sentences for the top of your blog page."
+            onChange={(event) => setDraft({ ...draft, blog: { ...draft.blog, intro: event.target.value } })}
+          />
+          <p className="hint">{(draft.blog?.intro || '').length}/600 characters</p>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-line bg-surface p-4">
+        <p className="text-sm font-medium text-white">Writing posts</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted">
+          Posts live in the Blog studio: draft in Markdown, use AI writing help, and publish when ready. Publishing a
+          post automatically turns this blog page on.
+        </p>
+        <Link to="/dashboard/blog" className="btn-secondary btn-sm mt-3">
+          <Newspaper size={13} aria-hidden="true" />
+          Open blog studio
+        </Link>
+      </div>
+
+      {enabled && draft.blog?.enabled ? (
+        <p className="text-[11px] leading-relaxed text-faint">
+          Remember to save your changes. The blog page appears at the public URL once both this portfolio and at least
+          one post are published.
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export default function Editor() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -65,17 +136,22 @@ export default function Editor() {
   const [notFound, setNotFound] = useState(false);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [tab, setTab] = useState('content');
+  // `/edit?tab=design` deep-links straight to a tab (used by "Customize" in the gallery).
+  const [tab, setTab] = useState(() => {
+    const requested = searchParams.get('tab');
+    return TABS.some((item) => item.id === requested) ? requested : 'profile';
+  });
   const [device, setDevice] = useState('desktop');
-  const [mobileView, setMobileView] = useState('edit');
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
-  const [openBlock, setOpenBlock] = useState('profile');
+  const [autoSaveState, setAutoSaveState] = useState('idle');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [mobilePane, setMobilePane] = useState('edit');
 
-  const serialise = (value) => (value ? JSON.stringify(draftToPayload(value)) : '');
-  const dirty = draft ? serialise(draft) !== savedSnapshot : false;
-
+  const dirty = draft ? JSON.stringify(draftToPayload(draft)) !== savedSnapshot : false;
   useUnsavedWarning(dirty);
+
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,8 +174,6 @@ export default function Editor() {
     load();
   }, [load]);
 
-  const updateDraft = useCallback((next) => setDraft(next), []);
-
   const save = useCallback(
     async ({ quiet = false } = {}) => {
       if (!draft) return false;
@@ -108,12 +182,13 @@ export default function Editor() {
         const data = await portfolioService.update(id, draftToPayload(draft));
         const refreshed = draftFromPortfolio(data.portfolio);
         setPortfolio(data.portfolio);
-        setDraft(refreshed);
         setSavedSnapshot(JSON.stringify(draftToPayload(refreshed)));
         setLastSaved(new Date());
-        if (!quiet) toast.success('Changes saved.');
+        setAutoSaveState('saved');
+        if (!quiet) toast.success('Draft saved.');
         return true;
       } catch (error) {
+        setAutoSaveState('error');
         toast.error(error.message || 'Could not save your changes.');
         return false;
       } finally {
@@ -123,24 +198,41 @@ export default function Editor() {
     [draft, id, toast]
   );
 
-  const revert = () => {
-    if (!portfolio) return;
-    const restored = draftFromPortfolio(portfolio);
-    setDraft(restored);
-    toast.info('Reverted to the last saved version.');
-  };
+  // Debounced autosave: only fires when the draft is dirty and the user pauses.
+  useEffect(() => {
+    if (!dirty || saving) return undefined;
+    setAutoSaveState('pending');
+    const timer = setTimeout(() => {
+      if (dirtyRef.current) save({ quiet: true });
+    }, 2600);
+    return () => clearTimeout(timer);
+  }, [draft, dirty, saving, save]);
 
-  const togglePublish = async () => {
+  const publish = async () => {
+    if (!draft) return;
     setPublishing(true);
     try {
       if (dirty) {
         const saved = await save({ quiet: true });
         if (!saved) throw new Error('Save your changes before publishing.');
       }
-      const data = await portfolioService.setPublished(id, !portfolio.published);
+      const data = await portfolioService.setPublished(id, true);
       setPortfolio(data.portfolio);
-      toast.success(data.portfolio.published ? 'Portfolio is now public.' : 'Portfolio is now a private draft.');
-      if (data.portfolio.published) setPreviewOpen(false);
+      toast.success('Portfolio published.');
+      navigate(`/dashboard/publish/${id}`);
+    } catch (error) {
+      toast.error(error.message || 'Could not publish this portfolio.');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const unpublish = async () => {
+    setPublishing(true);
+    try {
+      const data = await portfolioService.setPublished(id, false);
+      setPortfolio(data.portfolio);
+      toast.info('Portfolio set back to draft. The public link no longer resolves.');
     } catch (error) {
       toast.error(error.message || 'Could not change the publishing state.');
     } finally {
@@ -148,52 +240,34 @@ export default function Editor() {
     }
   };
 
-  const copyLink = async () => {
-    if (!portfolio?.slug) return;
-    const url = `${window.location.origin}/p/${portfolio.slug}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success('Public link copied.');
-    } catch {
-      toast.info('Copy this link manually:', { description: url, duration: 9000 });
-    }
-  };
-
-  const leaveToDashboard = () => {
-    if (dirty && !window.confirm('You have unsaved changes. Leave without saving?')) return;
-    navigate('/dashboard');
-  };
-
-  const progressHint = useMemo(() => {
-    if (!draft) return '';
-    const filled = [
+  const progress = useMemo(() => {
+    if (!draft) return { filled: 0, total: 6 };
+    const checks = [
       draft.profile.fullName,
       draft.profile.summary || draft.profile.bio,
       draft.skills.length,
       draft.education.length,
       draft.projects.length,
       draft.experience.length || draft.achievements.length,
-    ].filter(Boolean).length;
-    return `${filled} of 6 core sections complete`;
+    ];
+    return { filled: checks.filter(Boolean).length, total: checks.length };
   }, [draft]);
 
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Spinner label="Loading portfolio editor…" />
+        <Spinner label="Loading your portfolio…" />
       </div>
     );
   }
 
   if (notFound) {
     return (
-      <div className="card mx-auto max-w-lg p-8 text-center bg-surface shadow-card">
-        <h1 className="text-xl font-bold text-ink">Portfolio not found</h1>
-        <p className="mt-2 text-xs text-muted">
-          This portfolio does not exist, or it belongs to another account.
-        </p>
-        <Link to="/dashboard" className="btn-primary mt-5">
-          Back to dashboard
+      <div className="card mx-auto max-w-lg p-8 text-center">
+        <h1 className="text-xl font-bold text-white">Portfolio not found</h1>
+        <p className="mt-2 text-sm text-muted">This portfolio does not exist, or it belongs to another account.</p>
+        <Link to="/dashboard/portfolios" className="btn-primary mt-5">
+          Back to my portfolios
         </Link>
       </div>
     );
@@ -201,316 +275,245 @@ export default function Editor() {
 
   if (loadError) {
     return (
-      <Alert tone="error" title="Could not load this portfolio">
+      <Alert tone="error" title="Could not load this portfolio" actions={<Button variant="secondary" size="sm" onClick={load}>Try again</Button>}>
         {loadError}
-        <div className="mt-3">
-          <Button variant="secondary" size="sm" onClick={load}>
-            Try again
-          </Button>
-        </div>
       </Alert>
     );
   }
 
+  const template = getTemplate(draft.templateId);
+  const publicUrl = portfolio.slug ? `${window.location.origin}/p/${portfolio.slug}` : '';
+  const preview = <PortfolioRenderer portfolio={draft} blogHref={draft.blog?.enabled && portfolio.slug ? `/p/${portfolio.slug}/blog` : undefined} />;
+
+  const Status = () => {
+    if (autoSaveState === 'error') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-danger">
+          <CloudOff size={12} aria-hidden="true" />
+          Save failed — retry
+        </span>
+      );
+    }
+    if (saving || autoSaveState === 'pending') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-muted">
+          <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+          {saving ? 'Saving…' : 'Unsaved changes'}
+        </span>
+      );
+    }
+    if (dirty) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-warning">
+          <Cloud size={12} aria-hidden="true" />
+          Unsaved changes
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[11px] text-success">
+        <Check size={12} aria-hidden="true" />
+        {lastSaved ? `Saved ${formatRelative(lastSaved)}` : 'All changes saved'}
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-4">
-      {/* Top Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4 shadow-card">
-        <div className="min-w-0">
-          <button
-            type="button"
-            onClick={leaveToDashboard}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-ink transition-colors"
-          >
-            <ArrowLeft size={13} aria-hidden="true" />
-            <span>Portfolios</span>
-          </button>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+      {/* Toolbar */}
+      <div className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link to="/dashboard/portfolios" className="btn-ghost h-8 w-8 shrink-0 p-0" aria-label="Back to portfolios">
+            <ArrowLeft size={16} aria-hidden="true" />
+          </Link>
+          <div className="min-w-0">
             <input
               type="text"
               value={draft.title}
-              onChange={(event) => updateDraft({ ...draft, title: event.target.value })}
+              onChange={(event) => setDraft({ ...draft, title: event.target.value })}
               maxLength={120}
               aria-label="Portfolio title"
-              className="rounded-lg border border-transparent px-2 py-0.5 text-lg font-bold tracking-tight text-ink hover:border-line focus:border-accent focus:bg-white focus:outline-none transition-all max-w-sm sm:max-w-md"
+              className="w-full max-w-xs truncate rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-white transition-colors hover:border-line focus:border-accent focus:bg-canvasDeep focus:outline-none sm:max-w-sm sm:text-base"
             />
-            <span className={portfolio.published ? 'badge-published' : 'badge-draft'}>
-              {portfolio.published ? 'Published' : 'Draft'}
-            </span>
+            <div className="mt-0.5 flex flex-wrap items-center gap-2 px-1 text-[11px] text-faint">
+              <span className={portfolio.published ? 'badge-published !py-0' : 'badge-draft !py-0'}>
+                {portfolio.published ? 'Published' : 'Draft'}
+              </span>
+              <span>{template.name}</span>
+              <span aria-hidden="true">·</span>
+              <span>{progress.filled}/{progress.total} core sections</span>
+              <Status />
+            </div>
           </div>
-          <p className="mt-1 text-2xs text-muted pl-2">
-            <span className="font-semibold text-slate-700">{getTemplate(draft.templateId).name}</span> · {progressHint} ·{' '}
-            {dirty ? (
-              <span className="font-semibold text-amber-600">● Unsaved changes</span>
-            ) : lastSaved ? (
-              <span className="font-medium text-emerald-600">Saved {formatRelative(lastSaved)}</span>
-            ) : (
-              `Updated ${formatRelative(portfolio.updatedAt)}`
-            )}
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          {portfolio.published && portfolio.slug ? (
+          <Link to={`/dashboard/portfolio/${id}/analyze`} className="btn-ghost btn-sm">
+            <Gauge size={13} aria-hidden="true" />
+            <span className="hidden sm:inline">Analyze</span>
+          </Link>
+          <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(true)}>
+            <Eye size={13} aria-hidden="true" />
+            <span className="hidden sm:inline">Full preview</span>
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => save()} loading={saving} disabled={!dirty}>
+            <Save size={13} aria-hidden="true" />
+            Save draft
+          </Button>
+          {portfolio.published ? (
             <>
-              <a
-                href={`/p/${portfolio.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-ghost btn-sm text-xs font-semibold"
-              >
+              <a href={`/p/${portfolio.slug}`} target="_blank" rel="noopener noreferrer" className="btn-ghost btn-sm">
                 <ExternalLink size={13} aria-hidden="true" />
-                <span>Public page</span>
+                <span className="hidden sm:inline">View site</span>
               </a>
-              <Button variant="ghost" size="sm" onClick={copyLink}>
-                <Copy size={13} aria-hidden="true" />
-                <span>Copy link</span>
+              <Button variant="ghost" size="sm" onClick={unpublish} disabled={publishing}>
+                Unpublish
               </Button>
             </>
-          ) : null}
-
-          <Link to={`/dashboard/portfolio/${id}/analyze`} className="btn-ghost btn-sm text-xs font-semibold">
-            <Gauge size={13} aria-hidden="true" />
-            <span>Analyze</span>
-          </Link>
-
-          {dirty ? (
-            <Button variant="ghost" size="sm" onClick={revert}>
-              <RotateCcw size={13} aria-hidden="true" />
-              <span>Revert</span>
+          ) : (
+            <Button size="sm" onClick={publish} loading={publishing}>
+              <Rocket size={13} aria-hidden="true" />
+              Publish
             </Button>
-          ) : null}
-
-          <Button variant="secondary" size="sm" onClick={() => setPreviewOpen(true)}>
-            <Eye size={13} aria-hidden="true" />
-            <span>Full Preview</span>
-          </Button>
-
-          <Button
-            variant={dirty ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => save()}
-            loading={saving}
-            disabled={!dirty && !saving}
-          >
-            <Save size={13} aria-hidden="true" />
-            <span>{dirty ? 'Save changes' : 'Saved'}</span>
-          </Button>
-
-          <Button
-            variant={portfolio.published ? 'secondary' : 'primary'}
-            size="sm"
-            onClick={togglePublish}
-            loading={publishing}
-          >
-            {portfolio.published ? <Globe size={13} aria-hidden="true" /> : <Send size={13} aria-hidden="true" />}
-            <span>{portfolio.published ? 'Unpublish' : 'Publish'}</span>
-          </Button>
+          )}
         </div>
       </div>
 
-      {dirty ? (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-medium text-amber-800">
-          <AlertCircle size={14} className="shrink-0 text-amber-600" aria-hidden="true" />
-          <span>You have unsaved changes. Remember to click &ldquo;Save changes&rdquo; before leaving.</span>
-        </div>
-      ) : null}
-
-      {/* Mobile view switch */}
-      <div className="flex lg:hidden">
-        <div className="flex w-full rounded-xl border border-line bg-surface p-1 shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setMobileView('edit')}
-            aria-pressed={mobileView === 'edit'}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold ${
-              mobileView === 'edit' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-500'
-            }`}
-          >
-            <Pencil size={13} aria-hidden="true" />
-            <span>Edit Sections</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileView('preview')}
-            aria-pressed={mobileView === 'preview'}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold ${
-              mobileView === 'preview' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-500'
-            }`}
-          >
-            <Eye size={13} aria-hidden="true" />
-            <span>Live Preview</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Grid: Left editor / Right preview */}
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        {/* Editing pane */}
-        <div className={`${mobileView === 'edit' ? 'block' : 'hidden'} lg:block`}>
-          <div className="flex rounded-xl border border-line bg-slate-100/70 p-1 mb-3" role="tablist" aria-label="Editor panels">
-            {TABS.map((item) => (
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,440px)_1fr]">
+        {/* Editing panel */}
+        <section className={`card overflow-hidden ${mobilePane === 'preview' ? 'hidden xl:block' : ''}`} aria-label="Portfolio editor">
+          <div className="flex gap-1 overflow-x-auto border-b border-line px-2 py-2 scrollbar-none" role="tablist" aria-label="Editor sections">
+            {TABS.map(({ id: tabId, label, icon: Icon }) => (
               <button
-                key={item.id}
+                key={tabId}
                 role="tab"
                 type="button"
-                aria-selected={tab === item.id}
-                onClick={() => setTab(item.id)}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold tracking-tight transition-all ${
-                  tab === item.id
-                    ? 'bg-white text-ink shadow-2xs'
-                    : 'text-slate-500 hover:text-ink'
+                aria-selected={tab === tabId}
+                onClick={() => setTab(tabId)}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                  tab === tabId ? 'bg-accent-soft text-white' : 'text-muted hover:bg-white/[0.04] hover:text-ink'
                 }`}
               >
-                {item.label}
+                <Icon size={12} aria-hidden="true" />
+                {label}
               </button>
             ))}
           </div>
 
-          <div className="card p-5 bg-surface shadow-card">
-            {tab === 'content' ? (
-              <div className="space-y-3">
-                {CONTENT_BLOCKS.map((block) => {
-                  const open = openBlock === block.id;
-                  const Component = block.Component;
-                  return (
-                    <section
-                      key={block.id}
-                      className={`rounded-xl border transition-all ${
-                        open ? 'border-lineStrong bg-white shadow-xs ring-1 ring-slate-200/50' : 'border-line bg-surface hover:border-lineStrong'
-                      }`}
-                    >
-                      <h2>
-                        <button
-                          type="button"
-                          onClick={() => setOpenBlock(open ? '' : block.id)}
-                          aria-expanded={open}
-                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-semibold text-ink"
-                        >
-                          <span className="flex items-center gap-2">
-                            {open ? (
-                              <ChevronDown size={14} className="text-accent" aria-hidden="true" />
-                            ) : (
-                              <ChevronRight size={14} className="text-slate-400" aria-hidden="true" />
-                            )}
-                            <span className="text-sm font-semibold">{block.label}</span>
-                          </span>
-                          <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full ${open ? 'bg-accent-soft text-accent' : 'bg-slate-100 text-slate-500'}`}>
-                            {open ? 'Open' : 'Edit'}
-                          </span>
-                        </button>
-                      </h2>
-                      {open ? (
-                        <div className="border-t border-line px-4 py-4 animate-in fade-in duration-100">
-                          <Component draft={draft} setDraft={updateDraft} />
-                        </div>
-                      ) : null}
-                    </section>
-                  );
-                })}
+          <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-4 scroll-slim">
+            {tab === 'profile' ? <ProfileSection draft={draft} setDraft={setDraft} /> : null}
+            {tab === 'skills' ? <SkillsSection draft={draft} setDraft={setDraft} /> : null}
+            {tab === 'projects' ? <ProjectsSection draft={draft} setDraft={setDraft} /> : null}
+            {tab === 'experience' ? (
+              <div className="space-y-8">
+                <ExperienceSection draft={draft} setDraft={setDraft} />
+                <EducationSection draft={draft} setDraft={setDraft} />
               </div>
             ) : null}
-
-            {tab === 'design' ? <DesignSection draft={draft} setDraft={updateDraft} showPreview={false} /> : null}
-
-            {tab === 'sections' ? <SectionsSection draft={draft} setDraft={updateDraft} /> : null}
+            {tab === 'design' ? <DesignSection draft={draft} setDraft={setDraft} showPreview={false} /> : null}
+            {tab === 'sections' ? <SectionsSection draft={draft} setDraft={setDraft} /> : null}
+            {tab === 'blog' ? <BlogSettings draft={draft} setDraft={setDraft} /> : null}
           </div>
-        </div>
 
-        {/* Live preview pane */}
-        <div className={`${mobileView === 'preview' ? 'block' : 'hidden'} lg:block`}>
-          <div className="lg:sticky lg:top-[76px]">
-            <div className="flex items-center justify-between gap-2 border-b border-line pb-2.5 mb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
-                <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Live Preview Frame</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="badge-draft text-2xs">{getTemplate(draft.templateId).name}</span>
-                <div className="flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={() => setDevice('desktop')}
-                    aria-pressed={device === 'desktop'}
-                    aria-label="Desktop preview"
-                    className={`rounded-md p-1 transition-colors ${
-                      device === 'desktop' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-400 hover:text-slate-700'
-                    }`}
-                  >
-                    <Monitor size={14} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDevice('mobile')}
-                    aria-pressed={device === 'mobile'}
-                    aria-label="Mobile preview"
-                    className={`rounded-md p-1 transition-colors ${
-                      device === 'mobile' ? 'bg-slate-100 text-ink shadow-2xs' : 'text-slate-400 hover:text-slate-700'
-                    }`}
-                  >
-                    <Smartphone size={14} aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`overflow-hidden rounded-2xl border border-line bg-white shadow-raised transition-all duration-300 ${
-                device === 'mobile' ? 'mx-auto max-w-[380px]' : ''
-              }`}
-            >
-              <TemplatePreviewFrame
-                designWidth={device === 'mobile' ? 390 : 1000}
-                designHeight={device === 'mobile' ? 1500 : 1400}
-                label="Live portfolio preview"
-              >
-                <PortfolioRenderer portfolio={draft} />
-              </TemplatePreviewFrame>
-            </div>
-            <p className="mt-2.5 text-center text-2xs text-slate-400">
-              Instant hot reload. What you see is rendered identically on the public URL.
-            </p>
+          <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2.5">
+            <Status />
+            <p className="text-[10px] text-faint">Autosaves after a pause</p>
           </div>
-        </div>
+        </section>
+
+        {/* Preview panel */}
+        <section className={`card overflow-hidden ${mobilePane === 'edit' ? 'hidden xl:block' : ''}`} aria-label="Live preview">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-accent-hover">
+                <Eye size={12} aria-hidden="true" />
+              </span>
+              <p className="text-xs font-semibold text-white">Live preview</p>
+              <span className="hidden text-[10px] text-faint sm:inline">Updates instantly</span>
+            </div>
+            <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvasDeep p-0.5" role="group" aria-label="Preview device">
+              {DEVICES.map(({ id: deviceId, label, icon: Icon }) => (
+                <button
+                  key={deviceId}
+                  type="button"
+                  onClick={() => setDevice(deviceId)}
+                  aria-pressed={device === deviceId}
+                  aria-label={`${label} preview`}
+                  title={label}
+                  className={`rounded-md p-1.5 transition-colors ${device === deviceId ? 'bg-white/[0.09] text-white' : 'text-faint hover:text-ink'}`}
+                >
+                  <Icon size={13} aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-[#050813] p-2 sm:p-3">
+            <div className="mx-auto overflow-hidden rounded-lg border border-line transition-all duration-300" style={{ maxWidth: DEVICES.find((item) => item.id === device).width }}>
+              <div className="h-[calc(100vh-260px)] min-h-[560px] overflow-y-auto scroll-slim">{preview}</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Mobile pane switch */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-[#070b18]/95 px-4 py-2 backdrop-blur xl:hidden">
+        {[
+          { id: 'edit', label: 'Editor', icon: LayoutList },
+          { id: 'preview', label: 'Preview', icon: Eye },
+        ].map(({ id: paneId, label, icon: Icon }) => (
+          <button
+            key={paneId}
+            type="button"
+            onClick={() => setMobilePane(paneId)}
+            aria-pressed={mobilePane === paneId}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium ${
+              mobilePane === paneId ? 'bg-accent-soft text-white' : 'text-muted'
+            }`}
+          >
+            <Icon size={13} aria-hidden="true" />
+            {label}
+          </button>
+        ))}
       </div>
 
       <Modal
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         title={`Preview — ${draft.title}`}
-        description={
-          portfolio.published
-            ? 'This matches what visitors see at your public link.'
-            : 'Draft preview. Click Publish to make it public.'
-        }
+        description="Rendered from the current unsaved draft. Nothing is published until you press Publish."
         size="xl"
         footer={
           <>
             <Button variant="secondary" onClick={() => setPreviewOpen(false)}>
               Close
             </Button>
-            <Button onClick={togglePublish} loading={publishing}>
-              {portfolio.published ? 'Unpublish' : 'Publish now'}
-            </Button>
+            {portfolio.published && portfolio.slug ? (
+              <a href={`/p/${portfolio.slug}`} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                <ExternalLink size={14} aria-hidden="true" />
+                Open public site
+              </a>
+            ) : (
+              <Button onClick={publish} loading={publishing}>
+                <Rocket size={14} aria-hidden="true" />
+                Publish portfolio
+              </Button>
+            )}
           </>
         }
       >
-        <div className="overflow-hidden rounded-xl border border-line bg-white shadow-card">
-          <TemplatePreviewFrame designWidth={1050} designHeight={1300} label="Full portfolio preview">
-            <PortfolioRenderer portfolio={draft} />
-          </TemplatePreviewFrame>
+        <div className="overflow-hidden rounded-xl border border-line bg-white">
+          <div className="h-[65vh] overflow-y-auto">{preview}</div>
         </div>
-        {dirty ? (
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700">
-            <AlertCircle size={13} aria-hidden="true" /> This preview includes unsaved edits. Save before publishing.
-          </p>
-        ) : (
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-emerald-700">
-            <Check size={13} aria-hidden="true" /> Preview is synchronized with the saved database record.
-          </p>
-        )}
+        {portfolio.published && publicUrl ? <p className="mt-3 truncate text-xs text-muted">{publicUrl}</p> : null}
       </Modal>
+
+      {dirty ? (
+        <div className="flex items-center gap-2 rounded-xl border border-warning/25 bg-warningSoft px-3.5 py-2 text-[11px] text-warning">
+          <AlertCircle size={13} aria-hidden="true" />
+          You have unsaved changes. Autosave will save them shortly, or press Save draft now.
+        </div>
+      ) : null}
     </div>
   );
 }

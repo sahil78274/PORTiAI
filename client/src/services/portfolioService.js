@@ -14,6 +14,8 @@ export const portfolioService = {
 
 export const aiService = {
   status: () => api.get('/ai/status'),
+  /** Conversational builder: facts in, structured portfolio copy out. */
+  build: (facts) => api.post('/ai/builder', { facts }),
   generate: (payload) => api.post('/ai/generate', payload),
   improve: (payload) => api.post('/ai/improve', payload),
   analyze: (payload) => api.post('/ai/analyze', payload),

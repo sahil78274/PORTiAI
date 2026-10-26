@@ -14,11 +14,18 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
-import CreateWizard from './pages/CreateWizard.jsx';
+import Builder from './pages/Builder.jsx';
+import TemplatesWorkspace from './pages/TemplatesWorkspace.jsx';
+import StartProject from './pages/StartProject.jsx';
+import MyPortfolios from './pages/MyPortfolios.jsx';
 import Editor from './pages/Editor.jsx';
-import Analyze from './pages/Analyze.jsx';
+import Analyzer from './pages/Analyzer.jsx';
+import BlogStudio from './pages/BlogStudio.jsx';
+import BlogEditor from './pages/BlogEditor.jsx';
+import PublishSuccess from './pages/PublishSuccess.jsx';
 import Settings from './pages/Settings.jsx';
 import PublicPortfolio from './pages/PublicPortfolio.jsx';
+import { PublicBlogList, PublicBlogPost } from './pages/PublicBlog.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 export default function App() {
@@ -40,15 +47,24 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
 
-        {/* Public portfolio pages render on their own, without app chrome. */}
+        {/* Public portfolio + blog render on their own, without app chrome. */}
         <Route path="/p/:slug" element={<PublicPortfolio />} />
+        <Route path="/p/:slug/blog" element={<PublicBlogList />} />
+        <Route path="/p/:slug/blog/:postSlug" element={<PublicBlogPost />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/create" element={<CreateWizard />} />
+            <Route path="/dashboard/builder" element={<Builder />} />
+            <Route path="/dashboard/create" element={<StartProject />} />
+            <Route path="/dashboard/templates" element={<TemplatesWorkspace />} />
+            <Route path="/dashboard/portfolios" element={<MyPortfolios />} />
             <Route path="/dashboard/portfolio/:id/edit" element={<Editor />} />
-            <Route path="/dashboard/portfolio/:id/analyze" element={<Analyze />} />
+            <Route path="/dashboard/portfolio/:id/analyze" element={<Analyzer />} />
+            <Route path="/dashboard/analyzer" element={<Analyzer />} />
+            <Route path="/dashboard/blog" element={<BlogStudio />} />
+            <Route path="/dashboard/blog/:id" element={<BlogEditor />} />
+            <Route path="/dashboard/publish/:id" element={<PublishSuccess />} />
             <Route path="/dashboard/settings" element={<Settings />} />
           </Route>
         </Route>

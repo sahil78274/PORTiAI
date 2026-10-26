@@ -2,6 +2,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { analyzeRules, enrichWithAi } from '../services/analyzerService.js';
 import { generateContent, improveText } from '../services/aiService.js';
+import { buildPortfolio } from '../services/builderService.js';
 import { AiUnavailableError, isAiEnabled, AI_ERROR_MESSAGES } from '../services/geminiService.js';
 import { assertAiBudget, recordAiUsage, getAiUsageToday } from '../services/aiUsageService.js';
 import { findOwnedPortfolio } from './portfolioController.js';
@@ -49,6 +50,22 @@ export const generate = asyncHandler(async (req, res) => {
     res.json({ success: true, data: { kind, result, model, usage, source: 'ai' } });
   } catch (error) {
     if (error instanceof AiUnavailableError) return handleAiError(res, error);
+    return handleAiError(res, error);
+  }
+});
+
+/**
+ * Conversational builder: turns the facts collected in the chat into structured
+ * portfolio content. Facts are validated and sanitised in the service layer.
+ */
+export const build = asyncHandler(async (req, res) => {
+  try {
+    await assertAiBudget(req.user._id);
+    const { result, model } = await buildPortfolio(req.body.facts);
+    await recordAiUsage(req.user._id);
+    const usage = await getAiUsageToday(req.user._id);
+    res.json({ success: true, data: { result, model, usage, source: 'ai' } });
+  } catch (error) {
     return handleAiError(res, error);
   }
 });

@@ -185,9 +185,19 @@ Query: `search` (title / full name / professional title, ≤80 chars), `status` 
 
 ### `POST /api/portfolios`
 
-Body (optional): `{ "title": "…", "templateId": "minimal|developer|editorial" }`. Returns `201` with a
-full portfolio document. The profile name and contact email are pre-filled from the account, and a
-unique slug is reserved immediately so a later publish cannot collide.
+Body (optional): `{ "title": "…", "templateId": "…", "theme": { "accent": "#6366f1" } }`. Returns `201`
+with a full portfolio document. The profile name and contact email are pre-filled from the account, and
+a unique slug is reserved immediately so a later publish cannot collide.
+
+`templateId` accepts the nine canonical ids — `minimal`, `developer`, `editorial`, `obsidian`, `aurora`,
+`swiss`, `neon`, `editorialpro`, `executive` — plus the aliases `minimal-professional`,
+`developer-portfolio`, `modern-editorial`, `obsidian-pro`, `aurora-gradient`, `swiss-minimal`,
+`neon-terminal`, `editorial-pro`, `executive-elite`. Unknown ids fall back to `minimal` instead of
+failing. Choosing a template also applies that template's default accent and font, which the editor can
+then override.
+
+Only `title`, `templateId` and `theme.accent` are read at creation time; content (profile, skills,
+projects, blog settings…) is written with `PUT /api/portfolios/:id`.
 
 ### `GET /api/portfolios/:id`
 
@@ -382,6 +392,108 @@ The payload excludes `userId`, `analysis` and any account data. Slugs must match
 
 ---
 
+## AI chat builder
+
+### `POST /api/ai/builder`
+
+Auth required. Turns the facts collected by the conversational builder into structured, editable
+portfolio copy. The service validates and length-caps every field, and instructs the model to use only
+the supplied facts.
+
+```json
+{
+  "facts": {
+    "fullName": "Aditi Sharma",
+    "role": "Backend developer",
+    "location": "Sonipat, Haryana",
+    "about": "I build tested REST APIs with Node.js.",
+    "skills": ["Node.js", "Express", "MongoDB"],
+    "projects": [{ "name": "Events API", "description": "Registration API with JWT auth.", "technologies": ["Node.js"] }],
+    "experience": [{ "role": "Intern", "organization": "Acme", "startDate": "2024", "endDate": "2024", "details": "…" }],
+    "education": [{ "institution": "MD University", "degree": "BCA" }],
+    "achievements": ["Won the campus hackathon"],
+    "notes": "Include a blog on the portfolio.",
+    "tone": "professional"
+  }
+}
+```
+
+Response: `{ "success": true, "data": { "result": { "summary", "bio", "skills", "projects", "experience", "achievements" }, "model", "usage", "source": "ai" } }`.
+
+`400` when no usable facts are supplied ("Add a little more information first…"). Provider failures use
+the same error codes as the other AI endpoints (`503 NOT_CONFIGURED`, `429 RATE`, `502 BAD_RESPONSE`).
+
+---
+
+## Blog
+
+All routes require auth. Posts are always scoped to the signed-in user, and a post may only be attached
+to a portfolio the same user owns — anything else is a `404`, so other users' ids are never confirmed.
+Markdown is stored as plain text: HTML is stripped by the sanitiser on write.
+
+### `GET /api/blog`
+
+Query: `search` (title / excerpt), `status` = `all|published|draft`, `portfolioId` (optional).
+
+```json
+{ "success": true, "data": { "posts": [ { "id": "…", "title": "…", "slug": "…", "excerpt": "…", "content": "…", "coverUrl": "", "tags": [], "published": false, "publishedAt": null, "portfolioId": "…", "createdAt": "…", "updatedAt": "…" } ], "stats": { "total": 2, "published": 1, "drafts": 1 } } }
+```
+
+### `POST /api/blog`
+
+Body: `{ "portfolioId": "…", "title": "…", "excerpt": "", "content": "", "coverUrl": "", "tags": [] }`.
+Returns `201`. A title is required and slugs are made unique per portfolio.
+
+### `GET|PUT|DELETE /api/blog/:id`
+
+`PUT` accepts `title`, `slug`, `excerpt`, `content`, `coverUrl`, `tags`. `DELETE` returns
+`{ "data": { "message": "Post deleted.", "id": "…" } }`.
+
+### `PATCH /api/blog/:id/publish`
+
+Body: `{ "published": true }`. Sets `publishedAt` on publish and clears it on unpublish.
+
+### Public blog
+
+* `GET /api/public/:slug/blog` — no auth. `404` unless the portfolio is published **and** its blog is
+  enabled. Returns published posts only, newest first, without content.
+* `GET /api/public/:slug/blog/:postSlug` — a single published post including `content`.
+
+---
+
+## Website analyser
+
+Deterministic scans of a live page or an uploaded HTML document. Every finding is derived from markup
+that was actually retrieved; nothing is invented, and each response lists what could not be checked.
+
+### `POST /api/analyze/url`
+
+```json
+{ "url": "https://your-name.vercel.app", "categories": ["seo", "accessibility"] }
+```
+
+`categories` is optional (`seo`, `accessibility`, `performance`, `responsive`, `code`, `design`).
+
+### `POST /api/analyze/html`
+
+```json
+{ "html": "<!doctype html>…", "filename": "portfolio.html", "categories": [] }
+```
+
+The body limit is 1 MB and the document is capped at 600 KB. Both routes are limited to
+`SCAN_RATE_LIMIT_PER_MIN` (default 10) per minute per account and return:
+
+```json
+{ "success": true, "data": { "analysis": { "score": 81, "grade": "Good", "scannedUrl": "…", "generatedAt": "…", "categories": [ { "id": "seo", "label": "SEO", "score": 16, "max": 20, "detail": "…" } ], "issues": [ { "id": "…", "severity": "high", "category": "seo", "message": "…", "detail": "…", "recommendation": "…" } ], "notes": [ "…" ], "stats": { "documentKb": 42, "images": 3, "scripts": 1 } } } }
+```
+
+Rubric: SEO 20, accessibility 20, performance 20, mobile responsiveness 15, code quality 15, design 10.
+
+`/api/analyze/url` refuses non-HTTP(S) schemes and resolves DNS before fetching, blocking loopback,
+link-local, private-range and `.local` targets (`400 BLOCKED_HOST`). Requests time out after 12 s.
+
+---
+
 ## Rate limits
 
 | Scope | Limit |
@@ -389,6 +501,7 @@ The payload excludes `userId`, `analysis` and any account data. Slugs must match
 | `/api/*` | 300 requests / minute / IP |
 | `/api/auth/register`, `/login` | 30 requests / 15 minutes / IP (successful requests are not counted) |
 | `/api/ai/*`, `/api/portfolios/:id/analyze` | `AI_RATE_LIMIT_PER_MIN` (default 12) / minute / account |
-| `/api/public/:slug` | 120 requests / minute / IP |
+| `/api/public/:slug`, `/api/public/:slug/blog*` | 120 requests / minute / IP |
+| `/api/analyze/*` | `SCAN_RATE_LIMIT_PER_MIN` (default 10) / minute / account |
 
 Rate-limit responses are `429` with `{ "error": { "code": "RATE_LIMITED", "message": "…" } }`.

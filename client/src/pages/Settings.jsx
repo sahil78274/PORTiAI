@@ -1,29 +1,72 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { AlertCircle, Check, KeyRound, ShieldAlert, Sparkles, Trash2, User } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AlertTriangle,
+  Bell,
+  Check,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  Monitor,
+  Moon,
+  Palette,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  Trash2,
+  User,
+} from 'lucide-react';
+import { PageHeader } from '../components/ui/Kit.jsx';
 import { Alert, Button, Field, TextInput } from '../components/ui/Primitives.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
-import PasswordInput from '../components/ui/PasswordInput.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { authService } from '../services/authService.js';
-import useAiStatus from '../hooks/useAiStatus.js';
 import { formatDate } from '../utils/format.js';
+
+const PASSWORD_RULES = [
+  { label: 'At least 8 characters', test: (value) => value.length >= 8 },
+  { label: 'Contains a letter', test: (value) => /[a-zA-Z]/.test(value) },
+  { label: 'Contains a number', test: (value) => /[0-9]/.test(value) },
+];
+
+const THEMES = [
+  { id: 'dark', label: 'Midnight (default)', description: 'The dark studio theme PortiAI is designed around.', icon: Moon, available: true },
+  { id: 'light', label: 'Daylight', description: 'A light dashboard theme is on the roadmap — the current build is dark-only.', icon: Sun, available: false },
+  { id: 'system', label: 'Follow system', description: 'Automatically switch with your operating system.', icon: Monitor, available: false },
+];
+
+const NOTIFICATION_ROWS = [
+  { id: 'publish', label: 'Portfolio publishing', description: 'Confirmations when a portfolio goes live or is unpublished.', defaultOn: true },
+  { id: 'analyzer', label: 'Analyser results', description: 'A summary after each portfolio analysis run.', defaultOn: true },
+  { id: 'ai', label: 'AI availability', description: 'Warnings when AI features are unavailable and downgrade to rule-based output.', defaultOn: true },
+  { id: 'product', label: 'Product updates', description: 'Occasional notes about new templates and features.', defaultOn: false },
+];
 
 export default function Settings() {
   const { user, refresh, logout } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState({ name: '', headline: '' });
-  const [profileSaving, setProfileSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
 
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirm: '' });
-  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
-  const [passwordDone, setPasswordDone] = useState('');
 
-  const { status: aiStatus } = useAiStatus();
+  const [theme, setTheme] = useState(() => localStorage.getItem('portiai-theme') || 'dark');
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('portiai-notifications') || 'null') || Object.fromEntries(NOTIFICATION_ROWS.map((row) => [row.id, row.defaultOn]));
+    } catch {
+      return Object.fromEntries(NOTIFICATION_ROWS.map((row) => [row.id, row.defaultOn]));
+    }
+  });
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -33,67 +76,88 @@ export default function Settings() {
     if (user) setProfile({ name: user.name || '', headline: user.headline || '' });
   }, [user]);
 
+  useEffect(() => {
+    localStorage.setItem('portiai-notifications', JSON.stringify(notifications));
+  }, [notifications]);
+
+  const passwordChecks = useMemo(() => PASSWORD_RULES.map((rule) => ({ ...rule, passed: rule.test(passwords.newPassword) })), [passwords.newPassword]);
+  const passwordValid = passwordChecks.every((rule) => rule.passed) && passwords.newPassword === passwords.confirm;
+
+  const profileDirty = user && (profile.name.trim() !== (user.name || '') || profile.headline.trim() !== (user.headline || ''));
+
   const saveProfile = async (event) => {
     event.preventDefault();
     setProfileError('');
     if (profile.name.trim().length < 2) {
-      setProfileError('Your name needs at least two characters.');
+      setProfileError('Please enter your full name (at least 2 characters).');
       return;
     }
-    setProfileSaving(true);
+    setSavingProfile(true);
     try {
       await authService.updateAccount({ name: profile.name.trim(), headline: profile.headline.trim() });
       await refresh();
-      toast.success('Account details updated.');
+      toast.success('Profile updated.');
     } catch (error) {
-      setProfileError(error.message || 'Could not update your account.');
+      setProfileError(error.message || 'Could not update your profile.');
     } finally {
-      setProfileSaving(false);
+      setSavingProfile(false);
     }
   };
 
   const savePassword = async (event) => {
     event.preventDefault();
     setPasswordError('');
-    setPasswordDone('');
-
     if (!passwords.currentPassword) {
       setPasswordError('Enter your current password.');
       return;
     }
-    if (passwords.newPassword.length < 8 || !/[a-zA-Z]/.test(passwords.newPassword) || !/[0-9]/.test(passwords.newPassword)) {
-      setPasswordError('The new password must be at least 8 characters and include a letter and a number.');
+    if (!passwordValid) {
+      setPasswordError(
+        passwords.newPassword !== passwords.confirm ? 'The new passwords do not match.' : 'Your new password does not meet the requirements below.'
+      );
       return;
     }
-    if (passwords.newPassword !== passwords.confirm) {
-      setPasswordError('The new passwords do not match.');
-      return;
-    }
-
-    setPasswordSaving(true);
+    setSavingPassword(true);
     try {
       await authService.updateAccount({
         currentPassword: passwords.currentPassword,
         newPassword: passwords.newPassword,
       });
       setPasswords({ currentPassword: '', newPassword: '', confirm: '' });
-      setPasswordDone('Password updated. Other active devices have been signed out.');
-      toast.success('Password updated.');
+      toast.success('Password changed.', { description: 'Other devices have been signed out.' });
     } catch (error) {
-      setPasswordError(error.message || 'Could not update your password.');
+      setPasswordError(error.message || 'Could not change your password.');
     } finally {
-      setPasswordSaving(false);
+      setSavingPassword(false);
     }
+  };
+
+  const updateTheme = (id, available) => {
+    if (!available) {
+      toast.info('That theme is not available yet.', { description: 'The current build ships with the dark studio theme only.' });
+      return;
+    }
+    setTheme(id);
+    localStorage.setItem('portiai-theme', id);
+    toast.success('Appearance preference saved.');
+  };
+
+  const toggleNotification = (id) => {
+    setNotifications((current) => ({ ...current, [id]: !current[id] }));
   };
 
   const deleteAccount = async () => {
     setDeleteError('');
+    if (!deletePassword) {
+      setDeleteError('Enter your password to confirm deletion.');
+      return;
+    }
     setDeleting(true);
     try {
       await authService.deleteAccount(deletePassword);
       toast.success('Account deleted.');
       await logout().catch(() => {});
-      window.location.assign('/');
+      navigate('/', { replace: true });
     } catch (error) {
       setDeleteError(error.message || 'Could not delete your account.');
     } finally {
@@ -102,165 +166,264 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Account Settings</h1>
-        <p className="mt-1 text-xs text-muted">
-          Signed in as <strong className="text-slate-800">{user?.email}</strong> · Member since {formatDate(user?.createdAt)}
-        </p>
-      </div>
+    <div className="mx-auto max-w-4xl space-y-5">
+      <PageHeader
+        eyebrow="Settings"
+        title="Account and preferences"
+        description="Manage your PortiAI profile, password and local preferences. Appearance and notification choices are stored in this browser."
+        actions={
+          <Link to="/dashboard" className="btn-secondary btn-sm">
+            Back to dashboard
+          </Link>
+        }
+      />
 
-      {/* Profile Section */}
-      <section className="card p-6 bg-surface shadow-card">
-        <div className="flex items-center gap-2.5 border-b border-line pb-3 mb-4">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
-            <User size={15} aria-hidden="true" />
+      {/* Profile */}
+      <form onSubmit={saveProfile} className="card p-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+            <User size={16} aria-hidden="true" />
           </span>
-          <h2 className="text-base font-bold text-ink">Personal Profile</h2>
+          <div>
+            <h2 className="text-sm font-semibold text-white">Profile</h2>
+            <p className="mt-0.5 text-xs text-muted">Your display name appears in the dashboard. Your email is used to sign in.</p>
+          </div>
         </div>
-        <p className="text-xs text-muted mb-4">Your name is pre-populated as the author name on newly initialized portfolios.</p>
 
-        {profileError ? (
-          <Alert tone="error" className="mb-4">
-            {profileError}
-          </Alert>
-        ) : null}
-
-        <form onSubmit={saveProfile} className="space-y-4" noValidate>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Full name" htmlFor="settings-name" required>
             <TextInput
               id="settings-name"
               value={profile.name}
-              onChange={(event) => setProfile({ ...profile, name: event.target.value })}
               maxLength={80}
               autoComplete="name"
+              onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))}
             />
           </Field>
-          <Field label="Headline" htmlFor="settings-headline" hint="Optional subtitle for internal dashboard records, e.g. 'Software Engineering Intern'.">
+          <Field label="Headline" htmlFor="settings-headline" hint="Shown beside your name, e.g. “Frontend developer”.">
             <TextInput
               id="settings-headline"
               value={profile.headline}
-              onChange={(event) => setProfile({ ...profile, headline: event.target.value })}
               maxLength={120}
+              placeholder="Frontend developer"
+              onChange={(event) => setProfile((current) => ({ ...current, headline: event.target.value }))}
             />
           </Field>
-          <Field label="Email" htmlFor="settings-email" hint="Primary login credential. Locked to preserve account authenticity.">
-            <TextInput id="settings-email" value={user?.email || ''} disabled readOnly className="bg-slate-100 text-slate-500 cursor-not-allowed" />
+          <Field label="Email" htmlFor="settings-email" hint="Email changes are not supported yet — contact support to change it.">
+            <TextInput id="settings-email" value={user?.email || ''} readOnly disabled />
           </Field>
-          <Button type="submit" variant="primary" loading={profileSaving}>
-            <Check size={14} aria-hidden="true" />
-            <span>Save Profile</span>
-          </Button>
-        </form>
-      </section>
-
-      {/* Password Section */}
-      <section className="card p-6 bg-surface shadow-card">
-        <div className="flex items-center gap-2.5 border-b border-line pb-3 mb-4">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
-            <KeyRound size={15} aria-hidden="true" />
-          </span>
-          <h2 className="text-base font-bold text-ink">Change Password</h2>
+          <Field label="Member since" htmlFor="settings-created">
+            <TextInput id="settings-created" value={formatDate(user?.createdAt)} readOnly disabled />
+          </Field>
         </div>
-        <p className="text-xs text-muted mb-4">
-          Changing your password invalidates your existing JWT cookies across other sessions.
-        </p>
+
+        {profileError ? (
+          <p role="alert" className="mt-3 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
+            {profileError}
+          </p>
+        ) : null}
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-faint">{profileDirty ? 'You have unsaved profile changes.' : 'Profile is up to date.'}</p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={!profileDirty || savingProfile}
+              onClick={() => setProfile({ name: user?.name || '', headline: user?.headline || '' })}
+            >
+              Reset
+            </Button>
+            <Button type="submit" size="sm" loading={savingProfile} disabled={!profileDirty || savingProfile}>
+              <Check size={13} aria-hidden="true" />
+              Save profile
+            </Button>
+          </div>
+        </div>
+      </form>
+
+      {/* Password */}
+      <form onSubmit={savePassword} className="card p-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+            <KeyRound size={16} aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-white">Password</h2>
+            <p className="mt-0.5 text-xs text-muted">Changing your password signs out every other device.</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Field label="Current password" htmlFor="current-password" required>
+            <TextInput
+              id="current-password"
+              type={showPasswords ? 'text' : 'password'}
+              value={passwords.currentPassword}
+              autoComplete="current-password"
+              onChange={(event) => setPasswords((current) => ({ ...current, currentPassword: event.target.value }))}
+            />
+          </Field>
+          <Field label="New password" htmlFor="new-password" required>
+            <TextInput
+              id="new-password"
+              type={showPasswords ? 'text' : 'password'}
+              value={passwords.newPassword}
+              autoComplete="new-password"
+              onChange={(event) => setPasswords((current) => ({ ...current, newPassword: event.target.value }))}
+            />
+          </Field>
+          <Field
+            label="Confirm new password"
+            htmlFor="confirm-password"
+            required
+            error={passwords.confirm && passwords.confirm !== passwords.newPassword ? 'Passwords do not match.' : undefined}
+          >
+            <TextInput
+              id="confirm-password"
+              type={showPasswords ? 'text' : 'password'}
+              value={passwords.confirm}
+              autoComplete="new-password"
+              onChange={(event) => setPasswords((current) => ({ ...current, confirm: event.target.value }))}
+            />
+          </Field>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setShowPasswords((value) => !value)}
+            className="inline-flex items-center gap-1.5 text-[11px] text-muted hover:text-ink"
+          >
+            {showPasswords ? <EyeOff size={12} aria-hidden="true" /> : <Eye size={12} aria-hidden="true" />}
+            {showPasswords ? 'Hide passwords' : 'Show passwords'}
+          </button>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1">
+            {passwordChecks.map((rule) => (
+              <li key={rule.label} className={`inline-flex items-center gap-1 text-[11px] ${rule.passed ? 'text-success' : 'text-faint'}`}>
+                <Check size={10} aria-hidden="true" className={rule.passed ? '' : 'opacity-30'} />
+                {rule.label}
+              </li>
+            ))}
+          </ul>
+        </div>
 
         {passwordError ? (
-          <Alert tone="error" className="mb-4">
+          <p role="alert" className="mt-3 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
             {passwordError}
-          </Alert>
-        ) : null}
-        {passwordDone ? (
-          <Alert tone="success" className="mb-4">
-            {passwordDone}
-          </Alert>
+          </p>
         ) : null}
 
-        <form onSubmit={savePassword} className="space-y-4" noValidate>
-          <Field label="Current password" htmlFor="current-password" required>
-            <PasswordInput
-              id="current-password"
-              value={passwords.currentPassword}
-              onChange={(event) => setPasswords({ ...passwords, currentPassword: event.target.value })}
-            />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="New password" htmlFor="new-password" required>
-              <PasswordInput
-                id="new-password"
-                autoComplete="new-password"
-                value={passwords.newPassword}
-                onChange={(event) => setPasswords({ ...passwords, newPassword: event.target.value })}
-              />
-            </Field>
-            <Field label="Confirm new password" htmlFor="confirm-password" required>
-              <PasswordInput
-                id="confirm-password"
-                autoComplete="new-password"
-                value={passwords.confirm}
-                onChange={(event) => setPasswords({ ...passwords, confirm: event.target.value })}
-              />
-            </Field>
-          </div>
-          <Button type="submit" variant="secondary" loading={passwordSaving}>
-            <span>Update Password</span>
+        <div className="mt-4 flex justify-end">
+          <Button type="submit" size="sm" loading={savingPassword} disabled={savingPassword || !passwords.currentPassword || !passwords.newPassword}>
+            <ShieldCheck size={13} aria-hidden="true" />
+            Change password
           </Button>
-        </form>
-      </section>
-
-      {/* AI Usage Section */}
-      <section className="card p-6 bg-surface shadow-card">
-        <div className="flex items-center gap-2.5 border-b border-line pb-3 mb-4">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200">
-            <Sparkles size={15} aria-hidden="true" />
-          </span>
-          <h2 className="text-base font-bold text-ink">AI Usage & Quota</h2>
         </div>
-        <p className="text-xs text-muted mb-4">
-          Free-tier Gemini integrations are governed by fair-use rate limiting to guarantee equitable availability.
-        </p>
-        {aiStatus ? (
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
-              <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Service Status</p>
-              <p className="mt-1 text-xs font-bold text-ink flex items-center gap-1.5">
-                <span className={`h-2 w-2 rounded-full ${aiStatus.configured ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                {aiStatus.configured ? 'Active' : 'Unconfigured'}
-              </p>
-            </div>
-            <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
-              <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Daily Calls</p>
-              <p className="mt-1 text-sm font-bold tabular-nums text-ink">
-                {aiStatus.usage?.used ?? 0} / {aiStatus.usage?.limit ?? '—'}
-              </p>
-            </div>
-            <div className="rounded-xl border border-line bg-slate-50/60 p-3.5">
-              <p className="text-2xs font-semibold uppercase tracking-wider text-muted">Scoring Engine</p>
-              <p className="mt-1 text-xs font-semibold text-ink">100-pt Rubric Fallback</p>
-            </div>
+      </form>
+
+      {/* Appearance */}
+      <div className="card p-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+            <Palette size={16} aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-white">Appearance</h2>
+            <p className="mt-0.5 text-xs text-muted">Dashboard theme preference for this browser. Portfolio templates have their own design systems.</p>
           </div>
-        ) : (
-          <p className="text-xs text-muted">Status unavailable.</p>
-        )}
-      </section>
-
-      {/* Danger Zone */}
-      <section className="card p-6 border-red-200 bg-red-50/30 shadow-card">
-        <div className="flex items-center gap-2.5 border-b border-red-200/60 pb-3 mb-4">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-100 text-red-700">
-            <ShieldAlert size={15} aria-hidden="true" />
-          </span>
-          <h2 className="text-base font-bold text-red-900">Danger Zone</h2>
         </div>
-        <p className="text-xs text-red-900/80 mb-4 leading-relaxed">
-          Permanently delete your user credentials and all associated portfolios, drafts, and public URLs. This action cannot be reversed.
-        </p>
-        <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
-          <Trash2 size={13} aria-hidden="true" />
-          <span>Delete my account permanently</span>
-        </Button>
-      </section>
+        <div className="mt-4 grid gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Dashboard theme">
+          {THEMES.map(({ id, label, description, icon: Icon, available }) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={theme === id}
+              onClick={() => updateTheme(id, available)}
+              className={`rounded-xl border p-3.5 text-left transition-colors ${
+                theme === id ? 'border-accent-line bg-accent-soft' : 'border-line bg-canvasDeep/40 hover:border-lineStrong'
+              } ${available ? '' : 'opacity-70'}`}
+            >
+              <span className="flex items-center justify-between">
+                <Icon size={15} className={theme === id ? 'text-accent-hover' : 'text-faint'} aria-hidden="true" />
+                {!available ? <span className="badge !py-0 text-[9px]">Soon</span> : theme === id ? <Check size={13} className="text-accent-hover" aria-hidden="true" /> : null}
+              </span>
+              <p className="mt-2 text-xs font-semibold text-white">{label}</p>
+              <p className="mt-0.5 text-[10px] leading-relaxed text-muted">{description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="card p-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05] text-accent-hover">
+            <Bell size={16} aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-white">Notifications</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              PortiAI does not send email or push notifications yet. These preferences store your intent locally and are used for
+              in-app toasts.
+            </p>
+          </div>
+        </div>
+        <ul className="mt-4 divide-y divide-line">
+          {NOTIFICATION_ROWS.map((row) => (
+            <li key={row.id} className="flex items-start justify-between gap-4 py-3">
+              <div>
+                <p className="text-xs font-medium text-white">{row.label}</p>
+                <p className="mt-0.5 text-[11px] text-muted">{row.description}</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(notifications[row.id])}
+                aria-label={row.label}
+                onClick={() => toggleNotification(row.id)}
+                className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors ${
+                  notifications[row.id] ? 'bg-accent' : 'bg-white/[0.12]'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                    notifications[row.id] ? 'translate-x-[18px]' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Account / danger */}
+      <div className="card border-danger/25 p-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-danger/25 bg-dangerSoft text-danger">
+            <AlertTriangle size={16} aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-white">Danger zone</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              Deleting your account permanently removes every portfolio, blog post and analysis result. Published links stop
+              working immediately. This cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="inline-flex items-center gap-1.5 text-[11px] text-faint">
+            <Sparkles size={11} aria-hidden="true" />
+            Prefer a break? You can simply log out — your work stays saved.
+          </p>
+          <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
+            <Trash2 size={13} aria-hidden="true" />
+            Delete account
+          </Button>
+        </div>
+      </div>
 
       <ConfirmDialog
         open={deleteOpen}
@@ -271,26 +434,36 @@ export default function Settings() {
         }}
         onConfirm={deleteAccount}
         busy={deleting}
-        title="Permanently delete your account?"
-        description="All portfolios, drafts, and public URLs will be permanently deleted from the database. Type your password to proceed."
-        confirmLabel="Delete account permanently"
+        title="Delete your PortiAI account?"
+        description="Every portfolio, blog post and analysis will be deleted permanently and published links will stop working. Enter your password to confirm."
+        confirmLabel="Delete my account"
       >
-        <div className="mt-4">
-          <Field label="Current Password" htmlFor="delete-password" required error={deleteError}>
-            <PasswordInput
+        <div className="mt-3 space-y-2">
+          <Field label="Password" htmlFor="delete-password" required>
+            <TextInput
               id="delete-password"
+              type="password"
               value={deletePassword}
+              autoComplete="current-password"
               onChange={(event) => setDeletePassword(event.target.value)}
             />
           </Field>
           {deleteError ? (
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-red-600">
-              <AlertCircle size={13} aria-hidden="true" />
-              <span>{deleteError}</span>
+            <p role="alert" className="text-xs text-danger">
+              {deleteError}
             </p>
           ) : null}
         </div>
       </ConfirmDialog>
+
+      {deleting ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvasDeep/70">
+          <Loader2 size={22} className="animate-spin text-accent-hover" aria-hidden="true" />
+          <span className="sr-only">Deleting account</span>
+        </div>
+      ) : null}
+
+      {!user ? <Alert tone="warning" title="You are signed out">Sign in again to manage your account.</Alert> : null}
     </div>
   );
 }

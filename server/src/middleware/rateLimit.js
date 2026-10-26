@@ -37,3 +37,11 @@ export const aiLimiter = rateLimit({
 });
 
 export const publicLimiter = rateLimit({ ...base, windowMs: 60 * 1000, limit: 120 });
+
+/** Website/file scans are capped per account so the API cannot be used as a proxy. */
+export const scanLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 1000,
+  limit: 10,
+  keyGenerator: (req) => (req.user ? `user:${req.user._id}` : ipKeyGenerator(req.ip)),
+});

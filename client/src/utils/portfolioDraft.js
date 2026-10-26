@@ -32,8 +32,9 @@ export const emptyDraft = () => ({
   experience: [],
   achievements: [],
   socialLinks: { github: '', linkedin: '', twitter: '', website: '' },
-  theme: { accent: '#2f4a8b', font: 'sans', density: 'comfortable' },
+  theme: { accent: '#6366f1', font: 'sans', density: 'comfortable' },
   visibleSections: defaultVisibleSections(),
+  blog: { enabled: false, title: '', intro: '' },
 });
 
 /** Converts an API portfolio document into the editable draft shape. */
@@ -57,6 +58,7 @@ export const draftFromPortfolio = (portfolio) => {
       Array.isArray(portfolio.visibleSections) && portfolio.visibleSections.length
         ? portfolio.visibleSections
         : base.visibleSections,
+    blog: { ...base.blog, ...(portfolio.blog || {}) },
   };
 };
 
@@ -73,6 +75,7 @@ export const draftToPayload = (draft) => ({
   socialLinks: draft.socialLinks,
   theme: draft.theme,
   visibleSections: draft.visibleSections,
+  blog: draft.blog,
 });
 
 export const emptyProject = () => ({

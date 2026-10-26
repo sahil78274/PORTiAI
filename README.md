@@ -1,12 +1,14 @@
 # PortiAI — AI-Powered Portfolio Builder and Analyzer
 
-A full-stack MERN application built as a BCA final-year project. Users sign up, build a portfolio
-through a guided wizard, improve the wording with AI (Google Gemini), review the portfolio against a
-documented rubric, and publish it at a public link such as `/p/aarav-mehta`.
+A full-stack MERN application. Users sign up, draft a portfolio through an AI conversation (or pick one
+of nine templates), refine it in a live editor with device previews, review it against a documented
+rubric, optionally run a Website analyzer on any live page, write Markdown blog posts, and publish at a
+public link such as `/p/aarav-mehta`.
 
-The application is complete: real authentication, real MongoDB persistence, three working templates,
-a live editor, server-side AI integration with graceful quota handling, a deterministic analyzer that
-works without AI, and public publishing with ownership checks enforced in the backend.
+The application is complete: real authentication, real MongoDB persistence, nine distinct templates and
+a dark design system, a conversational AI builder backed by a validated server endpoint, server-side AI
+with graceful quota handling, a deterministic analyzer that works without AI, blog publishing, a
+deterministic website scanner, and public publishing with ownership checks enforced in the backend.
 
 ---
 
@@ -14,24 +16,49 @@ works without AI, and public publishing with ownership checks enforced in the ba
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Landing page at `/` | Done | Hero, product tour made of real components, features, how it works, templates, analyzer preview, FAQ, footer |
+| Design system | Done | Deep navy canvas, blue→indigo→violet gradients, Inter/Manrope, dark elevated cards, Lucide icons only, responsive and accessible |
+| Landing page at `/` | Done | Sticky nav, hero with product mockup, features, template previews, how it works, comparison, pricing, FAQ, final CTA, footer. Sample statistics are labelled illustrative |
 | Public pages | Done | `/features`, `/templates`, `/privacy`, `/terms`, `*` not-found |
-| Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation |
-| Dashboard | Done | Real counts from MongoDB, search, sort, status filter, preview, duplicate, delete with confirmation, publish toggle |
-| Creation wizard | Done | 7 steps, per-step save, live preview, publish at the end |
-| Editor | Done | Split screen, live preview, desktop/mobile preview, templates, accent, font, density, section order/visibility, unsaved state, revert |
-| Templates | Done | Minimal Professional, Developer Portfolio, Modern Editorial — distinct layouts, all data-driven and responsive |
-| AI generation | Done | Biography, summary, project description, achievement, skills, generic section; per-field regeneration; validated JSON; quota handling |
-| AI + rule-based analyzer | Done | 100-point rubric in 7 categories, issues, prioritised recommendations, example rewrites, apply-to-portfolio |
-| Public publishing | Done | Unique URL-safe slugs, publish/unpublish, 404 for drafts, no private data in the public payload |
+| Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation. Email/password only — no OAuth buttons are shown |
+| Dashboard `/dashboard` | Done | Collapsible sidebar, real counts from MongoDB, quick actions, recent portfolios, activity feed, onboarding, notifications, profile menu |
+| AI builder `/dashboard/builder` | Done | Chat UI with suggested prompts, validation, generation progress, preview panel, create-draft hand-off via `POST /api/ai/builder` |
+| Templates | Done | Nine design systems — Minimal Professional, Developer, Modern Editorial, Obsidian Pro, Aurora Gradient, Swiss Minimal, Neon Terminal, Editorial Pro, Executive Elite — each with its own layout |
+| Template gallery | Done | Search, category filters, selected indicator, live rendered previews with desktop/tablet/mobile modes, Use-template action |
+| Editor | Done | Seven tabs, debounced autosave with status, desktop/tablet/mobile previews, accent/font/density, section order and visibility, blog settings, publish |
+| My Portfolios | Done | Grid/list views, search + status filters + sort, thumbnails, preview, duplicate, share, delete with confirmation, analysis score |
+| Portfolio analyzer | Done | Portfolio rubric (7 categories, 100 points) and a website scanner (6 categories) for a live URL or uploaded HTML; severity-grouped findings; apply selected rewrites |
+| Blog studio | Done | Post list with covers, Markdown editor with live preview, publish/unpublish, delete, AI writing help; public blog page per portfolio |
+| Publishing | Done | Unique URL-safe slugs, publish/unpublish, dedicated success page with copy/share/open, 404 for drafts, no private data in the public payload |
+| Public portfolio + blog | Done | `/p/:slug` and `/p/:slug/blog`, rendered by the chosen template from saved data, SEO title/description, no dashboard chrome |
+| Settings | Done | Profile, password change, appearance and notification preferences, account deletion with password confirmation |
+| AI generation | Done | Biography, summary, project description, achievement, skills, blog text, section copy, chat-builder drafting; validated JSON; quota handling |
 | Documentation | Done | README, API reference, analyzer rubric, deployment guide, testing log, project report outline |
 
-Two things are deliberately **not** implemented, and the UI says so instead of pretending:
+### Route map
+
+| Route | Access |
+| --- | --- |
+| `/`, `/features`, `/templates`, `/privacy`, `/terms` | public |
+| `/login`, `/register`, `/forgot-password` | public (redirect to the dashboard when already signed in) |
+| `/p/:slug`, `/p/:slug/blog`, `/p/:slug/blog/:postSlug` | public portfolio and blog |
+| `/dashboard` | signed in |
+| `/dashboard/builder`, `/dashboard/create` | signed in |
+| `/dashboard/templates`, `/dashboard/portfolios` | signed in |
+| `/dashboard/portfolio/:id/edit`, `/dashboard/portfolio/:id/analyze` | signed in (owner only) |
+| `/dashboard/analyzer`, `/dashboard/blog`, `/dashboard/blog/:id` | signed in |
+| `/dashboard/publish/:id`, `/dashboard/settings` | signed in (owner only) |
+
+Things that are deliberately **not** implemented, and the UI says so instead of pretending:
 
 * **Password reset by email** — needs a transactional email provider. `/forgot-password` explains the
   situation and documents the administrator workaround.
+* **Social (Google/GitHub) sign-in** — the backend authenticates with email + password only, so those
+  buttons are not shown rather than being mocked.
 * **Automatic AI content on every save** — AI is opt-in per field so the shared free-tier quota is not
   consumed by background requests.
+* **Paid plans and billing** — the pricing section describes what the product would charge; no payment
+  provider is connected and no plan is enforced.
+* **Custom domains and PDF export** — neither is implemented.
 
 ---
 
@@ -69,18 +96,21 @@ portiai/
 │   ├── public/                 # favicon, robots.txt
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ui/             # Primitives, Modal, ConfirmDialog, Logo, PasswordInput
-│   │   │   ├── marketing/      # Navbar, Hero, HeroPreview, ProductTour, Features, …
+│   │   │   ├── ui/             # Primitives, Kit, Modal, ConfirmDialog, Logo, PasswordInput
+│   │   │   ├── marketing/      # Navbar, Footer, HeroMockup, TemplatePreviewFrame
+│   │   │   ├── templates/      # TemplateCard, TemplateGallery
 │   │   │   ├── dashboard/      # ProtectedRoute
 │   │   │   └── editor/         # PortfolioForm sections, AiAssist, useUnsavedWarning
 │   │   ├── context/            # AuthContext, ToastContext
-│   │   ├── hooks/              # (reserved — shared hooks currently live beside their features)
+│   │   ├── hooks/              # useAiStatus, useDebouncedValue
 │   │   ├── layouts/            # MarketingLayout, AuthLayout, DashboardLayout
-│   │   ├── pages/              # Landing, Features, Templates, Login, Register, Dashboard,
-│   │   │                       # CreateWizard, Editor, Analyze, Settings, PublicPortfolio, …
-│   │   ├── services/           # api.js (fetch wrapper), authService, portfolioService
-│   │   ├── templates/          # MinimalTemplate, DeveloperTemplate, EditorialTemplate, renderer
-│   │   ├── utils/              # format, templates metadata, draft helpers, demo content
+│   │   ├── pages/              # Landing, FeaturesPage, TemplatesPage, Login, Register, Dashboard,
+│   │   │                       # Builder, TemplatesWorkspace, MyPortfolios, Editor, Analyzer,
+│   │   │                       # BlogStudio, BlogEditor, PublishSuccess, Settings, PublicPortfolio,
+│   │   │                       # PublicBlog, StartProject, Privacy, Terms, NotFound
+│   │   ├── services/           # api.js (fetch wrapper), authService, portfolioService, blogService, scanService
+│   │   ├── templates/          # nine templates + shared.jsx + PortfolioRenderer
+│   │   ├── utils/              # format, templates metadata, draft helpers, markdown, demo content
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css           # Tailwind layers + design tokens
@@ -90,16 +120,16 @@ portiai/
 ├── server/                     # Express API
 │   ├── src/
 │   │   ├── config/             # env.js, db.js
-│   │   ├── controllers/        # auth, portfolio, public, ai
+│   │   ├── controllers/        # auth, portfolio, public, blog, ai, scan
 │   │   ├── middleware/         # auth, validate, error, rateLimit
-│   │   ├── models/             # User.js, Portfolio.js
-│   │   ├── routes/             # authRoutes, portfolioRoutes, aiRoutes, publicRoutes
-│   │   ├── services/           # geminiService, aiService, analyzerService, aiUsageService
+│   │   ├── models/             # User.js, Portfolio.js, BlogPost.js
+│   │   ├── routes/             # authRoutes, portfolioRoutes, aiRoutes, publicRoutes, blogRoutes, analyzeRoutes
+│   │   ├── services/           # geminiService, aiService, analyzerService, aiUsageService, builderService, webAnalyzerService
 │   │   ├── utils/              # ApiError, asyncHandler, sanitize, slug, portfolioDefaults
 │   │   ├── validators/         # authInput.js, portfolioInput.js (Zod + sanitisers)
 │   │   ├── app.js
 │   │   └── server.js
-│   ├── tests/api.test.js       # 41-check HTTP suite (real app + real DB + stub Gemini)
+│   ├── tests/api.test.js       # 58-check HTTP suite (real app + real DB + stub Gemini)
 │   └── .env.example
 ├── docs/
 │   ├── API.md                  # Endpoint reference
@@ -178,10 +208,13 @@ exactly as it does behind a reverse proxy.
 ### 4.4 First run
 
 1. Open <http://localhost:5173> — the landing page loads at `/`.
-2. Click **Get Started**, register, and you land on the creation wizard.
-3. Complete the steps; each **Continue** saves the draft to MongoDB.
-4. At the review step, choose **Publish** — you are taken to the analyzer.
-5. Run the analysis, then open the public page from the dashboard (**Open** / **Copy link**).
+2. Click **Start Building with AI**, register, and you land on the dashboard.
+3. Choose **AI Builder** to draft content through the conversation, or **Templates** to start from one
+   of the nine designs. Both end in the editor at `/dashboard/portfolio/:id/edit`.
+4. Edit any tab; changes autosave after a short pause (the toolbar shows the save state).
+5. Press **Publish** — the success page at `/dashboard/publish/:id` shows the live URL, copy and share
+   actions. Open the public page, then run **Analyzer** to review the content score.
+6. Optional: create a post in **Blog studio**, publish it, and open the portfolio's `/p/:slug/blog` page.
 
 ---
 
@@ -240,7 +273,18 @@ Full request/response documentation: [`docs/API.md`](docs/API.md).
 | POST | `/api/ai/generate` | ✔ | Biography, summary, project, achievement, skills, section |
 | POST | `/api/ai/improve` | ✔ | Rewrite an existing block |
 | POST | `/api/ai/analyze` | ✔ | Analysis with an explicit `portfolioId` |
+| POST | `/api/ai/builder` | ✔ | Chat-builder facts → structured portfolio copy |
+| GET | `/api/blog` | ✔ | List posts with `search`, `status`, `portfolioId` |
+| POST | `/api/blog` | ✔ | Create a post draft for an owned portfolio |
+| GET | `/api/blog/:id` | ✔ | Read one post (owner only) |
+| PUT | `/api/blog/:id` | ✔ | Update title, slug, excerpt, content, cover, tags |
+| DELETE | `/api/blog/:id` | ✔ | Delete a post |
+| PATCH | `/api/blog/:id/publish` | ✔ | Publish / unpublish a post |
+| POST | `/api/analyze/url` | ✔ | Deterministic scan of a public URL (SSRF-guarded) |
+| POST | `/api/analyze/html` | ✔ | Deterministic scan of uploaded HTML |
 | GET | `/api/public/:slug` | – | Published portfolio only |
+| GET | `/api/public/:slug/blog` | – | Published posts of a published, blog-enabled portfolio |
+| GET | `/api/public/:slug/blog/:postSlug` | – | A single published post |
 
 All private endpoints require the session cookie and re-check ownership in the database. Another
 user's portfolio id returns `404` (not `403`) so ids cannot be probed.
@@ -260,7 +304,10 @@ user's portfolio id returns `404` (not `403`) so ids cannot be probed.
 * **Validation** with Zod on every write endpoint; unknown fields are dropped.
 * **Sanitisation**: HTML tags are stripped from all text, and only absolute `http(s)` URLs survive, so
   `javascript:` payloads cannot reach an `href` or `src`.
-* **Rate limiting**: 300 req/min general, 30 / 15 min on auth, 12 / min and 200 / day per account on AI.
+* **Rate limiting**: 300 req/min general, 30 / 15 min on auth, 12 / min and 200 / day per account on AI,
+  10 scans / min per account, 120 req/min on public pages.
+* **SSRF protection**: the website scanner only accepts `http(s)`, resolves DNS first and refuses
+  loopback, link-local, private-range and `.local` targets before fetching.
 * **Helmet** security headers, JSON body limit 256 kB, CORS restricted to `CLIENT_URL`.
 * Errors never include stack traces in production, and never include the API key or provider internals.
 
@@ -297,7 +344,7 @@ commands and output.
 
 ```bash
 cd server && npm test                              # 42 HTTP checks: real Express app, real mongod, stub Gemini
-cd client && npm test                              # 8 unit checks: template registry, normalisation, fallback
+cd client && npm test                              # 10 unit checks: 9-template registry, normalisation, fallback
 cd client && npm run build                         # production build (passes cleanly)
 GEMINI_API_KEY=… node server/scripts/check-gemini.mjs   # one real request to Google, with translated errors
 ```
@@ -312,7 +359,9 @@ change invalidation and account deletion.
 
 Browser flows (registration → wizard → publish → analyze → editor → public page → unpublish → logout →
 login) were exercised with Playwright against the running dev servers, at desktop and 390 px mobile
-widths with no horizontal overflow.
+widths with no horizontal overflow. That screenshot pass predates the dark redesign; the current build
+was verified with the production build plus a scripted HTTP run through the real dev-server proxy
+(register → create → update → analyze → publish → public → blog → scan). See `docs/TESTING.md` §3.
 
 The Gemini request path was validated against a **local stub** that mimics the REST contract (success,
 429 quota with `retryDetails`, empty candidates, 502, malformed JSON). It was not exercised against

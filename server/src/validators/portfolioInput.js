@@ -3,8 +3,8 @@ import crypto from 'node:crypto';
 import {
   SECTION_DEFINITIONS,
   SECTION_IDS,
-  TEMPLATE_IDS,
   FONT_IDS,
+  normalizeTemplateId,
 } from '../utils/portfolioDefaults.js';
 import { sanitizeText, sanitizeUrl, sanitizeStringArray } from '../utils/sanitize.js';
 
@@ -56,7 +56,7 @@ export const generateRequestSchema = z.object({
 });
 
 export const improveRequestSchema = z.object({
-  kind: z.enum(['project', 'achievement', 'bio', 'summary', 'experience']),
+  kind: z.enum(['project', 'achievement', 'bio', 'summary', 'experience', 'blog']),
   text: z.string().trim().min(1, 'Nothing to improve yet.').max(2500),
   context: z
     .object({
@@ -74,17 +74,8 @@ export const normalizePortfolioBody = (body = {}) => {
   if (typeof body.title === 'string') out.title = sanitizeText(body.title, 120) || 'Untitled portfolio';
 
   const incomingTemplate = body.templateId || body.template;
-  if (typeof incomingTemplate === 'string') {
-    const cleanId = incomingTemplate.toLowerCase().trim();
-    const mapped =
-      cleanId === 'developer-portfolio' ? 'developer' :
-      cleanId === 'modern-editorial' ? 'editorial' :
-      cleanId === 'minimal-professional' ? 'minimal' :
-      cleanId;
-    if (TEMPLATE_IDS.includes(mapped)) {
-      out.templateId = mapped;
-    }
-  }
+  const canonicalTemplate = normalizeTemplateId(incomingTemplate);
+  if (canonicalTemplate) out.templateId = canonicalTemplate;
 
   if (body.profile && typeof body.profile === 'object') {
     const p = body.profile;
@@ -188,6 +179,14 @@ export const normalizePortfolioBody = (body = {}) => {
     };
   }
 
+  if (body.blog && typeof body.blog === 'object') {
+    out.blog = {
+      enabled: body.blog.enabled === true,
+      title: sanitizeText(body.blog.title, 120),
+      intro: sanitizeText(body.blog.intro, 600),
+    };
+  }
+
   if (Array.isArray(body.visibleSections)) {
     const incoming = new Map();
     body.visibleSections.forEach((section, index) => {
@@ -229,3 +228,77 @@ export const hashPortfolioContent = (portfolio) => {
   };
   return crypto.createHash('sha256').update(JSON.stringify(relevant)).digest('hex');
 };
+
+/** Facts accepted by the conversational AI builder. */
+export const builderRequestSchema = z.object({
+  facts: z
+    .object({
+      fullName: z.string().max(120).optional(),
+      role: z.string().max(160).optional(),
+      location: z.string().max(120).optional(),
+      about: z.string().max(1500).optional(),
+      skills: z.array(z.string().max(60)).max(30).optional(),
+      projects: z
+        .array(
+          z.object({
+            name: z.string().max(160).optional(),
+            description: z.string().max(1200).optional(),
+            technologies: z.array(z.string().max(40)).max(12).optional(),
+            projectUrl: z.string().max(300).optional(),
+            githubUrl: z.string().max(300).optional(),
+          })
+        )
+        .max(8)
+        .optional(),
+      experience: z
+        .array(
+          z.object({
+            role: z.string().max(160).optional(),
+            organization: z.string().max(160).optional(),
+            startDate: z.string().max(40).optional(),
+            endDate: z.string().max(40).optional(),
+            details: z.string().max(1200).optional(),
+          })
+        )
+        .max(6)
+        .optional(),
+      education: z
+        .array(
+          z.object({
+            institution: z.string().max(160).optional(),
+            degree: z.string().max(160).optional(),
+            field: z.string().max(160).optional(),
+            startDate: z.string().max(40).optional(),
+            endDate: z.string().max(40).optional(),
+            grade: z.string().max(60).optional(),
+          })
+        )
+        .max(5)
+        .optional(),
+      achievements: z
+        .array(
+          z.object({
+            title: z.string().max(200).optional(),
+            issuer: z.string().max(160).optional(),
+            date: z.string().max(40).optional(),
+          })
+        )
+        .max(10)
+        .optional(),
+      notes: z.string().max(600).optional(),
+      tone: z.enum(['professional', 'concise', 'friendly']).optional(),
+    })
+    .default({}),
+});
+
+/** Website / file scanner input. */
+export const scanUrlSchema = z.object({
+  url: z.string().trim().min(4, 'Enter a portfolio URL to scan.').max(2048),
+  categories: z.array(z.enum(['seo', 'accessibility', 'performance', 'responsive', 'code', 'design'])).max(6).optional(),
+});
+
+export const scanHtmlSchema = z.object({
+  html: z.string().min(40, 'That file did not contain enough HTML to analyse.').max(700000),
+  filename: z.string().max(160).optional(),
+  categories: z.array(z.enum(['seo', 'accessibility', 'performance', 'responsive', 'code', 'design'])).max(6).optional(),
+});

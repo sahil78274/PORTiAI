@@ -11,10 +11,10 @@ Environment: Linux sandbox, Node.js 20.20.2, npm 10.8.2, MongoDB `mongod` from
 
 ## 1. Backend HTTP suite — `cd server && npm test`
 
-42 checks, 42 passed. The suite boots the real Express app (`createApp()`), connects to a real MongoDB
+58 checks, 58 passed. The suite boots the real Express app (`createApp()`), connects to a real MongoDB
 instance, and uses a local HTTP stub that speaks the Gemini REST contract. No application code is
 mocked: routing, middleware, validation, persistence, authorisation, sanitisation, template selection
-normalization and error mapping are all exercised over HTTP.
+normalization, blog ownership, the website scanner and the AI chat builder are all exercised over HTTP.
 
 ```
 Health & security headers
@@ -93,6 +93,34 @@ Notable assertions, for the report:
   contains the API key;
 * `PUT` with an unknown template id or a non-hex accent colour is normalised, not silently accepted.
 
+### Suites added with the redesign
+
+```
+Template registry
+  ✓ all nine template ids are accepted and normalised on create
+  ✓ legacy template aliases map to canonical ids
+  ✓ an unknown template id falls back instead of erroring
+
+Blog posts
+  ✓ a draft post can be created for an owned portfolio
+  ✓ blog posts are scoped to their owner
+  ✓ a post cannot be attached to another users portfolio
+  ✓ titles are required and slugs stay unique
+  ✓ published posts appear on the public blog only when the portfolio is published
+  ✓ a public post is readable by its slug and 404s when unpublished
+  ✓ deleting a post removes it from the public blog
+
+Website analyser
+  ✓ uploaded HTML is scored across all six categories
+  ✓ a weak page scores lower and reports concrete findings
+  ✓ only requested categories are scored, and empty files are rejected
+  ✓ internal and loopback scan targets are refused
+
+AI chat builder
+  ✓ the builder returns validated structured content from supplied facts
+  ✓ the builder requires authentication and some facts
+```
+
 ### Bugs found and fixed by this suite
 
 | Bug | Symptom | Fix |
@@ -106,30 +134,36 @@ Notable assertions, for the report:
 
 ## 1b. Frontend unit & regression suite — `cd client && npm test`
 
-8 tests, 8 passed. Uses Node's built-in test runner to verify template registries, template normalization, case/alias tolerance, safe fallback, draft translation, and payload consistency.
+10 tests, 10 passed. Uses Node's built-in test runner to verify the nine-template registry, per-template
+gallery metadata, normalization, case/alias tolerance, safe fallback, draft translation, and payload
+consistency.
 
 ```
 TAP version 13
-# Subtest: TEMPLATES registry contains exactly 3 documented templates
-ok 1 - TEMPLATES registry contains exactly 3 documented templates
+# Subtest: TEMPLATES registry contains exactly 9 documented templates
+ok 1 - TEMPLATES registry contains exactly 9 documented templates
+# Subtest: every template declares the metadata the gallery relies on
+ok 2 - every template declares the metadata the gallery relies on
 # Subtest: normalizeTemplateId handles canonical IDs correctly
-ok 2 - normalizeTemplateId handles canonical IDs correctly
+ok 3 - normalizeTemplateId handles canonical IDs correctly
 # Subtest: normalizeTemplateId handles casing and whitespace
-ok 3 - normalizeTemplateId handles casing and whitespace
+ok 4 - normalizeTemplateId handles casing and whitespace
 # Subtest: normalizeTemplateId handles template aliases
-ok 4 - normalizeTemplateId handles template aliases
+ok 5 - normalizeTemplateId handles template aliases
+# Subtest: the nine new template ids normalise to themselves
+ok 6 - the nine new template ids normalise to themselves
 # Subtest: normalizeTemplateId safely falls back to minimal on missing or unknown input
-ok 5 - normalizeTemplateId safely falls back to minimal on missing or unknown input
+ok 7 - normalizeTemplateId safely falls back to minimal on missing or unknown input
 # Subtest: getTemplate returns matching template object or minimal fallback
-ok 6 - getTemplate returns matching template object or minimal fallback
+ok 8 - getTemplate returns matching template object or minimal fallback
 # Subtest: draftFromPortfolio preserves chosen templateId and normalises invalid ones
-ok 7 - draftFromPortfolio preserves chosen templateId and normalises invalid ones
+ok 9 - draftFromPortfolio preserves chosen templateId and normalises invalid ones
 # Subtest: draftToPayload preserves canonical templateId in outgoing payload
-ok 8 - draftToPayload preserves canonical templateId in outgoing payload
-1..8
-# tests 8
+ok 10 - draftToPayload preserves canonical templateId in outgoing payload
+1..10
+# tests 10
 # suites 0
-# pass 8
+# pass 10
 # fail 0
 ```
 
@@ -160,7 +194,60 @@ shows the quota message and the rule-based analyzer keeps working.
 
 ---
 
-## 3. Browser end-to-end runs (Playwright, Chromium)
+## 3. Redesign verification (2026-10-26)
+
+The dark redesign (nine templates, chat builder, blog studio, website scanner, publishing pages) was
+verified in three ways. No headless browser was available in this build environment, so the screenshot
+pass described in section 3b still refers to the previous UI and was **not** re-run here.
+
+**a. Production build**
+
+```bash
+cd client && npx vite build
+# ✓ 2027 modules transformed.
+# dist/assets/index-*.css  103.99 kB │ gzip:  16.63 kB
+# dist/assets/index-*.js   707.01 kB │ gzip: 188.54 kB
+# ✓ built in 4.51s
+```
+
+The only warning is Vite's 500 kB chunk-size notice (single-bundle SPA); it is not an error.
+
+**b. Unused-import sweep**
+
+A script walked every `src/**/*.js(x)` file, parsed each `import` statement and checked that every
+bound name appears elsewhere in the file. All findings (`ChevronDown`, `Monitor`, `Spinner`,
+`draftFromPortfolio`, `Rocket`, `ArrowLeft`, `FolderOpen`, `X`, `ProgressBar`, `ChevronLeft`,
+`AlertTriangle`, `SECTION_LABELS`) were removed; a re-run reports `total 0`.
+
+**c. Real HTTP smoke run against the running stack**
+
+`server` (`USE_LOCAL_MONGO=true`, port 5000) and `client` (Vite dev server, port 5173, `/api`
+proxied) were started together and driven with `curl`, i.e. exactly the routes the browser calls:
+
+```
+POST /api/auth/register            -> 200, HTTP-only portiai_session cookie set
+GET  /api/auth/me                  -> 200, stats for the new account
+POST /api/portfolios               -> 201, slug generated, templateId aurora
+PUT  /api/portfolios/:id           -> 200, full content (profile, 3 skills, 1 project, 1 degree)
+POST /api/portfolios/:id/analyze   -> 200, rule-based score 52 "Incomplete", 10 issues, 10 recommendations
+PATCH /api/portfolios/:id/publish  -> 200, published: true, slug smoke-tester-t1ph
+GET  /api/public/:slug             -> 200, name/template/projects/blog flag, no account data
+POST /api/blog                     -> 201, draft post
+PATCH /api/blog/:id/publish        -> 200, published
+GET  /api/public/:slug/blog        -> 200, 1 post listed
+POST /api/analyze/html             -> 200, score 81 "Good", 6 categories, 7 findings
+GET  /                             -> 200 (SPA shell)
+GET  /templates                    -> 200
+GET  /p/:slug                      -> 200
+```
+
+The publish attempt before the content existed was rejected with `400` and the message
+“Before publishing, add a professional summary or biography, at least one of skills, education,
+experience or projects.”, which is the same validation the editor surfaces.
+
+---
+
+## 3b. Browser end-to-end runs (Playwright, Chromium) — pre-redesign build
 
 Two flows were scripted and executed against the running dev servers
 (Vite on `http://localhost:5173`, API on `http://localhost:5000`).
