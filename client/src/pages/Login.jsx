@@ -57,17 +57,17 @@ export default function Login() {
   };
 
   return (
-    <div className="card p-6 shadow-raised sm:p-8">
+    <div className="rounded-lg border border-line bg-white p-6 sm:p-7">
       <div className="mb-7">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-accent-hover">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-canvasAlt text-accent-hover">
           <LockKeyhole size={18} aria-hidden="true" />
         </span>
-        <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Welcome back</h2>
+        <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Welcome back</h2>
         <p className="mt-1.5 text-sm text-muted">Sign in to keep building, editing and publishing your portfolios.</p>
       </div>
 
       {error ? (
-        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-xl border border-danger/30 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-lg border border-danger/30 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
           <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
@@ -107,7 +107,7 @@ export default function Login() {
         </Button>
       </form>
 
-      <p className="mt-5 rounded-xl border border-line bg-canvasDeep/40 px-3.5 py-2.5 text-[11px] leading-relaxed text-faint">
+      <p className="mt-5 rounded-lg border border-line bg-canvas px-3.5 py-2.5 text-[11px] leading-relaxed text-faint">
         Email and password sign-in only. Google and GitHub OAuth are not connected to this deployment yet, so they are
         intentionally not shown here.
       </p>
@@ -115,7 +115,7 @@ export default function Login() {
       <p className="mt-6 border-t border-line pt-5 text-center text-sm text-muted">
         New to PortiAI?{' '}
         <Link to="/register" className="font-semibold text-accent-hover hover:underline">
-          Create a free account
+          Create an account
         </Link>
       </p>
     </div>

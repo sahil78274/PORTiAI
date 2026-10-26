@@ -71,7 +71,7 @@ export default function Modal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-[#020617]/75 p-0 backdrop-blur-md sm:items-center sm:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-[#1a1d21]/40 p-0 backdrop-blur-sm sm:items-center sm:p-6 animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
@@ -79,12 +79,12 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-describedby={description ? 'modal-description' : undefined}
-        className={`relative z-10 w-full ${SIZES[size]} rounded-t-2xl border border-lineStrong/70 bg-surface shadow-float sm:rounded-2xl`}
+        className={`relative z-10 w-full ${SIZES[size]} rounded-t-xl border border-line bg-white shadow-float sm:rounded-xl`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5">
           <div className="min-w-0">
             {title ? (
-              <h2 id="modal-title" className="text-base font-semibold text-ink">
+              <h2 id="modal-title" className="text-[15px] font-semibold text-ink">
                 {title}
               </h2>
             ) : null}
@@ -97,15 +97,15 @@ export default function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost -mr-2 -mt-1 h-8 w-8 rounded-lg p-0 text-muted hover:text-ink"
+            className="btn-ghost -mr-2 -mt-1 h-8 w-8 rounded-md p-0 text-muted hover:text-ink"
             aria-label={closeLabel}
           >
             <X size={16} aria-hidden="true" />
           </button>
         </div>
-        <div className="max-h-[72vh] overflow-y-auto px-6 py-5 scroll-slim">{children}</div>
+        <div className="max-h-[72vh] overflow-y-auto px-5 py-4 scroll-slim">{children}</div>
         {footer ? (
-          <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-line bg-canvasAlt/40 px-6 py-3.5 rounded-b-2xl">
+          <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-line bg-canvasAlt/40 px-6 py-3.5 rounded-b-xl">
             {footer}
           </div>
         ) : null}

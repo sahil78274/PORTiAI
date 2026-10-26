@@ -185,16 +185,27 @@ Query: `search` (title / full name / professional title, ≤80 chars), `status` 
 
 ### `POST /api/portfolios`
 
-Body (optional): `{ "title": "…", "templateId": "…", "theme": { "accent": "#6366f1" } }`. Returns `201`
+Body (optional): `{ "title": "…", "templateId": "…", "theme": { "accent": "#2563eb" } }`. Returns `201`
 with a full portfolio document. The profile name and contact email are pre-filled from the account, and
 a unique slug is reserved immediately so a later publish cannot collide.
 
-`templateId` accepts the nine canonical ids — `minimal`, `developer`, `editorial`, `obsidian`, `aurora`,
-`swiss`, `neon`, `editorialpro`, `executive` — plus the aliases `minimal-professional`,
-`developer-portfolio`, `modern-editorial`, `obsidian-pro`, `aurora-gradient`, `swiss-minimal`,
-`neon-terminal`, `editorial-pro`, `executive-elite`. Unknown ids fall back to `minimal` instead of
-failing. Choosing a template also applies that template's default accent and font, which the editor can
-then override.
+`templateId` accepts the six canonical ids — `developer`, `dark`, `designer`, `student`, `freelancer`,
+`executive`. Ids from earlier releases are still accepted and mapped onto the current six:
+`minimal` and `minimal-professional` → `student`; `editorial`, `modern-editorial`, `aurora`,
+`aurora-gradient` and `editorialpro`/`editorial-pro` → `designer`; `obsidian`, `obsidian-pro`, `neon` and
+`neon-terminal` → `dark`; `swiss` and `swiss-minimal` → `executive`; `developer-portfolio` →
+`developer`; `modern-freelancer` → `freelancer`; `executive-elite` and `executive-portfolio` →
+`executive`. Unknown ids fall back to `developer` instead of failing. Choosing a template also applies
+that template's default accent and font, which the editor can then override.
+
+| Template id | Default accent | Default font |
+| --- | --- | --- |
+| `developer` | `#2563eb` | sans |
+| `dark` | `#8ab4f8` | sans |
+| `designer` | `#8a4b32` | serif |
+| `student` | `#2f6f8f` | sans |
+| `freelancer` | `#215b7a` | sans |
+| `executive` | `#8a6a3b` | serif |
 
 Only `title`, `templateId` and `theme.accent` are read at creation time; content (profile, skills,
 projects, blog settings…) is written with `PUT /api/portfolios/:id`.

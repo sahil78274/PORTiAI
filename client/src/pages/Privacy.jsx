@@ -53,8 +53,7 @@ const SECTIONS = [
         When you use an AI feature, only the facts relevant to that request (for example a project description and your listed
         technologies) are sent to Google&apos;s Gemini API through our backend. API keys stay on the server. When you scan a URL
         with the website analyser, the server fetches that public page to inspect its HTML; private and internal addresses are
-        blocked. Hosting providers (Vercel, Render, MongoDB Atlas) process data as part of running the application. Template
-        previews may request royalty-free images from Unsplash.
+        blocked. Hosting providers (Vercel, Render, MongoDB Atlas) process data as part of running the application.
       </p>
     ),
   },
@@ -92,7 +91,7 @@ export default function Privacy() {
         Back to home
       </Link>
       <p className="eyebrow mt-6">Privacy</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">Privacy information</h1>
+      <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.03em] text-ink sm:text-[36px]">Privacy information</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
         A plain-language description of what PortiAI stores, what it publishes and who else processes your data. Last updated{' '}
         {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
@@ -109,7 +108,7 @@ export default function Privacy() {
       <div className="mt-9 space-y-8">
         {SECTIONS.map(({ id, title, icon: Icon, body }) => (
           <section key={id} id={id} className="scroll-mt-24">
-            <h2 className="flex items-center gap-2 text-base font-semibold text-white">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
               <Icon size={15} className="text-accent-hover" aria-hidden="true" />
               {title}
             </h2>

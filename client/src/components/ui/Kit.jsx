@@ -16,7 +16,7 @@ export const Tooltip = ({ label, children, side = 'top' }) => {
       {children}
       <span
         role="tooltip"
-        className={`pointer-events-none absolute z-50 hidden whitespace-nowrap rounded-md border border-lineStrong bg-surfaceRaised px-2 py-1 text-[10px] font-medium text-inkSoft shadow-raised group-hover:block group-focus-within:block ${positions[side]}`}
+        className={`pointer-events-none absolute z-50 hidden whitespace-nowrap rounded border border-lineStrong bg-white px-2 py-1 text-[10px] font-medium text-inkSoft shadow-raised group-hover:block group-focus-within:block ${positions[side]}`}
       >
         {label}
       </span>
@@ -29,7 +29,7 @@ export const SectionHeading = ({ eyebrow, title, description, align = 'left', cl
   <div className={`flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${className}`}>
     <div className={align === 'center' ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}>
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <h2 className="mt-3 text-balance text-2xl font-bold tracking-tight text-white sm:text-3xl">{title}</h2>
+      <h2 className="mt-2 text-balance text-[26px] font-semibold tracking-[-0.025em] text-ink">{title}</h2>
       {description ? <p className="mt-3 text-sm leading-relaxed text-muted">{description}</p> : null}
     </div>
     {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
@@ -38,17 +38,17 @@ export const SectionHeading = ({ eyebrow, title, description, align = 'left', cl
 
 /* -------------------------------------------------- Stat card -------------------------------------------------- */
 const TONES = {
-  indigo: 'from-accent/20 to-transparent text-accent-hover',
-  violet: 'from-[#a855f7]/20 to-transparent text-[#c084fc]',
-  emerald: 'from-success/20 to-transparent text-success',
-  amber: 'from-warning/20 to-transparent text-warning',
+  indigo: 'text-accent',
+  violet: 'text-[#7c5a3c]',
+  emerald: 'text-success',
+  amber: 'text-warning',
 };
 
 export const StatCard = ({ icon: Icon, label, value, hint, tone = 'indigo', loading = false, to, trend }) => {
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <span className={`flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br ${TONES[tone] || TONES.indigo}`}>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-md border border-line bg-canvas ${TONES[tone] || TONES.indigo}`}>
           {Icon ? <Icon size={16} aria-hidden="true" /> : null}
         </span>
         {trend ? (
@@ -58,8 +58,8 @@ export const StatCard = ({ icon: Icon, label, value, hint, tone = 'indigo', load
           </span>
         ) : null}
       </div>
-      <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.14em] text-faint">{label}</p>
-      {loading ? <div className="skeleton mt-2 h-7 w-16" /> : <p className="mt-1 font-display text-2xl font-bold tabular-nums text-white">{value}</p>}
+      <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.12em] text-faint">{label}</p>
+      {loading ? <div className="skeleton mt-2 h-7 w-16" /> : <p className="mt-0.5 text-[22px] font-semibold leading-tight tabular-nums tracking-[-0.02em] text-ink">{value}</p>}
       {hint ? <p className="mt-1 text-[11px] leading-relaxed text-muted">{hint}</p> : null}
     </>
   );
@@ -76,10 +76,10 @@ export const StatCard = ({ icon: Icon, label, value, hint, tone = 'indigo', load
 
 /* -------------------------------------------------- Page header -------------------------------------------------- */
 export const PageHeader = ({ eyebrow, title, description, actions, className = '' }) => (
-  <header className={`flex flex-col gap-4 border-b border-line/70 pb-5 sm:flex-row sm:items-end sm:justify-between ${className}`}>
+  <header className={`flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between ${className}`}>
     <div className="min-w-0">
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <h1 className="mt-2 text-balance text-xl font-bold tracking-tight text-white sm:text-2xl">{title}</h1>
+      <h1 className="mt-1.5 text-balance text-[20px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
       {description ? <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{description}</p> : null}
     </div>
     {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
@@ -87,18 +87,8 @@ export const PageHeader = ({ eyebrow, title, description, actions, className = '
 );
 
 /* -------------------------------------------------- Smart image -------------------------------------------------- */
-const FALLBACK_GRADIENTS = [
-  'linear-gradient(135deg, #1e293b, #4338ca)',
-  'linear-gradient(135deg, #0f172a, #6d28d9)',
-  'linear-gradient(135deg, #111827, #0e7490)',
-  'linear-gradient(135deg, #1f2937, #be123c)',
-  'linear-gradient(135deg, #0b1120, #2563eb)',
-];
-
 export const SmartImage = ({ src, alt = '', className = '', ratio = 'aspect-[16/10]', fallbackSeed = 0, ...props }) => {
   const [failed, setFailed] = useState(false);
-  const gradient = FALLBACK_GRADIENTS[Math.abs(fallbackSeed) % FALLBACK_GRADIENTS.length];
-
   useEffect(() => {
     setFailed(false);
   }, [src]);
@@ -106,18 +96,14 @@ export const SmartImage = ({ src, alt = '', className = '', ratio = 'aspect-[16/
   if (!src || failed) {
     return (
       <div
-        className={`flex items-center justify-center overflow-hidden bg-canvasAlt ${ratio} ${className}`}
-        style={{ backgroundImage: gradient }}
+        className={`flex items-center justify-center overflow-hidden border border-line bg-canvasAlt ${ratio} ${className}`}
         role={alt ? 'img' : 'presentation'}
         aria-label={alt || undefined}
       >
-        <svg viewBox="0 0 120 80" className="h-full w-full opacity-30" aria-hidden="true">
-          <defs>
-            <pattern id={`grid-${Math.abs(fallbackSeed)}`} width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M10 0H0v10" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="120" height="80" fill={`url(#grid-${Math.abs(fallbackSeed)})`} />
+        <svg viewBox="0 0 48 48" className="h-7 w-7 text-faint" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="6" y="9" width="36" height="30" rx="2.5" />
+          <circle cx="17" cy="19" r="3" />
+          <path d="M8 34l10-9 7 6 6-4 9 7" />
         </svg>
       </div>
     );
@@ -165,7 +151,7 @@ export const Dropdown = ({ trigger, children, align = 'right', className = '' })
       {open ? (
         <div
           role="menu"
-          className={`absolute z-40 mt-2 min-w-[190px] overflow-hidden rounded-xl border border-lineStrong bg-surfaceRaised py-1 shadow-float animate-fadeIn ${
+          className={`absolute z-40 mt-2 min-w-[190px] overflow-hidden rounded-lg border border-lineStrong bg-white py-1 shadow-float animate-fadeIn ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
           onClick={() => setOpen(false)}
@@ -179,7 +165,7 @@ export const Dropdown = ({ trigger, children, align = 'right', className = '' })
 
 export const DropdownItem = ({ icon: Icon, children, onClick, to, danger = false, ...props }) => {
   const className = `flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors ${
-    danger ? 'text-danger hover:bg-danger/10' : 'text-inkSoft hover:bg-white/[0.06] hover:text-white'
+    danger ? 'text-danger hover:bg-danger/10' : 'text-inkSoft hover:bg-canvasAlt hover:text-ink'
   }`;
   const content = (
     <>

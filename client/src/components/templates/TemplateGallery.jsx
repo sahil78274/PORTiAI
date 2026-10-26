@@ -1,15 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, Search, Sparkles, Check, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import TemplateCard, { TemplatePreviewModal } from './TemplateCard.jsx';
 import { TEMPLATES, TEMPLATE_CATEGORIES } from '../../utils/templates.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { portfolioService } from '../../services/portfolioService.js';
 
 /**
- * Template marketplace grid used both on the public marketing site and inside
- * the dashboard. In workspace mode "Use template" creates an empty draft with
- * that template and opens the editor.
+ * Template gallery used on the public templates page and inside the dashboard.
+ * In workspace mode "Use template" creates an empty draft with that design.
  */
 export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = [], onChanged, className = '' }) {
   const navigate = useNavigate();
@@ -56,16 +55,16 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
 
   return (
     <div className={className}>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 border-b border-line pb-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search templates by name or use case…"
+            placeholder="Search templates"
             aria-label="Search templates"
-            className="input h-10 pl-9 text-sm"
+            className="input h-9 pl-9 text-[13px]"
           />
           {search ? (
             <button
@@ -74,7 +73,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-faint hover:text-ink"
               aria-label="Clear search"
             >
-              <X size={13} aria-hidden="true" />
+              <X size={12} aria-hidden="true" />
             </button>
           ) : null}
         </div>
@@ -86,7 +85,11 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
               type="button"
               onClick={() => setCategory(item)}
               aria-pressed={category === item}
-              className={`chip !py-1.5 ${category === item ? 'chip-active' : ''}`}
+              className={`rounded-md border px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
+                category === item
+                  ? 'border-accent/40 bg-accent-soft text-accent-hover'
+                  : 'border-line bg-white text-muted hover:border-lineStrong hover:text-ink'
+              }`}
             >
               {item}
             </button>
@@ -94,27 +97,17 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-faint">
-        <p>
-          {filtered.length} template{filtered.length === 1 ? '' : 's'}
-          {search ? ` matching “${search}”` : ''}
-          {category !== 'All' ? ` in ${category}` : ''}
-        </p>
-        {used.size ? (
-          <p className="inline-flex items-center gap-1.5 text-success">
-            <Check size={11} aria-hidden="true" />
-            {used.size} in use in your workspace
-          </p>
-        ) : null}
-      </div>
+      <p className="mt-3 text-[12px] text-faint">
+        {filtered.length} template{filtered.length === 1 ? '' : 's'}
+        {category !== 'All' ? ` in ${category}` : ''}
+        {search ? ` matching “${search}”` : ''}
+        {used.size ? ` · ${used.size} in use in your workspace` : ''}
+      </p>
 
       {filtered.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-lineStrong/70 bg-surface/40 px-6 py-14 text-center">
-          <LayoutGrid size={24} className="text-faint" aria-hidden="true" />
-          <p className="mt-3 text-sm font-semibold text-white">No templates match that search</p>
-          <p className="mt-1 max-w-sm text-xs text-muted">
-            Try a broader term, or reset the filters to see all nine templates.
-          </p>
+        <div className="mt-6 rounded-lg border border-dashed border-lineStrong px-6 py-12 text-center">
+          <p className="text-sm font-medium">No templates match those filters</p>
+          <p className="mt-1 text-[13px] text-muted">Try a different search term, or reset to see all six templates.</p>
           <button
             type="button"
             onClick={() => {
@@ -127,7 +120,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
           </button>
         </div>
       ) : (
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((template) => (
             <TemplateCard
               key={template.id}
@@ -148,18 +141,6 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
         useLabel={mode === 'marketing' ? 'Create a free account' : 'Use this template'}
         busy={creating}
       />
-
-      {mode === 'workspace' ? (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface/50 px-4 py-3 text-[11px] text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <Sparkles size={12} className="text-accent-hover" aria-hidden="true" />
-            Every template shares the same content model — switching designs never loses your work.
-          </span>
-          <button type="button" onClick={() => navigate('/dashboard/builder')} className="font-medium text-accent-hover hover:text-white">
-            Prefer AI drafting? Open the builder →
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }

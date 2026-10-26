@@ -194,7 +194,7 @@ export default function BlogEditor() {
   if (notFound) {
     return (
       <div className="card mx-auto max-w-lg p-8 text-center">
-        <h1 className="text-xl font-bold text-white">Post not found</h1>
+        <h1 className="text-[18px] font-semibold text-ink">Post not found</h1>
         <p className="mt-2 text-sm text-muted">This post does not exist, or it belongs to another account.</p>
         <Link to="/dashboard/blog" className="btn-primary mt-5">
           Back to blog studio
@@ -217,7 +217,7 @@ export default function BlogEditor() {
             <ArrowLeft size={16} aria-hidden="true" />
           </Link>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white">Edit post</p>
+            <p className="text-sm font-semibold text-ink">Edit post</p>
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-faint">
               <span className={post.published ? 'badge-published !py-0' : 'badge-draft !py-0'}>{post.published ? 'Published' : 'Draft'}</span>
               <span>{portfolio?.title || 'Portfolio'}</span>
@@ -284,7 +284,7 @@ export default function BlogEditor() {
       <div className="grid gap-4 lg:grid-cols-[1.4fr_0.85fr]">
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-            <div className="flex items-center gap-1 rounded-lg border border-line bg-canvasDeep p-0.5" role="tablist" aria-label="Editor mode">
+            <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="tablist" aria-label="Editor mode">
               {[
                 { id: 'write', label: 'Write', icon: Pencil },
                 { id: 'preview', label: 'Preview', icon: Eye },
@@ -296,7 +296,7 @@ export default function BlogEditor() {
                   aria-selected={tab === tabId}
                   onClick={() => setTab(tabId)}
                   className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium ${
-                    tab === tabId ? 'bg-white/[0.09] text-white' : 'text-muted hover:text-ink'
+                    tab === tabId ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'
                   }`}
                 >
                   <Icon size={11} aria-hidden="true" />
@@ -335,8 +335,8 @@ export default function BlogEditor() {
               </div>
             ) : (
               <article className="min-h-[420px]">
-                {post.coverUrl ? <SmartImage src={post.coverUrl} alt="" ratio="aspect-[16/7]" className="mb-5 rounded-xl" fallbackSeed={2} /> : null}
-                <h1 className="text-2xl font-bold leading-tight text-white">{post.title || 'Untitled post'}</h1>
+                {post.coverUrl ? <SmartImage src={post.coverUrl} alt="" ratio="aspect-[16/7]" className="mb-5 rounded-lg" fallbackSeed={2} /> : null}
+                <h1 className="text-[24px] font-semibold leading-tight tracking-[-0.02em] text-ink">{post.title || 'Untitled post'}</h1>
                 {post.excerpt ? <p className="mt-2 text-sm italic text-muted">{post.excerpt}</p> : null}
                 <div className="mt-5">
                   <Markdown content={post.content || '_Nothing written yet._'} />
@@ -348,7 +348,7 @@ export default function BlogEditor() {
 
         <div className="space-y-4">
           <div className="card p-4">
-            <p className="text-sm font-semibold text-white">Post details</p>
+            <p className="text-sm font-semibold text-ink">Post details</p>
             <div className="mt-4 space-y-4">
               <Field label="Title" htmlFor="post-title" required>
                 <TextInput
@@ -442,7 +442,7 @@ export default function BlogEditor() {
           {aiError ? (
             <Alert tone="warning" title="AI writing help unavailable">{aiError}</Alert>
           ) : (
-            <div className="rounded-xl border border-line bg-surface/60 p-4 text-[11px] leading-relaxed text-muted">
+            <div className="rounded-lg border border-line bg-white p-4 text-[11px] leading-relaxed text-muted">
               <p className="flex items-center gap-1.5 font-medium text-inkSoft">
                 <Sparkles size={12} className="text-accent-hover" aria-hidden="true" />
                 AI writing help
@@ -468,7 +468,7 @@ export default function BlogEditor() {
       />
 
       {post.published && portfolio?.published && publicHref ? (
-        <p className="flex items-center gap-2 rounded-xl border border-success/25 bg-successSoft px-3.5 py-2.5 text-[11px] text-success">
+        <p className="flex items-center gap-2 rounded-lg border border-success/25 bg-successSoft px-3.5 py-2.5 text-[11px] text-success">
           <Globe2 size={12} aria-hidden="true" />
           Live at {portfolio.slug && `${window.location.origin}${publicHref}`}
           {dirty ? <span className="ml-auto inline-flex items-center gap-1 text-warning"><AlertCircle size={11} aria-hidden="true" />Unsaved edits are not live yet</span> : null}

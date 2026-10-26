@@ -155,8 +155,7 @@ export default function BlogStudio() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Blog studio"
-        title="Write, publish and attach a blog to your portfolio"
+        title="Blog"
         description="Markdown posts with optional AI writing help. Drafts stay private; published posts appear on your portfolio’s blog page."
         actions={
           <Button size="sm" onClick={() => setCreateOpen(true)} disabled={!portfolios.length}>
@@ -178,7 +177,7 @@ export default function BlogStudio() {
             className="input h-9 py-1.5 pl-9 text-xs"
           />
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-line bg-canvasDeep p-0.5" role="group" aria-label="Post status">
+        <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Post status">
           {[
             { id: 'all', label: 'All' },
             { id: 'published', label: 'Published' },
@@ -190,7 +189,7 @@ export default function BlogStudio() {
               onClick={() => setStatus(filter.id)}
               aria-pressed={status === filter.id}
               className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                status === filter.id ? 'bg-white/[0.09] text-white' : 'text-muted hover:text-ink'
+                status === filter.id ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'
               }`}
             >
               {filter.label}
@@ -203,7 +202,7 @@ export default function BlogStudio() {
       </div>
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/30 bg-dangerSoft p-4 text-sm text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/30 bg-dangerSoft p-4 text-sm text-danger">
           <span>{error}</span>
           <Button variant="secondary" size="sm" onClick={load}>
             Try again
@@ -270,14 +269,14 @@ export default function BlogStudio() {
           {posts.map((post) => {
             const portfolio = portfolioMap[post.portfolioId];
             return (
-              <article key={post.id} className="card flex flex-col overflow-hidden transition-all hover:border-lineStrong sm:flex-row">
+              <article key={post.id} className="card flex flex-col overflow-hidden transition-colors hover:border-lineStrong sm:flex-row">
                 <div className="sm:w-40 sm:shrink-0">
                   <SmartImage src={post.coverUrl} alt="" ratio="aspect-[16/10] sm:h-full sm:aspect-auto" className="h-36 w-full sm:h-full" fallbackSeed={post.title.length} />
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <Link to={`/dashboard/blog/${post.id}`} className="line-clamp-2 text-sm font-semibold text-white hover:text-accent-hover">
+                      <Link to={`/dashboard/blog/${post.id}`} className="line-clamp-2 text-sm font-semibold text-ink hover:text-accent-hover">
                         {post.title}
                       </Link>
                       <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted">{post.excerpt || 'No excerpt yet.'}</p>
@@ -422,7 +421,7 @@ export default function BlogStudio() {
       >
         {preview ? (
           <div>
-            {preview.coverUrl ? <SmartImage src={preview.coverUrl} alt="" ratio="aspect-[16/7]" className="mb-4 rounded-xl" fallbackSeed={3} /> : null}
+            {preview.coverUrl ? <SmartImage src={preview.coverUrl} alt="" ratio="aspect-[16/7]" className="mb-4 rounded-lg" fallbackSeed={3} /> : null}
             {preview.excerpt ? <p className="mb-4 border-l-2 border-accent-line pl-3 text-sm italic text-muted">{preview.excerpt}</p> : null}
             <Markdown content={preview.content || '_This post has no content yet._'} />
           </div>

@@ -1,45 +1,34 @@
 import { Link } from 'react-router-dom';
 
-/** PortiAI brand mark: geometric P with a gradient and an AI spark. */
-export default function Logo({ to = '/', size = 'md', className = '', withWordmark = true }) {
-  const markSize = size === 'sm' ? 26 : size === 'lg' ? 38 : 32;
+/**
+ * PortiAI wordmark: a solid navy tile with a white "P" counter, plus the name.
+ * `tone="light"` is for dark surfaces (auth panel, dark footers).
+ */
+export default function Logo({ to = '/', size = 'md', className = '', withWordmark = true, tone = 'dark' }) {
+  const markSize = size === 'sm' ? 24 : size === 'lg' ? 34 : 28;
 
   const content = (
-    <span className={`inline-flex select-none items-center gap-2.5 ${className}`}>
+    <span className={`inline-flex select-none items-center gap-2 ${className}`}>
       <span
-        className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 shadow-[0_10px_24px_-12px_rgba(99,102,241,0.9)]"
-        style={{ width: markSize, height: markSize, background: 'linear-gradient(145deg, #101735, #070b18)' }}
+        className={`flex shrink-0 items-center justify-center rounded-[7px] ${
+          tone === 'light' ? 'bg-white text-[#16233b]' : 'bg-[#16233b] text-white'
+        }`}
+        style={{ width: markSize, height: markSize }}
         aria-hidden="true"
       >
-        <span className="absolute inset-0 opacity-60" style={{ background: 'radial-gradient(circle at 30% 20%, rgba(99,102,241,0.65), transparent 65%)' }} />
-        <svg
-          width={Math.round(markSize * 0.62)}
-          height={Math.round(markSize * 0.62)}
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="relative"
-        >
-          <path d="M5 20V4h7.5a5.5 5.5 0 0 1 0 11H8v5H5Z" fill="url(#logo-grad)" />
-          <path d="M8 7v5h4.5a2.5 2.5 0 0 0 0-5H8Z" fill="#070b18" />
-          <circle cx="18" cy="6" r="2.1" fill="#a855f7" />
-          <defs>
-            <linearGradient id="logo-grad" x1="5" y1="4" x2="19" y2="16" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#ffffff" />
-              <stop offset="0.55" stopColor="#a5b4fc" />
-              <stop offset="1" stopColor="#7c3aed" />
-            </linearGradient>
-          </defs>
+        <svg width={Math.round(markSize * 0.56)} height={Math.round(markSize * 0.56)} viewBox="0 0 24 24" fill="none">
+          <path d="M5 20V4h7.2a5.4 5.4 0 0 1 0 10.8H8.6V20H5Zm3.6-8.4h3.4a2.2 2.2 0 0 0 0-4.4H8.6v4.4Z" fill="currentColor" />
+          <circle cx="18.4" cy="6.4" r="1.7" fill="currentColor" opacity="0.55" />
         </svg>
       </span>
 
       {withWordmark ? (
         <span
-          className={`font-display font-bold tracking-[-0.03em] text-ink ${
-            size === 'sm' ? 'text-[15px]' : size === 'lg' ? 'text-[22px]' : 'text-[18px]'
-          }`}
+          className={`font-display font-semibold tracking-[-0.03em] ${
+            tone === 'light' ? 'text-white' : 'text-ink'
+          } ${size === 'sm' ? 'text-[15px]' : size === 'lg' ? 'text-[21px]' : 'text-[17px]'}`}
         >
-          Porti<span className="gradient-text">AI</span>
+          PortiAI
         </span>
       ) : null}
     </span>
@@ -47,7 +36,7 @@ export default function Logo({ to = '/', size = 'md', className = '', withWordma
 
   if (!to) return content;
   return (
-    <Link to={to} className="rounded-lg transition-opacity hover:opacity-90">
+    <Link to={to} className="rounded-md transition-opacity hover:opacity-80" aria-label="PortiAI home">
       {content}
     </Link>
   );

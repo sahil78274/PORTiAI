@@ -71,9 +71,9 @@ export default function AiAssist({
           onClick={run}
           loading={state === 'loading'}
           disabled={state === 'loading'}
-          className="border-indigo-200 text-indigo-700 hover:bg-indigo-50/70"
+          className="border-lineStrong text-accent hover:bg-canvasAlt"
         >
-          {state === 'loading' ? null : <Sparkles size={13} className="text-indigo-600" aria-hidden="true" />}
+          {state === 'loading' ? null : <Sparkles size={13} className="text-accent" aria-hidden="true" />}
           <span>{state === 'loading' ? 'Generating…' : label}</span>
         </Button>
 
@@ -83,7 +83,7 @@ export default function AiAssist({
             value={tone}
             onChange={(event) => setTone(event.target.value)}
             aria-label="Tone for generated text"
-            className="rounded-lg border border-line bg-surface px-2 py-1 text-2xs text-inkSoft shadow-2xs focus:border-accent focus:outline-none"
+            className="rounded border border-line bg-white px-2 py-1 text-[11px] text-inkSoft shadow-2xs focus:border-accent focus:outline-none"
           >
             <option value="professional">Professional</option>
             <option value="concise">Concise</option>
@@ -94,9 +94,9 @@ export default function AiAssist({
       </div>
 
       {state === 'error' && error ? (
-        <div role="alert" className="mt-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs leading-relaxed text-red-800">
-          <p className="flex items-center gap-1.5 font-bold">
-            <AlertCircle size={14} className="shrink-0 text-red-600" aria-hidden="true" />
+        <div role="alert" className="mt-2.5 rounded-md border border-danger/25 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+          <p className="flex items-center gap-1.5 font-semibold">
+            <AlertCircle size={14} className="shrink-0 text-danger" aria-hidden="true" />
             <span>
               {error.code === 'AI_DAILY_CAP_REACHED' || error.code === 'QUOTA'
                 ? 'Daily AI quota exhausted'
@@ -105,8 +105,8 @@ export default function AiAssist({
                   : 'Generation failed'}
             </span>
           </p>
-          <p className="mt-1 text-red-700">{error.message}</p>
-          <p className="mt-1 text-red-600 text-2xs">
+          <p className="mt-1 text-danger">{error.message}</p>
+          <p className="mt-1 text-danger text-2xs">
             You can type or edit your content directly — portfolio saving and publishing remain fully functional.
           </p>
           <Button variant="secondary" size="sm" className="mt-2.5 text-2xs" onClick={run}>
@@ -117,9 +117,9 @@ export default function AiAssist({
       ) : null}
 
       {state === 'ready' && result ? (
-        <div className="mt-3 rounded-xl border border-indigo-200/80 bg-indigo-50/50 p-4 shadow-card">
-          <div className="flex items-center justify-between gap-2 border-b border-indigo-100 pb-2 mb-2">
-            <p className="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wider text-indigo-700">
+        <div className="mt-3 rounded-md border border-line bg-white p-3.5">
+          <div className="flex items-center justify-between gap-2 border-b border-line pb-2 mb-2">
+            <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-accent-hover">
               <Wand2 size={12} aria-hidden="true" />
               <span>AI Suggestion (Editable)</span>
             </p>
@@ -132,12 +132,12 @@ export default function AiAssist({
 
           {applyShape === 'skills' ? (
             <div className="my-2 grid gap-2 text-xs sm:grid-cols-2">
-              <div className="rounded-lg bg-white p-2.5 border border-indigo-100">
-                <p className="font-bold text-ink">Technical</p>
+              <div className="rounded border border-line bg-canvas p-2.5">
+                <p className="font-semibold text-ink">Technical</p>
                 <p className="text-inkSoft">{result.technical?.join(', ') || '—'}</p>
               </div>
-              <div className="rounded-lg bg-white p-2.5 border border-indigo-100">
-                <p className="font-bold text-ink">Soft Skills</p>
+              <div className="rounded border border-line bg-canvas p-2.5">
+                <p className="font-semibold text-ink">Soft Skills</p>
                 <p className="text-inkSoft">{result.soft?.join(', ') || '—'}</p>
               </div>
             </div>

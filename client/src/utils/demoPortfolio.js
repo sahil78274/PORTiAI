@@ -6,7 +6,7 @@
 export const demoPortfolio = {
   id: 'demo',
   title: 'Sample portfolio',
-  templateId: 'minimal',
+  templateId: 'student',
   profile: {
     fullName: 'Aarav Mehta',
     title: 'BCA Student · Frontend Developer',
@@ -100,7 +100,7 @@ export const demoPortfolio = {
     website: '',
     twitter: '',
   },
-  theme: { accent: '#2f4a8b', font: 'sans', density: 'comfortable' },
+  theme: { accent: '#2f6f8f', font: 'sans', density: 'comfortable' },
   visibleSections: [
     { id: 'about', label: 'About', visible: true, order: 0 },
     { id: 'skills', label: 'Skills', visible: true, order: 1 },
@@ -166,7 +166,7 @@ export const demoDashboard = [
   {
     id: 'demo-1',
     title: 'Aarav Mehta — Portfolio',
-    templateId: 'minimal',
+    templateId: 'student',
     published: true,
     updatedAt: '2026-01-04T10:20:00.000Z',
     fullName: 'Aarav Mehta',
@@ -188,7 +188,7 @@ export const demoDashboard = [
   {
     id: 'demo-3',
     title: 'Design module submission',
-    templateId: 'editorial',
+    templateId: 'designer',
     published: true,
     updatedAt: '2025-12-28T16:40:00.000Z',
     fullName: 'Aarav Mehta',

@@ -60,7 +60,7 @@ function BlogSettings({ draft, setDraft }) {
   const enabled = Boolean(draft.blog?.enabled);
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-line bg-canvasAlt/60 p-4">
+      <div className="rounded-lg border border-line bg-canvasAlt/60 p-4">
         <Switch
           checked={enabled}
           onChange={(value) => setDraft({ ...draft, blog: { ...draft.blog, enabled: value } })}
@@ -100,8 +100,8 @@ function BlogSettings({ draft, setDraft }) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4">
-        <p className="text-sm font-medium text-white">Writing posts</p>
+      <div className="rounded-lg border border-line bg-white p-4">
+        <p className="text-sm font-medium text-ink">Writing posts</p>
         <p className="mt-1 text-xs leading-relaxed text-muted">
           Posts live in the Blog studio: draft in Markdown, use AI writing help, and publish when ready. Publishing a
           post automatically turns this blog page on.
@@ -264,7 +264,7 @@ export default function Editor() {
   if (notFound) {
     return (
       <div className="card mx-auto max-w-lg p-8 text-center">
-        <h1 className="text-xl font-bold text-white">Portfolio not found</h1>
+        <h1 className="text-[18px] font-semibold text-ink">Portfolio not found</h1>
         <p className="mt-2 text-sm text-muted">This portfolio does not exist, or it belongs to another account.</p>
         <Link to="/dashboard/portfolios" className="btn-primary mt-5">
           Back to my portfolios
@@ -333,7 +333,7 @@ export default function Editor() {
               onChange={(event) => setDraft({ ...draft, title: event.target.value })}
               maxLength={120}
               aria-label="Portfolio title"
-              className="w-full max-w-xs truncate rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-white transition-colors hover:border-line focus:border-accent focus:bg-canvasDeep focus:outline-none sm:max-w-sm sm:text-base"
+              className="w-full max-w-xs truncate rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-ink transition-colors hover:border-line focus:border-accent focus:bg-canvas focus:outline-none sm:max-w-sm sm:text-base"
             />
             <div className="mt-0.5 flex flex-wrap items-center gap-2 px-1 text-[11px] text-faint">
               <span className={portfolio.published ? 'badge-published !py-0' : 'badge-draft !py-0'}>
@@ -391,7 +391,7 @@ export default function Editor() {
                 aria-selected={tab === tabId}
                 onClick={() => setTab(tabId)}
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
-                  tab === tabId ? 'bg-accent-soft text-white' : 'text-muted hover:bg-white/[0.04] hover:text-ink'
+                  tab === tabId ? 'bg-accent-soft text-ink' : 'text-muted hover:bg-canvasAlt hover:text-ink'
                 }`}
               >
                 <Icon size={12} aria-hidden="true" />
@@ -425,13 +425,13 @@ export default function Editor() {
         <section className={`card overflow-hidden ${mobilePane === 'edit' ? 'hidden xl:block' : ''}`} aria-label="Live preview">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-accent-hover">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md border border-line bg-canvasAlt text-accent-hover">
                 <Eye size={12} aria-hidden="true" />
               </span>
-              <p className="text-xs font-semibold text-white">Live preview</p>
+              <p className="text-xs font-semibold text-ink">Live preview</p>
               <span className="hidden text-[10px] text-faint sm:inline">Updates instantly</span>
             </div>
-            <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvasDeep p-0.5" role="group" aria-label="Preview device">
+            <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Preview device">
               {DEVICES.map(({ id: deviceId, label, icon: Icon }) => (
                 <button
                   key={deviceId}
@@ -440,7 +440,7 @@ export default function Editor() {
                   aria-pressed={device === deviceId}
                   aria-label={`${label} preview`}
                   title={label}
-                  className={`rounded-md p-1.5 transition-colors ${device === deviceId ? 'bg-white/[0.09] text-white' : 'text-faint hover:text-ink'}`}
+                  className={`rounded-md p-1.5 transition-colors ${device === deviceId ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
                 >
                   <Icon size={13} aria-hidden="true" />
                 </button>
@@ -448,8 +448,8 @@ export default function Editor() {
             </div>
           </div>
 
-          <div className="bg-[#050813] p-2 sm:p-3">
-            <div className="mx-auto overflow-hidden rounded-lg border border-line transition-all duration-300" style={{ maxWidth: DEVICES.find((item) => item.id === device).width }}>
+          <div className="border-t border-line bg-canvasAlt p-2 sm:p-3">
+            <div className="mx-auto overflow-hidden rounded-md border border-line bg-white transition-colors duration-300" style={{ maxWidth: DEVICES.find((item) => item.id === device).width }}>
               <div className="h-[calc(100vh-260px)] min-h-[560px] overflow-y-auto scroll-slim">{preview}</div>
             </div>
           </div>
@@ -457,7 +457,7 @@ export default function Editor() {
       </div>
 
       {/* Mobile pane switch */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-[#070b18]/95 px-4 py-2 backdrop-blur xl:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-white/95 px-4 py-2 backdrop-blur xl:hidden">
         {[
           { id: 'edit', label: 'Editor', icon: LayoutList },
           { id: 'preview', label: 'Preview', icon: Eye },
@@ -468,7 +468,7 @@ export default function Editor() {
             onClick={() => setMobilePane(paneId)}
             aria-pressed={mobilePane === paneId}
             className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium ${
-              mobilePane === paneId ? 'bg-accent-soft text-white' : 'text-muted'
+              mobilePane === paneId ? 'bg-accent-soft text-ink' : 'text-muted'
             }`}
           >
             <Icon size={13} aria-hidden="true" />
@@ -502,14 +502,14 @@ export default function Editor() {
           </>
         }
       >
-        <div className="overflow-hidden rounded-xl border border-line bg-white">
+        <div className="overflow-hidden rounded-lg border border-line bg-white">
           <div className="h-[65vh] overflow-y-auto">{preview}</div>
         </div>
         {portfolio.published && publicUrl ? <p className="mt-3 truncate text-xs text-muted">{publicUrl}</p> : null}
       </Modal>
 
       {dirty ? (
-        <div className="flex items-center gap-2 rounded-xl border border-warning/25 bg-warningSoft px-3.5 py-2 text-[11px] text-warning">
+        <div className="flex items-center gap-2 rounded-lg border border-warning/25 bg-warningSoft px-3.5 py-2 text-[11px] text-warning">
           <AlertCircle size={13} aria-hidden="true" />
           You have unsaved changes. Autosave will save them shortly, or press Save draft now.
         </div>

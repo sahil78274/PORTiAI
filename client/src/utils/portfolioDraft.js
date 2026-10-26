@@ -15,7 +15,7 @@ export const defaultVisibleSections = () =>
 
 export const emptyDraft = () => ({
   title: 'Untitled portfolio',
-  templateId: 'minimal',
+  templateId: 'developer',
   profile: {
     fullName: '',
     title: '',
@@ -32,7 +32,7 @@ export const emptyDraft = () => ({
   experience: [],
   achievements: [],
   socialLinks: { github: '', linkedin: '', twitter: '', website: '' },
-  theme: { accent: '#6366f1', font: 'sans', density: 'comfortable' },
+  theme: { accent: '#2563eb', font: 'sans', density: 'comfortable' },
   visibleSections: defaultVisibleSections(),
   blog: { enabled: false, title: '', intro: '' },
 });

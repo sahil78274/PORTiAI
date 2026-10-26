@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, LayoutDashboard, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Menu, X } from 'lucide-react';
 import Logo from '../ui/Logo.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const LINKS = [
   { label: 'Features', to: '/#features', hash: 'features' },
   { label: 'Templates', to: '/templates' },
-  { label: 'Pricing', to: '/#pricing', hash: 'pricing' },
-  { label: 'FAQ', to: '/#faq', hash: 'faq' },
+  { label: 'How It Works', to: '/#how-it-works', hash: 'how-it-works' },
 ];
 
 export default function Navbar() {
@@ -21,7 +20,7 @@ export default function Navbar() {
   useEffect(() => setOpen(false), [location.pathname, location.hash]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -37,31 +36,27 @@ export default function Navbar() {
       } else {
         navigate(`/#${link.hash}`);
       }
-    } else {
-      navigate(link.to);
+      return;
     }
+    navigate(link.to);
   };
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-300 ${
-        scrolled ? 'border-b border-white/[0.07] bg-[#070b18]/85 shadow-[0_10px_30px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl' : 'border-b border-transparent bg-transparent'
+      className={`sticky top-0 z-40 border-b transition-colors duration-200 ${
+        scrolled ? 'border-line bg-white/95 backdrop-blur' : 'border-transparent bg-canvas'
       }`}
     >
-      <div className="container-wide flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-9">
+      <div className="container-wide flex h-14 items-center justify-between gap-4">
+        <div className="flex items-center gap-8">
           <Logo />
-          <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+          <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
             {LINKS.map((link) => (
               <a
                 key={link.label}
                 href={link.hash ? `/#${link.hash}` : link.to}
                 onClick={(event) => go(event, link)}
-                className={`rounded-lg px-3.5 py-2 text-[13px] font-medium tracking-tight transition-all duration-200 ${
-                  location.pathname === link.to
-                    ? 'bg-white/[0.06] text-white'
-                    : 'text-muted hover:bg-white/[0.04] hover:text-ink'
-                }`}
+                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted transition-colors hover:text-ink"
               >
                 {link.label}
               </a>
@@ -69,22 +64,21 @@ export default function Navbar() {
           </nav>
         </div>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-1.5 md:flex">
           {loading ? (
-            <span className="h-9 w-28 animate-pulse rounded-lg bg-white/[0.06]" aria-hidden="true" />
+            <span className="h-8 w-28 animate-pulse rounded-md bg-canvasAlt" aria-hidden="true" />
           ) : user ? (
             <Link to="/dashboard" className="btn-primary btn-sm">
-              <LayoutDashboard size={14} aria-hidden="true" />
-              <span>Dashboard</span>
+              <LayoutDashboard size={13} aria-hidden="true" />
+              Dashboard
             </Link>
           ) : (
             <>
-              <Link to="/login" className="btn-ghost btn-sm text-inkSoft">
-                Log in
+              <Link to="/login" className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted transition-colors hover:text-ink">
+                Login
               </Link>
               <Link to="/register" className="btn-primary btn-sm">
-                <span>Get Started</span>
-                <ArrowRight size={14} aria-hidden="true" />
+                Build Your Portfolio
               </Link>
             </>
           )}
@@ -92,43 +86,41 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="btn-ghost h-9 w-9 rounded-lg p-0 md:hidden"
+          className="btn-ghost h-9 w-9 rounded-md p-0 md:hidden"
           aria-expanded={open}
           aria-controls="mobile-nav"
           aria-label={open ? 'Close menu' : 'Open menu'}
           onClick={() => setOpen((value) => !value)}
         >
-          {open ? <X size={19} aria-hidden="true" /> : <Menu size={19} aria-hidden="true" />}
+          {open ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
         </button>
       </div>
 
       {open ? (
-        <div id="mobile-nav" className="border-t border-white/[0.07] bg-[#070b18]/97 px-4 py-4 backdrop-blur-xl md:hidden animate-fadeIn">
-          <nav aria-label="Mobile" className="flex flex-col gap-1">
+        <div id="mobile-nav" className="border-t border-line bg-white px-4 py-3 md:hidden">
+          <nav aria-label="Mobile" className="flex flex-col">
             {LINKS.map((link) => (
               <a
                 key={link.label}
                 href={link.hash ? `/#${link.hash}` : link.to}
                 onClick={(event) => go(event, link)}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-inkSoft hover:bg-white/[0.05] hover:text-white"
+                className="rounded-md px-2 py-2.5 text-sm font-medium text-inkSoft hover:bg-canvasAlt hover:text-ink"
               >
                 {link.label}
               </a>
             ))}
-            <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.07] pt-3">
+            <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
               {user ? (
                 <Link to="/dashboard" className="btn-primary w-full justify-center">
-                  <LayoutDashboard size={15} aria-hidden="true" />
-                  Open Dashboard
+                  Open dashboard
                 </Link>
               ) : (
                 <>
                   <Link to="/login" className="btn-secondary w-full justify-center">
-                    Log in
+                    Login
                   </Link>
                   <Link to="/register" className="btn-primary w-full justify-center">
-                    Get Started Free
-                    <ArrowRight size={15} aria-hidden="true" />
+                    Build your portfolio
                   </Link>
                 </>
               )}

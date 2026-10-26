@@ -47,11 +47,11 @@ const Thumbnail = ({ portfolio, large = false }) => {
   const light = template.tone === 'light';
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-white/10 ${large ? 'aspect-[16/10] w-full' : 'h-16 w-24 shrink-0'}`}
-      style={{ background: light ? '#f7f6f2' : '#080b14' }}
+      className={`relative overflow-hidden rounded-lg border border-line ${large ? 'aspect-[16/10] w-full' : 'h-16 w-24 shrink-0'}`}
+      style={{ background: light ? '#ffffff' : '#14171c' }}
       aria-hidden="true"
     >
-      <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 80% 15%, ${accent}55, transparent 62%)` }} />
+      <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: accent }} />
       <div className={`absolute ${large ? 'inset-5 space-y-2' : 'inset-2.5 space-y-1'}`}>
         <div className={`${large ? 'h-2.5 w-24' : 'h-1.5 w-9'} rounded-full`} style={{ background: light ? '#111827' : '#ffffff', opacity: 0.85 }} />
         <div className={`${large ? 'h-2 w-36' : 'h-1 w-12'} rounded-full`} style={{ background: accent }} />
@@ -190,8 +190,7 @@ export default function MyPortfolios() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="My portfolios"
-        title="Every draft and published site you own"
+        title="My portfolios"
         description={`${counts.total} total · ${counts.published} published · ${counts.drafts} draft${counts.drafts === 1 ? '' : 's'}. Search, filter and manage them from here.`}
         actions={
           <>
@@ -208,7 +207,7 @@ export default function MyPortfolios() {
       />
 
       {/* Controls */}
-      <div className="card flex flex-wrap items-center gap-2 p-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-white p-2.5">
         <div className="relative min-w-[180px] flex-1">
           <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
@@ -221,7 +220,7 @@ export default function MyPortfolios() {
           />
         </div>
 
-        <div className="flex items-center gap-1 rounded-lg border border-line bg-canvasDeep p-0.5" role="group" aria-label="Status filter">
+        <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Status filter">
           {STATUS_FILTERS.map((filter) => (
             <button
               key={filter.id}
@@ -229,7 +228,7 @@ export default function MyPortfolios() {
               onClick={() => setStatus(filter.id)}
               aria-pressed={status === filter.id}
               className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                status === filter.id ? 'bg-white/[0.09] text-white' : 'text-muted hover:text-ink'
+                status === filter.id ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'
               }`}
             >
               {filter.label}
@@ -245,13 +244,13 @@ export default function MyPortfolios() {
           ))}
         </select>
 
-        <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvasDeep p-0.5" role="group" aria-label="Layout">
+        <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Layout">
           <button
             type="button"
             onClick={() => setView('grid')}
             aria-pressed={view === 'grid'}
             aria-label="Grid view"
-            className={`rounded-md p-1.5 ${view === 'grid' ? 'bg-white/[0.09] text-white' : 'text-faint hover:text-ink'}`}
+            className={`rounded-md p-1.5 ${view === 'grid' ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
           >
             <LayoutGrid size={13} aria-hidden="true" />
           </button>
@@ -260,7 +259,7 @@ export default function MyPortfolios() {
             onClick={() => setView('list')}
             aria-pressed={view === 'list'}
             aria-label="List view"
-            className={`rounded-md p-1.5 ${view === 'list' ? 'bg-white/[0.09] text-white' : 'text-faint hover:text-ink'}`}
+            className={`rounded-md p-1.5 ${view === 'list' ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
           >
             <List size={13} aria-hidden="true" />
           </button>
@@ -268,7 +267,7 @@ export default function MyPortfolios() {
       </div>
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/30 bg-dangerSoft p-4 text-sm text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger/30 bg-dangerSoft px-4 py-3 text-[13px] text-danger">
           <span>{error}</span>
           <Button variant="secondary" size="sm" onClick={load}>
             Try again
@@ -279,7 +278,7 @@ export default function MyPortfolios() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((index) => (
-            <div key={index} className="card overflow-hidden p-4">
+            <div key={index} className="rounded-lg border border-line bg-white p-3">
               <div className="skeleton aspect-[16/10] w-full" />
               <div className="skeleton mt-4 h-4 w-32" />
               <div className="skeleton mt-2 h-3 w-48" />
@@ -293,7 +292,7 @@ export default function MyPortfolios() {
           description={
             emptySearch
               ? 'Try a different search term, or reset the filters to see everything in your workspace.'
-              : 'Create your first portfolio with the AI builder, or start from one of nine templates.'
+              : 'Create your first portfolio with the AI builder, or start from one of six templates.'
           }
           action={
             emptySearch ? (
@@ -324,14 +323,14 @@ export default function MyPortfolios() {
       ) : view === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {portfolios.map((portfolio) => (
-            <article key={portfolio.id} className="card group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-lineStrong hover:shadow-raised">
+            <article key={portfolio.id} className="group flex flex-col overflow-hidden rounded-lg border border-line bg-white transition-colors hover:border-lineStrong">
               <button type="button" onClick={() => openPreview(portfolio)} className="text-left" aria-label={`Preview ${portfolio.title}`}>
                 <Thumbnail portfolio={portfolio} large />
               </button>
-              <div className="flex flex-1 flex-col p-4">
+              <div className="flex flex-1 flex-col p-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="block truncate text-sm font-semibold text-white hover:text-accent-hover">
+                    <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="block truncate text-sm font-semibold text-ink hover:text-accent-hover">
                       {portfolio.title}
                     </Link>
                     <p className="mt-0.5 truncate text-[11px] text-muted">
@@ -354,7 +353,7 @@ export default function MyPortfolios() {
                   ) : null}
                 </div>
 
-                <div className="mt-4 flex items-center gap-1.5 border-t border-line pt-3">
+                <div className="mt-3 flex items-center gap-1.5 border-t border-line pt-3">
                   <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="btn-secondary btn-sm flex-1 justify-center">
                     <Pencil size={12} aria-hidden="true" />
                     Edit
@@ -390,14 +389,14 @@ export default function MyPortfolios() {
           ))}
         </div>
       ) : (
-        <div className="card overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-line bg-white">
           <ul className="divide-y divide-line">
             {portfolios.map((portfolio) => (
-              <li key={portfolio.id} className="flex flex-wrap items-center gap-3 p-3 transition-colors hover:bg-white/[0.02]">
+              <li key={portfolio.id} className="flex flex-wrap items-center gap-3 p-3 transition-colors hover:bg-canvasAlt">
                 <Thumbnail portfolio={portfolio} />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="truncate text-sm font-semibold text-white hover:text-accent-hover">
+                    <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="truncate text-sm font-semibold text-ink hover:text-accent-hover">
                       {portfolio.title}
                     </Link>
                     <span className={portfolio.published ? 'badge-published' : 'badge-draft'}>{portfolio.published ? 'Published' : 'Draft'}</span>
@@ -440,12 +439,12 @@ export default function MyPortfolios() {
       )}
 
       {!loading && portfolios.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface/50 px-4 py-3 text-[11px] text-faint">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-3 text-[11px] text-faint">
           <span className="inline-flex items-center gap-1.5">
             <Globe2 size={12} aria-hidden="true" />
             Published portfolios are readable by anyone with the link. Drafts return 404 publicly.
           </span>
-          <Link to="/dashboard/analyzer" className="inline-flex items-center gap-1 font-medium text-accent-hover hover:text-white">
+          <Link to="/dashboard/analyzer" className="inline-flex items-center gap-1 font-medium text-accent-hover hover:text-ink">
             <Gauge size={12} aria-hidden="true" />
             Analyze a portfolio
           </Link>
@@ -502,7 +501,7 @@ export default function MyPortfolios() {
             <Spinner label="Loading saved portfolio…" />
           </div>
         ) : previewData ? (
-          <div className="overflow-hidden rounded-xl border border-line bg-white">
+          <div className="overflow-hidden rounded-lg border border-line bg-white">
             <div className="h-[60vh] overflow-y-auto">
               <PortfolioRenderer
                 portfolio={previewData}

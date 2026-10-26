@@ -56,7 +56,7 @@ export default function PublicPortfolio() {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070b18]">
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
         <div className="text-center">
           <Loader2 size={22} className="mx-auto animate-spin text-accent-hover" aria-hidden="true" />
           <p className="mt-3 text-xs text-muted">Loading portfolio…</p>
@@ -67,11 +67,11 @@ export default function PublicPortfolio() {
 
   if (status !== 'ready' || !portfolio) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#070b18] px-6 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-muted">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-6 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full border border-line bg-canvasAlt text-muted">
           <Lock size={20} aria-hidden="true" />
         </span>
-        <h1 className="mt-4 text-xl font-semibold text-white">
+        <h1 className="mt-4 text-[18px] font-semibold text-ink">
           {status === 'missing' ? 'This portfolio is not available' : 'Something went wrong'}
         </h1>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
@@ -98,10 +98,10 @@ export default function PublicPortfolio() {
   return (
     <div className="min-h-screen">
       <PortfolioRenderer portfolio={portfolio} blogHref={blogEnabled ? `/p/${portfolio.slug}/blog` : undefined} />
-      <div className="border-t border-black/10 bg-[#0b1020] px-4 py-5 text-center">
+      <div className="border-t border-line bg-canvasAlt px-4 py-4 text-center">
         <Link
           to="/?ref=portfolio-footer"
-          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/60 transition-colors hover:text-white"
+          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-faint transition-colors hover:text-ink"
         >
           Built with PortiAI
           <ArrowUpRight size={11} aria-hidden="true" />

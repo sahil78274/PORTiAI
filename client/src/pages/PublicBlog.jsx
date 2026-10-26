@@ -7,7 +7,7 @@ import { portfolioService } from '../services/portfolioService.js';
 import { formatDate } from '../utils/format.js';
 
 const usePortfolioTheme = (portfolio) => {
-  const accent = portfolio?.theme?.accent || '#6366f1';
+  const accent = portfolio?.theme?.accent || '#2563eb';
   return useMemo(
     () => ({
       accent,
@@ -64,7 +64,7 @@ function Notice({ title, body, slug, retry }) {
           </button>
         ) : null}
         {slug ? (
-          <Link to={`/p/${slug}`} className="rounded-lg bg-black px-3 py-2 text-xs font-medium text-white hover:bg-black/85">
+          <Link to={`/p/${slug}`} className="rounded-lg bg-black px-3 py-2 text-xs font-medium text-ink hover:bg-black/85">
             Back to portfolio
           </Link>
         ) : null}
@@ -148,7 +148,7 @@ export function PublicBlogList() {
       ) : null}
 
       {filtered.length === 0 ? (
-        <p className="mt-12 rounded-xl border border-dashed border-black/12 px-5 py-10 text-center text-sm text-black/45">
+        <p className="mt-12 rounded-lg border border-dashed border-black/12 px-5 py-10 text-center text-sm text-black/45">
           {posts.length === 0 ? 'No posts have been published yet.' : 'No posts match that search.'}
         </p>
       ) : (
@@ -258,7 +258,7 @@ export function PublicBlogPost() {
           <img
             src={post.coverUrl}
             alt=""
-            className="mt-6 aspect-[16/8] w-full rounded-xl object-cover"
+            className="mt-6 aspect-[16/8] w-full rounded-lg object-cover"
             onError={(event) => {
               event.currentTarget.style.display = 'none';
             }}
