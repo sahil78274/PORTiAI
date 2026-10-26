@@ -1,3 +1,4 @@
+import FarheenPhoto from "../components/FarheenPhoto";
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {

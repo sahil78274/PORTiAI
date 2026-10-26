@@ -12,7 +12,7 @@ import { useState } from 'react';
  * While PORTRAIT_SRC is empty a neutral placeholder is shown. No generated or
  * stock face is ever substituted.
  */
-export const PORTRAIT_SRC = '';
+export const PORTRAIT_SRC = '/images/farheen.png';
 export const PORTRAIT_NAME = 'Farheen';
 export const PORTRAIT_ROLE = 'Full Stack Developer';
 
@@ -46,7 +46,7 @@ export default function HeroPortrait({
               loading="eager"
               decoding="async"
               onError={() => setFailed(true)}
-              className="h-full w-full object-cover object-top"
+              className="h-full w-full object-cover object-[center_35%]"
             />
           ) : (
             <div
