@@ -565,3 +565,84 @@ Node — that is the only page the harness could not render server-side.)
 
 `docs/screenshots/` still contains captures of the earlier light build; the numbers above are from
 the current dark tree.
+
+---
+
+## 3e. AI builder conversation fix (2026-10-26)
+
+### The bug
+
+The builder was a rigid script: `STEPS` was an array and `stepIndex` advanced only inside the
+`if (outcome.forceNext)` branch of `submitValue`. The `name`, `role`, `about` and `skills` steps never
+set `forceNext`, so the conversation stayed parked on the **name** step forever. Every later message was
+run through the name handler, which stored the raw text as `facts.fullName` and replied with
+“Nice to meet you, <first word>. What do you do?”. Typing “web developer” therefore produced
+“Nice to meet you, web …”, and the role question was never actually reached.
+
+There was no message parsing either: a sentence such as “I build websites using React and Node.js” had
+no way to become a summary or skills, and each answer was interpreted against whatever step the index
+happened to point at rather than against the conversation so far.
+
+### The fix
+
+* `client/src/utils/builderConversation.js` — a pure, state-driven conversation engine. The next
+  question is derived from what is **known**, never from an index:
+  `nextFieldId(facts, declined)` returns the first unanswered, undeclined field
+  (name → role → about → skills → projects → experience → education → contact → template → blog →
+  generate).
+* Each message is parsed for the field that was actually asked, and also opportunistically for
+  anything else it contains: explicit names (“my name is …”, “I'm Sahil Sharma, a full stack
+  developer”), roles (“my professional role is …”, “I work as …”, a bare “web developer”), summaries,
+  skills (“using React and Node.js” → `React`, `Node.js`), emails and profile links, pipe-format
+  projects/experience/education, templates and tone.
+* Name and role are mutually exclusive: `looksLikeName` rejects role nouns, verbs, digits and known
+  non-name answers, so a role can never be written into `fullName`, and a role answer never overwrites
+  a known name.
+* Known answers are never asked again. Optional fields decline permanently (`declined`), collection
+  steps (projects/experience/education) stay open until “done”/“skip”, and required fields that cannot
+  be skipped reply with an explanation plus a *differently worded* clarification.
+* Ambiguous answers produce a field-specific clarification (alternating between two phrasings, so the
+  same sentence is not repeated) instead of restarting.
+* The page (`client/src/pages/Builder.jsx`) keeps the ordered transcript, passes the previous assistant
+  message into the engine for round-robin clarifications, blocks duplicate or double-fired submits with
+  refs (state updates are async), and updates the composer only when the reply lands so the visible
+  question always matches the engine state. Editing a required field in the “Collected details” panel
+  moves the conversation past it.
+* The AI request is unchanged: `POST /api/ai/builder` still receives `{ facts }` with the same field
+  names and validation. Nothing about authentication, MongoDB, the Gemini integration or the API
+  contract changed.
+
+### Verification
+
+```
+cd client && npm test     # 32/32 (22 conversation + 10 template checks)
+cd client && npx vite build   # ✓ built
+cd server && npm test     # 61/61 (unchanged)
+```
+
+The reported sequence is covered by `client/tests/builderConversation.test.js`:
+
+```
+AI:  What's your full name?
+you: hii
+AI:  Hello! What's your full name?
+you: Sahil
+AI:  Nice to meet you, Sahil. What's your professional role? …
+you: web developer
+AI:  Got it — Web Developer. Thanks, Sahil. In your own words, what do you work on …?
+you: I build websites using React and Node.js
+AI:  Noted — that becomes your summary. Added 2 skills: React, Node.js. Now the most important section — projects.
+```
+
+Other cases pinned by the tests: a role answer never becomes the name; a seeded account name skips the
+name question; a bare name given while the role is pending is acknowledged rather than rejected;
+declined optional fields are never revisited; unparseable projects are not stored; information given
+out of order (contact details while the summary is pending, or while a template is being chosen) is
+retained instead of being swallowed; a tool named later is still added to the skill list; closing a
+project/experience section reports what was actually saved; consecutive clarifications are worded
+differently; replaying a transcript is deterministic.
+
+The chat transcript is kept in order in component state and each turn is applied to it exactly once
+(the page guards double submits with a ref, because React state updates are asynchronous). The
+transcript is not posted to the API: `POST /api/ai/builder` is a facts-in/content-out endpoint with no
+conversation parameter, so the collected facts — not the raw messages — are what the model receives.

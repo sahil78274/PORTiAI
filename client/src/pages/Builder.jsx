@@ -27,257 +27,24 @@ import { aiService, portfolioService } from '../services/portfolioService.js';
 import { TEMPLATES, getTemplate, normalizeTemplateId } from '../utils/templates.js';
 import { emptyDraft, draftToPayload } from '../utils/portfolioDraft.js';
 import { demoPortfolio } from '../utils/demoPortfolio.js';
+import {
+  BUILDER_FIELDS,
+  FIELD_ORDER,
+  answerTurn,
+  createBuilderFacts,
+  fieldPrompt,
+  firstName,
+  getReadiness,
+  isFieldSatisfied,
+  nextFieldId,
+} from '../utils/builderConversation.js';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-
-const splitPipes = (value) =>
-  value
-    .split(value.includes('|') ? '|' : /\s+·\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-const parseTechnologies = (value) =>
-  String(value || '')
-    .split(/[,/]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 12);
 
 const TONE_OPTIONS = [
   { id: 'professional', label: 'Professional' },
   { id: 'concise', label: 'Concise' },
   { id: 'friendly', label: 'Friendly' },
-];
-
-const createEmptyFacts = () => ({
-  fullName: '',
-  role: '',
-  location: '',
-  about: '',
-  skills: [],
-  projects: [],
-  experience: [],
-  education: [],
-  achievements: [],
-  contactEmail: '',
-  socialLinks: { github: '', linkedin: '', website: '', twitter: '' },
-  templateId: 'developer',
-  tone: 'professional',
-  wantsBlog: false,
-});
-
-const STEPS = [
-  {
-    id: 'name',
-    question: (facts) =>
-      facts.fullName
-        ? `I have your name as ${facts.fullName}. Is that correct? You can send a different name or press Continue.`
-        : 'Welcome to the PortiAI builder. Let’s build your portfolio properly. What’s your full name?',
-    placeholder: 'e.g. Aarav Mehta',
-    hint: 'This becomes the hero heading on your portfolio.',
-    quick: (facts) => (facts.fullName ? ['Continue'] : []),
-    handle: (value, facts) => ({
-      patch: { fullName: value === 'Continue' && facts.fullName ? facts.fullName : value },
-      reply: `Nice to meet you${(value === 'Continue' ? facts.fullName : value).split(' ')[0] ? `, ${(value === 'Continue' ? facts.fullName : value).split(' ')[0]}` : ''}. What do you do? Give me your professional role in a few words.`,
-    }),
-  },
-  {
-    id: 'role',
-    question: () => 'What’s your professional role? A recruiter should understand it instantly.',
-    placeholder: 'e.g. Full-stack Developer · React & Node.js',
-    hint: 'Keep it specific rather than “tech enthusiast”.',
-    handle: (value) => ({
-      patch: { role: value },
-      reply: 'Got it. Now, in your own words, what do you work on, what have you shipped, and what are you looking for next? Two or three sentences is plenty.',
-    }),
-  },
-  {
-    id: 'about',
-    question: () => 'Tell me about your work in plain language. Specific beats polished — you can refine the wording later.',
-    placeholder: 'e.g. I build React dashboards… my last project was…',
-    hint: 'I use only what you write here. Nothing is invented.',
-    handle: (value) => ({
-      patch: { about: value },
-      reply: 'Perfect. Now list your skills and tools, separated by commas — languages, frameworks, design tools, and any soft skills you can genuinely demonstrate.',
-    }),
-  },
-  {
-    id: 'skills',
-    question: () => 'Which skills and technologies should appear on your portfolio?',
-    placeholder: 'React, TypeScript, Node.js, Figma, technical writing',
-    hint: 'Comma separated. I’ll normalise capitalisation where possible.',
-    handle: (value) => {
-      const skills = value
-        .split(',')
-        .map((skill) => skill.trim())
-        .filter(Boolean)
-        .slice(0, 24);
-      if (!skills.length) return { error: 'Add at least one skill so your portfolio has something to show.' };
-      return {
-        patch: { skills },
-        reply: `Added ${skills.length} skill${skills.length === 1 ? '' : 's'}. Now let’s add projects — this is the most important section.\n\nSend one project per message in this format:\nName | What it does and the outcome | Technologies | Link (optional)`,
-        chips: ['Skip projects for now'],
-      };
-    },
-  },
-  {
-    id: 'projects',
-    question: () => 'Describe a project. Name first, then what it does, the stack, and any link.',
-    placeholder: 'Campus Event Portal | Registration platform used by two departments | React, Node.js, MongoDB | github.com/me/events',
-    hint: 'Use the pipe format. Send “done” when you’ve added your projects.',
-    chips: ['Add another project', 'Done adding projects'],
-    handle: (value) => {
-      const normalized = value.toLowerCase().replace(/[.!]+$/, '');
-      if (['done', 'done adding projects', 'skip projects for now', 'skip', 'no more projects'].includes(normalized)) {
-        return { patch: {}, next: 'experience', forceNext: true, reply: 'Projects saved. Now your experience — internships, freelance work or part-time roles.' };
-      }
-      const parts = splitPipes(value);
-      if (!parts.length || !parts[0]) {
-        return { error: 'Start with the project name, then use pipes ( | ) to separate the description, stack and link.' };
-      }
-      const [name, description = '', tech = '', link = ''] = parts;
-      const url = /^https?:\/\//i.test(link) ? link : link ? `https://${link.replace(/^\/+/, '')}` : '';
-      const isGithub = /github\.com/i.test(link);
-      return {
-        patch: {
-          projects: [
-            {
-              name,
-              description,
-              technologies: parseTechnologies(tech),
-              projectUrl: isGithub ? '' : url,
-              githubUrl: isGithub ? url : '',
-            },
-          ],
-        },
-        appendProjects: true,
-        reply: `Added “${name}”. Send another project in the same format, or type done.`,
-        chips: ['Done adding projects'],
-      };
-    },
-  },
-  {
-    id: 'experience',
-    question: () => 'Any experience to include? Use: Role | Organisation | Dates | One line about what you did. Send “skip” if none yet.',
-    placeholder: 'Web Development Intern | Nexa Studio | Jun 2025 – Aug 2025 | Built responsive React interfaces',
-    hint: 'Internships, freelance work and volunteering all count.',
-    chips: ['Skip experience'],
-    handle: (value) => {
-      const normalized = value.toLowerCase().replace(/[.!]+$/, '');
-      if (['done', 'skip', 'skip experience', 'none', 'no'].includes(normalized)) {
-        return { patch: {}, next: 'education', forceNext: true, reply: 'Understood. Let’s add your education — degree, institution and years. Format: Degree | Institution | Years | Grade (optional).' };
-      }
-      const parts = splitPipes(value);
-      if (!parts.length || !parts[0]) {
-        return { error: 'Use the format: Role | Organisation | Dates | What you did.' };
-      }
-      const [role, organization = '', dates = '', details = ''] = parts;
-      const [startDate, endDate] = dates.split(/[–—-]|\bto\b/).map((part) => part.trim());
-      return {
-        patch: { experience: [{ role, organization, startDate: startDate || dates, endDate: endDate || '', details }] },
-        appendExperience: true,
-        reply: `Added “${role}${organization ? ` at ${organization}` : ''}”. Send another role, or type done.`,
-        chips: ['Done with experience'],
-      };
-    },
-  },
-  {
-    id: 'education',
-    question: () => 'Education: Degree | Institution | Years | Grade (optional). Send “skip” if you’d rather leave it out.',
-    placeholder: 'BCA | M.D. University | 2023 – 2026 | 78%',
-    hint: 'Add your most recent qualification first.',
-    chips: ['Skip education'],
-    handle: (value) => {
-      const normalized = value.toLowerCase().replace(/[.!]+$/, '');
-      if (['done', 'skip', 'skip education', 'none', 'no'].includes(normalized)) {
-        return { patch: {}, next: 'contact', forceNext: true, reply: 'Education noted. Now contact details: email, GitHub, LinkedIn and a website if you have one.' };
-      }
-      const parts = splitPipes(value);
-      if (!parts.length || !parts[0]) return { error: 'Use the format: Degree | Institution | Years | Grade.' };
-      const [degree, institution = '', dates = '', grade = ''] = parts;
-      const [startDate, endDate] = dates.split(/[–—-]|\bto\b/).map((part) => part.trim());
-      return {
-        patch: { education: [{ degree, institution, startDate: startDate || dates, endDate: endDate || '', grade }] },
-        appendEducation: true,
-        reply: 'Added. Add another qualification, or type done.',
-        chips: ['Done with education'],
-      };
-    },
-  },
-  {
-    id: 'contact',
-    question: (facts) =>
-      `How should people reach you? Send your email${facts.socialLinks.github ? '' : ', GitHub URL'}, LinkedIn or website — comma separated. Type skip to only use your account email.`,
-    placeholder: 'you@example.com, github.com/you, linkedin.com/in/you',
-    hint: 'Emails and links are detected automatically.',
-    chips: ['Skip contact details'],
-    handle: (value, facts) => {
-      const normalized = value.toLowerCase().replace(/[.!]+$/, '');
-      if (['skip', 'skip contact details', 'none'].includes(normalized)) {
-        return {
-          patch: { contactEmail: facts.contactEmail || '' },
-          next: 'template',
-          forceNext: true,
-          reply: 'Fine — I’ll use your account email. Finally, choose a design and a writing tone.',
-        };
-      }
-      const tokens = value
-        .split(/[,\s]+/)
-        .map((token) => token.trim().replace(/^[<(]|[>)]$/g, ''))
-        .filter(Boolean);
-      const email = tokens.find((token) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(token)) || facts.contactEmail;
-      const links = tokens.filter((token) => /\./.test(token) && !token.includes('@'));
-      const github = links.find((token) => /github/i.test(token));
-      const linkedin = links.find((token) => /linkedin/i.test(token));
-      const website = links.find((token) => token !== github && token !== linkedin);
-      const withProtocol = (token) => (token ? (/^https?:\/\//i.test(token) ? token : `https://${token}`) : '');
-      return {
-        patch: {
-          contactEmail: email,
-          socialLinks: {
-            github: withProtocol(github),
-            linkedin: withProtocol(linkedin),
-            website: withProtocol(website),
-            twitter: '',
-          },
-        },
-        next: 'template',
-        forceNext: true,
-        reply: 'Saved. Pick a template and tone in the panel on the right, then I’ll generate your portfolio.',
-      };
-    },
-  },
-  {
-    id: 'template',
-    question: () => 'Choose a template and a writing tone. You can change both later at any time.',
-    type: 'choice',
-    handle: () => ({
-      patch: {},
-      next: 'blog',
-      forceNext: true,
-      reply: 'Almost done. Would you like a blog attached to this portfolio? You can write posts later — this just enables the blog page.',
-    }),
-  },
-  {
-    id: 'blog',
-    question: () => 'Do you want a blog page on your portfolio?',
-    type: 'choice',
-    chips: ['Yes, add a blog', 'No blog for now'],
-    handle: (value) => ({
-      patch: { wantsBlog: /^yes/i.test(value) },
-      next: 'generate',
-      forceNext: true,
-      reply: /^yes/i.test(value)
-        ? 'Blog enabled. I have everything I need — generate your portfolio when you’re ready.'
-        : 'No blog. I have everything I need — generate your portfolio when you’re ready.',
-    }),
-  },
-  {
-    id: 'generate',
-    question: () => 'Your answers are ready. Press Generate to draft the written content with AI, then review it before creating your draft portfolio.',
-    type: 'final',
-    handle: () => ({ patch: {}, reply: null }),
-  },
 ];
 
 export default function Builder() {
@@ -287,17 +54,23 @@ export default function Builder() {
   const [params] = useSearchParams();
   const initialTemplate = normalizeTemplateId(params.get('template') || 'obsidian');
 
-  const [facts, setFacts] = useState(() => ({
-    ...createEmptyFacts(),
-    fullName: user?.name || '',
-    contactEmail: user?.email || '',
-    templateId: initialTemplate,
-  }));
-  const [stepIndex, setStepIndex] = useState(0);
+  const seed = useMemo(
+    () => ({
+      fullName: user?.name || '',
+      contactEmail: user?.email || '',
+      templateId: initialTemplate,
+    }),
+    // The account details only seed the conversation; the chat owns them after that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  const [facts, setFacts] = useState(() => createBuilderFacts(seed));
+  const [declined, setDeclined] = useState([]);
+  const [activeField, setActiveField] = useState(() => nextFieldId(createBuilderFacts(seed), []) || 'name');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
-  const [thinking, setThinking] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(null);
   const [aiError, setAiError] = useState(null);
@@ -308,30 +81,49 @@ export default function Builder() {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const startedRef = useRef(false);
+  // Refs, not state: a fast Enter-then-click can fire twice before React
+  // re-renders, and a duplicated message would be sent twice.
+  const busyRef = useRef(false);
+  const lastSubmitRef = useRef({ text: '', at: 0 });
+  const timersRef = useRef([]);
 
-  const step = STEPS[Math.min(stepIndex, STEPS.length - 1)];
+  const activeMeta = BUILDER_FIELDS[activeField] || BUILDER_FIELDS.generate;
+  const readiness = useMemo(() => getReadiness(facts), [facts]);
+  const collectedCount = useMemo(() => FIELD_ORDER.filter((id) => isFieldSatisfied(facts, id)).length, [facts]);
 
-  const lastGenerated = useMemo(() => {
-    if (!generated) return null;
-    return generated;
-  }, [generated]);
+  const lastGenerated = useMemo(() => generated, [generated]);
 
   const pushAssistant = useCallback((text, extra = {}) => {
     setMessages((current) => [...current, { id: uid(), role: 'assistant', text, ...extra }]);
   }, []);
 
-  // Kick off the conversation once.
+  const later = useCallback((callback, delay) => {
+    const timer = setTimeout(callback, delay);
+    timersRef.current.push(timer);
+    return timer;
+  }, []);
+
+  useEffect(() => () => timersRef.current.forEach((timer) => clearTimeout(timer)), []);
+
+  // Kick off the conversation once. The first question is derived from the
+  // facts the account already supplies (usually the full name), so nothing is
+  // asked twice.
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
+    const openingFacts = createBuilderFacts(seed);
+    const openingField = nextFieldId(openingFacts, []) || 'name';
     const timer = setTimeout(() => {
+      const greetingName = firstName(user?.name || '');
       pushAssistant(
-        `Hi ${user?.name?.split(' ')[0] || 'there'} — I’m the PortiAI builder. I’ll ask a few questions, then draft your portfolio copy. You can edit everything afterwards.`,
+        `${
+          greetingName ? `Hi ${greetingName}` : 'Hi there'
+        } — I’m the PortiAI builder. I’ll ask a few questions, then draft your portfolio copy. You can edit everything afterwards.`,
         { variant: 'intro' }
       );
-      setTimeout(() => pushAssistant(STEPS[0].question(facts), { stepId: 'name' }), 450);
+      later(() => pushAssistant(fieldPrompt(openingField, openingFacts), { fieldId: openingField }), 500);
     }, 250);
-    return () => clearTimeout(timer);
+    timersRef.current.push(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -339,86 +131,61 @@ export default function Builder() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, typing]);
 
-  const moveToStep = (nextId, fallbackIndex) => {
-    const index = STEPS.findIndex((item) => item.id === nextId);
-    setStepIndex(index >= 0 ? index : fallbackIndex + 1);
-  };
+  // If one of the required fields is filled in the "Collected details" panel
+  // while the chat is waiting on it, move the conversation on instead of asking
+  // for it again. Collection steps (projects, experience, education) are left
+  // alone: those stay open until the user says done or skip.
+  useEffect(() => {
+    if (busyRef.current || typing) return;
+    if (!['name', 'role', 'about', 'skills'].includes(activeField)) return;
+    if (!isFieldSatisfied(facts, activeField)) return;
+    const expected = nextFieldId(facts, declined) || 'generate';
+    if (expected === activeField) return;
+    setActiveField(expected);
+    pushAssistant(fieldPrompt(expected, facts), { fieldId: expected });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facts, declined, typing, activeField]);
 
   const submitValue = (rawValue) => {
-    const value = String(rawValue || '').trim();
-    if (!value || thinking || generating) return;
-    if (step.type === 'final') {
+    const value = String(rawValue ?? '').trim();
+    if (!value || generating) return;
+    // One turn at a time, and never the same message twice in a row.
+    if (busyRef.current) return;
+    const now = Date.now();
+    if (lastSubmitRef.current.text === value && now - lastSubmitRef.current.at < 1500) return;
+    lastSubmitRef.current = { text: value, at: now };
+
+    if (activeField === 'generate') {
       toast.info('Press Generate portfolio to create the draft.');
       return;
     }
 
-    setMessages((current) => [...current, { id: uid(), role: 'user', text: value }]);
-    setInput('');
-
-    // Choice steps update facts directly.
-    if (step.id === 'template') {
-      setTyping(true);
-      setTimeout(() => {
-        setTyping(false);
-        pushAssistant('Template and tone saved. One last question:', { stepId: 'blog' });
-        setStepIndex(STEPS.findIndex((item) => item.id === 'blog'));
-        setTimeout(() => pushAssistant(STEPS.find((item) => item.id === 'blog').question(facts)), 250);
-      }, 500);
-      return;
-    }
-
-    const outcome = step.handle(value, facts);
-    if (!outcome || outcome.error) {
-      setTyping(true);
-      setTimeout(() => {
-        setTyping(false);
-        pushAssistant(outcome?.error || 'I could not read that. Try again with a little more detail.', { variant: 'error' });
-      }, 400);
-      return;
-    }
-
-    setFacts((current) => {
-      const next = { ...current, ...outcome.patch };
-      if (outcome.appendProjects && outcome.patch.projects) {
-        next.projects = [...current.projects, ...outcome.patch.projects];
-      }
-      if (outcome.appendExperience && outcome.patch.experience) {
-        next.experience = [...current.experience, ...outcome.patch.experience];
-      }
-      if (outcome.appendEducation && outcome.patch.education) {
-        next.education = [...current.education, ...outcome.patch.education];
-      }
-      return next;
-    });
-
+    busyRef.current = true;
     setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      if (outcome.reply) pushAssistant(outcome.reply, outcome.chips ? { chips: outcome.chips } : {});
-      if (outcome.forceNext) {
-        const currentIndex = STEPS.findIndex((item) => item.id === step.id);
-        const nextIndex = outcome.next ? STEPS.findIndex((item) => item.id === outcome.next) : currentIndex + 1;
-        setStepIndex(nextIndex);
-        const nextStep = STEPS[nextIndex];
-        if (nextStep && nextStep.id !== 'generate') {
-          setTimeout(() => {
-            setTyping(true);
-            setTimeout(() => {
-              setTyping(false);
-              pushAssistant(nextStep.question(facts), { stepId: nextStep.id });
-            }, 500);
-          }, 700);
-        }
-      } else if (step.id === 'contact') {
-        // handled by forceNext above
-      } else if (step.id === 'blog') {
-        setStepIndex(STEPS.findIndex((item) => item.id === 'generate'));
-      }
-      inputRef.current?.focus();
-    }, 550);
+    setInput('');
+    setMessages((current) => [...current, { id: uid(), role: 'user', text: value }]);
+
+    // The engine reads this message against the state collected so far, so an
+    // answer is never re-interpreted as a field that was already answered.
+    const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant')?.text || '';
+    const outcome = answerTurn({ facts, declined, text: value, activeField, lastAssistant });
+    setFacts(outcome.facts);
+    setDeclined(outcome.declined);
+
+    later(
+      () => {
+        // The composer and the transcript change together, so the visible
+        // question always matches the state the engine expects next.
+        pushAssistant(outcome.reply, { fieldId: outcome.activeField });
+        setActiveField(outcome.activeField);
+        setTyping(false);
+        busyRef.current = false;
+        inputRef.current?.focus();
+      },
+      420 + Math.min(500, outcome.reply.length * 2)
+    );
   };
 
-  // Blog step chips
   const onChip = (chip) => {
     if (chip === 'Add another project') {
       setInput('');
@@ -428,16 +195,7 @@ export default function Builder() {
     submitValue(chip);
   };
 
-  const readiness = useMemo(() => {
-    const checks = [
-      { id: 'name', ok: Boolean(facts.fullName.trim()), label: 'Full name' },
-      { id: 'role', ok: Boolean(facts.role.trim()), label: 'Professional role' },
-      { id: 'about', ok: facts.about.trim().split(/\s+/).length >= 8, label: 'About summary' },
-      { id: 'skills', ok: facts.skills.length >= 2, label: 'Skills' },
-      { id: 'projects', ok: facts.projects.length >= 1, label: 'At least one project' },
-    ];
-    return { checks, ready: checks.slice(0, 3).every((check) => check.ok) && facts.skills.length > 0 };
-  }, [facts]);
+  const stepChips = activeMeta.chips || [];
 
   const buildDraftFromFacts = (aiContent) => {
     const draft = emptyDraft();
@@ -576,14 +334,6 @@ export default function Builder() {
     return { ...draftToPayload(generated.draft), published: false, updatedAt: new Date().toISOString() };
   }, [generated, facts]);
 
-  const stepChips = (() => {
-    if (step.id === 'template') return [];
-    if (step.id === 'blog') return ['Yes, add a blog', 'No blog for now'];
-    if (step.chips) return step.chips;
-    if (step.quick) return step.quick(facts);
-    return [];
-  })();
-
   const templateMeta = getTemplate(facts.templateId);
 
   return (
@@ -610,7 +360,8 @@ export default function Builder() {
               <div>
                 <p className="text-sm font-semibold text-ink">PortiAI Builder</p>
                 <p className="text-[11px] text-muted">
-                  Step {Math.min(stepIndex + 1, STEPS.length)} of {STEPS.length} · {step.id === 'generate' ? 'Ready to generate' : 'Collecting details'}
+                  Collected {collectedCount} of {FIELD_ORDER.length} ·{' '}
+                  {activeField === 'generate' ? 'Ready to generate' : 'Collecting details'}
                 </p>
               </div>
             </div>
@@ -715,7 +466,7 @@ export default function Builder() {
 
           {/* Composer */}
           <div className="border-t border-line p-3 sm:p-4">
-            {step.id === 'template' ? (
+            {activeField === 'template' ? (
               <div className="rounded-lg border border-line bg-canvas p-3">
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">Template</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -747,13 +498,13 @@ export default function Builder() {
                   type="button"
                   onClick={() => submitValue(`${templateMeta.name}, ${facts.tone} tone`)}
                   className="btn-primary btn-sm mt-3 w-full justify-center"
-                  disabled={thinking}
+                  disabled={typing}
                 >
                   Continue
                   <ArrowRight size={13} aria-hidden="true" />
                 </button>
               </div>
-            ) : step.id === 'blog' ? (
+            ) : activeField === 'blog' ? (
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => submitValue('Yes, add a blog')} className="btn-primary btn-sm flex-1 justify-center">
                   <Plus size={13} aria-hidden="true" />
@@ -763,7 +514,7 @@ export default function Builder() {
                   No blog for now
                 </button>
               </div>
-            ) : step.id === 'generate' ? (
+            ) : activeField === 'generate' ? (
               <div className="space-y-2">
                 <button type="button" onClick={() => generate()} className="btn-primary w-full justify-center" disabled={generating || !readiness.ready}>
                   <Sparkles size={15} aria-hidden="true" />
@@ -798,22 +549,22 @@ export default function Builder() {
                       submitValue(input);
                     }
                   }}
-                  placeholder={step.placeholder || 'Type your answer…'}
+                  placeholder={activeMeta.placeholder || 'Type your answer…'}
                   className="min-h-[52px] flex-1 resize-none py-2.5 text-sm"
-                  disabled={thinking}
+                  disabled={typing}
                 />
                 <button
                   type="submit"
                   className="btn-primary h-[52px] w-[52px] shrink-0 rounded-lg p-0"
                   aria-label="Send answer"
-                  disabled={!input.trim() || thinking}
+                  disabled={!input.trim() || typing}
                 >
                   <Send size={17} aria-hidden="true" />
                 </button>
               </form>
             )}
-            {step.hint && step.id !== 'template' && step.id !== 'generate' ? (
-              <p className="mt-2 text-[11px] text-faint">{step.hint}</p>
+            {activeMeta.hint && activeField !== 'template' && activeField !== 'generate' && activeField !== 'blog' ? (
+              <p className="mt-2 text-[11px] text-faint">{activeMeta.hint}</p>
             ) : null}
           </div>
         </section>

@@ -22,7 +22,7 @@ in the backend. There is no subscription, plan or payment interface anywhere in 
 | Public pages | Done | `/features`, `/templates`, `/privacy`, `/terms`, `*` not-found |
 | Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation. Email/password only — no OAuth buttons are shown |
 | Dashboard `/dashboard` | Done | Collapsible sidebar, real counts from MongoDB, next-step suggestion, recent portfolios, quick links, profile menu |
-| AI builder `/dashboard/builder` | Done | Chat UI with suggested prompts, validation, generation progress, preview panel, create-draft hand-off via `POST /api/ai/builder` |
+| AI builder `/dashboard/builder` | Done | Fact-driven chat (`client/src/utils/builderConversation.js`): each message is parsed for the field that was asked, known answers are never asked again, and the next question is the first missing detail; suggested role prompts, validation, generation progress, preview panel and create-draft hand-off via `POST /api/ai/builder` |
 | Templates | Done | Six design systems — Minimal Developer, Dark Professional, Creative Designer, Student, Modern Freelancer, Executive — each with its own layout, typography and section treatment |
 | Template gallery | Done | Search, category filters, in-use indicator, live rendered previews at desktop/tablet/mobile widths, Use-template action |
 | Editor | Done | Seven tabs, debounced autosave with status, desktop/tablet/mobile previews, accent/font/density, section order and visibility, blog settings, publish |
