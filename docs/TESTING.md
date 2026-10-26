@@ -480,3 +480,88 @@ cd server && cp .env.example .env      # set USE_LOCAL_MONGO=1 for a local datab
 npm run dev
 cd client && cp .env.example .env && npm run dev
 ```
+
+---
+
+## 3d. Dark navy interface and image uploads (2026-10-26)
+
+The interface was re-skinned from the off-white build to a dark navy product surface: canvas `#0a1020`,
+cards `#111a2b`, borders `#1e2a42`, headings `#eef2f8`, secondary text `#93a1b8`, one vivid blue accent
+`#2f6bff` used only for primary buttons and selected states. No card or section uses a decorative
+gradient, and no glow is applied outside the single hero wash. Templates keep their own palettes and
+are rendered on white inside preview frames, because a published portfolio is a standalone page.
+
+**a. Production build**
+
+```bash
+cd client && npx vite build
+# ✓ 2032 modules transformed.
+# dist/index.html                   1.38 kB │ gzip:   0.66 kB
+# dist/assets/index-*.css          71.82 kB │ gzip:  12.24 kB
+# dist/assets/index-*.js          642.63 kB │ gzip: 173.77 kB
+# ✓ built in 4.60s
+```
+
+**b. Automated tests**
+
+```bash
+cd server && npm test    # 61/61 checks passed (58 + 3 new upload checks)
+cd client && npm test    # 10/10 template checks passed
+```
+
+The three new server checks cover: an authenticated PNG upload returning an absolute URL that the
+portfolio validator accepts and that is readable anonymously, `401` for anonymous uploads, and
+rejection of non-image payloads, mismatched signatures and oversized files.
+
+**c. Route smoke test through the Vite proxy (`:5173`)**
+
+```
+200 /            200 /features     200 /templates      200 /gallery
+200 /login       200 /signup       200 /forgot-password 200 /privacy   200 /terms
+200 /p/farheen   200 /p/farheen/blog   200 /p/farheen/blog/migrations-that-never-fail-quietly
+200 /nope-404    (client-rendered NotFound page)
+```
+
+Public data comes from the seeded account, not hardcoded markup:
+
+```
+GET /api/public/farheen        -> Farheen · Full Stack Developer · freelancer template
+GET /api/public/farheen/blog   -> 3 published posts
+```
+
+**d. Image upload round trip**
+
+```
+POST /api/uploads (cookie session) -> 201
+  { "upload": { "id": "…", "mimeType": "image/png", "size": 70 },
+    "path": "/api/uploads/…", "url": "http://127.0.0.1:5173/api/uploads/…" }
+GET <url>  -> 200  content-type: image/png  cache-control: public, max-age=31536000, immutable
+```
+
+**e. Server-side render smoke test**
+
+Every page was rendered with `renderToString` through the real providers (router, auth, toasts) to
+catch render crashes that a build cannot detect. Landing, Features, Templates, Login, Register,
+Forgot password, Privacy, Terms, NotFound, Builder, Analyzer, Blog studio, Blog editor, My
+portfolios, Start project, Templates workspace, Editor, Dashboard and Publish success all rendered
+without throwing. (`Settings` reads the saved appearance from `localStorage`, which does not exist in
+Node — that is the only page the harness could not render server-side.)
+
+**f. Manual checks on the dark build**
+
+* Landing hero fits one desktop screen at 1440×900: eyebrow, headline, supporting copy, two CTAs,
+  benefit row, 268 px circular portrait with a thin blue ring, and one subordinate browser-style
+  preview.
+* The portrait is an intentional placeholder (initial + role). No generated or stock face is used;
+  `PORTRAIT_SRC` takes a real photograph.
+* Marketing nav (Features / Templates / How It Works / Login / Build Your Portfolio) collapses into a
+  working mobile menu below `md`; the dashboard has its own mobile drawer.
+* Editor sections use a vertical rail on `sm+` and a scrolling pill row on phones; desktop, tablet and
+  mobile preview widths all render the real template.
+* No pricing, plan, billing or upgrade copy exists in the client (grep for
+  `premium|upgrade|pricing|billing|subscription` returns only an example project description).
+* Images use `object-fit: cover`, `loading="lazy"` below the fold, descriptive `alt` text and a
+  neutral fallback when a URL fails to load.
+
+`docs/screenshots/` still contains captures of the earlier light build; the numbers above are from
+the current dark tree.

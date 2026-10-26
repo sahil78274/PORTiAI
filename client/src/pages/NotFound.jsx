@@ -28,7 +28,7 @@ export default function NotFound() {
 
       <main id="main" className="flex flex-1 items-center">
         <div className="container-wide max-w-xl py-20">
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-line bg-white text-accent-hover">
+          <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-line bg-surface text-accent-hover">
             <Compass size={20} aria-hidden="true" />
           </span>
           <p className="mt-5 font-mono text-2xs uppercase tracking-[0.2em] text-faint">Error 404</p>
@@ -49,9 +49,9 @@ export default function NotFound() {
               <LayoutDashboard size={15} aria-hidden="true" />
               Dashboard
             </Link>
-            <Link to="/#faq" className="btn-ghost">
+            <Link to="/features" className="btn-ghost">
               <LifeBuoy size={15} aria-hidden="true" />
-              FAQ
+              What PortiAI does
             </Link>
           </div>
         </div>

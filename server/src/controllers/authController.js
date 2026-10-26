@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { Portfolio } from '../models/Portfolio.js';
+import { Upload } from '../models/Upload.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import {
@@ -108,6 +109,7 @@ export const deleteAccount = asyncHandler(async (req, res) => {
   if (!matches) throw ApiError.badRequest('Password is incorrect. Your account was not deleted.');
 
   await Portfolio.deleteMany({ userId: user._id });
+  await Upload.deleteMany({ userId: user._id });
   await User.deleteOne({ _id: user._id });
   clearSessionCookie(res);
 

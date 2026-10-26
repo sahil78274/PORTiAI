@@ -8,12 +8,9 @@ import {
   EyeOff,
   KeyRound,
   Loader2,
-  Monitor,
-  Moon,
   Palette,
   ShieldCheck,
   Sparkles,
-  Sun,
   Trash2,
   User,
 } from 'lucide-react';
@@ -29,12 +26,6 @@ const PASSWORD_RULES = [
   { label: 'At least 8 characters', test: (value) => value.length >= 8 },
   { label: 'Contains a letter', test: (value) => /[a-zA-Z]/.test(value) },
   { label: 'Contains a number', test: (value) => /[0-9]/.test(value) },
-];
-
-const THEMES = [
-  { id: 'light', label: 'Light (default)', description: 'The single dashboard theme in this build.', icon: Sun, available: true },
-  { id: 'dark', label: 'Dark', description: 'Not implemented — no dark dashboard theme ships today.', icon: Moon, available: false },
-  { id: 'system', label: 'Follow system', description: 'Needs a second theme to switch between, so it is disabled.', icon: Monitor, available: false },
 ];
 
 const NOTIFICATION_ROWS = [
@@ -58,7 +49,6 @@ export default function Settings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('portiai-theme') || 'light');
   const [notifications, setNotifications] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('portiai-notifications') || 'null') || Object.fromEntries(NOTIFICATION_ROWS.map((row) => [row.id, row.defaultOn]));
@@ -132,15 +122,6 @@ export default function Settings() {
     }
   };
 
-  const updateTheme = (id, available) => {
-    if (!available) {
-      toast.info('That theme is not available.', { description: 'This build ships with one light dashboard theme.' });
-      return;
-    }
-    setTheme(id);
-    localStorage.setItem('portiai-theme', id);
-    toast.success('Appearance preference saved.');
-  };
 
   const toggleNotification = (id) => {
     setNotifications((current) => ({ ...current, [id]: !current[id] }));
@@ -178,9 +159,9 @@ export default function Settings() {
       />
 
       {/* Profile */}
-      <form onSubmit={saveProfile} className="rounded-lg border border-line bg-white p-5">
+      <form onSubmit={saveProfile} className="rounded-lg border border-line bg-surface p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
             <User size={16} aria-hidden="true" />
           </span>
           <div>
@@ -243,9 +224,9 @@ export default function Settings() {
       </form>
 
       {/* Password */}
-      <form onSubmit={savePassword} className="rounded-lg border border-line bg-white p-5">
+      <form onSubmit={savePassword} className="rounded-lg border border-line bg-surface p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
             <KeyRound size={16} aria-hidden="true" />
           </span>
           <div>
@@ -323,43 +304,34 @@ export default function Settings() {
       </form>
 
       {/* Appearance */}
-      <div className="rounded-lg border border-line bg-white p-5">
+      <div className="rounded-lg border border-line bg-surface p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
             <Palette size={16} aria-hidden="true" />
           </span>
           <div>
             <h2 className="text-[14px] font-semibold text-ink">Appearance</h2>
-            <p className="mt-0.5 text-xs text-muted">PortiAI uses one light dashboard theme. Portfolio templates keep their own palettes, independent of this setting.</p>
+            <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted">
+              PortiAI uses a single dark interface, so there is no dashboard theme to choose. The look of your
+              public portfolio — template, accent colour, font and section order — is set per portfolio in the
+              editor.
+            </p>
           </div>
         </div>
-        <div className="mt-4 grid gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Dashboard theme">
-          {THEMES.map(({ id, label, description, icon: Icon, available }) => (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={theme === id}
-              onClick={() => updateTheme(id, available)}
-              className={`rounded-lg border p-3.5 text-left transition-colors ${
-                theme === id ? 'border-accent-line bg-accent-soft' : 'border-line bg-canvas hover:border-lineStrong'
-              } ${available ? '' : 'opacity-70'}`}
-            >
-              <span className="flex items-center justify-between">
-                <Icon size={15} className={theme === id ? 'text-accent-hover' : 'text-faint'} aria-hidden="true" />
-                {!available ? <span className="badge !py-0 text-[9px]">Soon</span> : theme === id ? <Check size={13} className="text-accent-hover" aria-hidden="true" /> : null}
-              </span>
-              <p className="mt-2 text-xs font-semibold text-ink">{label}</p>
-              <p className="mt-0.5 text-[10px] leading-relaxed text-muted">{description}</p>
-            </button>
-          ))}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Link to="/dashboard/templates" className="btn-secondary btn-sm">
+            Browse templates
+          </Link>
+          <Link to="/dashboard/portfolios" className="btn-ghost btn-sm">
+            Open a portfolio to change its design
+          </Link>
         </div>
       </div>
 
       {/* Notifications */}
-      <div className="rounded-lg border border-line bg-white p-5">
+      <div className="rounded-lg border border-line bg-surface p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
             <Bell size={16} aria-hidden="true" />
           </span>
           <div>
@@ -388,7 +360,7 @@ export default function Settings() {
                 }`}
               >
                 <span
-                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow transition-transform ${
                     notifications[row.id] ? 'translate-x-[18px]' : 'translate-x-0.5'
                   }`}
                 />

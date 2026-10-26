@@ -57,7 +57,7 @@ export default function Login() {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-white p-6 sm:p-7">
+    <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
       <div className="mb-7">
         <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-canvasAlt text-accent-hover">
           <LockKeyhole size={18} aria-hidden="true" />
@@ -114,7 +114,7 @@ export default function Login() {
 
       <p className="mt-6 border-t border-line pt-5 text-center text-sm text-muted">
         New to PortiAI?{' '}
-        <Link to="/register" className="font-semibold text-accent-hover hover:underline">
+        <Link to="/signup" className="font-semibold text-accent-hover hover:underline">
           Create an account
         </Link>
       </p>

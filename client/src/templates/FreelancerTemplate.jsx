@@ -1,4 +1,4 @@
-import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, projectImage, formatDate } from './shared.jsx';
+import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, projectImage, formatDate, Avatar } from './shared.jsx';
 
 /**
  * Modern Freelancer — split introduction, selected work grid, capabilities,
@@ -12,6 +12,7 @@ export default function FreelancerTemplate({ portfolio, blogHref }) {
   const has = (id) => sections.some((section) => section.id === id);
   const experience = sections.find((section) => section.id === 'experience');
   const about = sections.find((section) => section.id === 'about');
+  const firstName = (profile.fullName || '').trim().split(/\s+/)[0];
 
   if (!sections.length) return <EmptyTemplateNotice className="bg-white text-neutral-700" />;
 
@@ -21,63 +22,47 @@ export default function FreelancerTemplate({ portfolio, blogHref }) {
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-6 py-4">
           <span className="text-[14px] font-semibold tracking-tight">{profile.fullName || 'Freelance'}</span>
           <nav aria-label="Sections" className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px] text-[#5d676e]">
-            {has('projects') ? <a href="#work" className="hover:text-[var(--accent)]">Work</a> : null}
-            {has('skills') ? <a href="#capabilities" className="hover:text-[var(--accent)]">Capabilities</a> : null}
-            {has('experience') ? <a href="#experience" className="hover:text-[var(--accent)]">Background</a> : null}
+            <a href="#top" className="hover:text-[var(--accent)]">Home</a>
+            {about ? <a href="#about" className="hover:text-[var(--accent)]">About</a> : null}
+            {has('projects') ? <a href="#work" className="hover:text-[var(--accent)]">Projects</a> : null}
             <BlogLink href={blogHref} className="text-[13px]" />
-            {has('contact') ? (
-              <a href="#contact" className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-[12px] font-medium text-white">
-                Get in touch
-              </a>
-            ) : null}
+            {has('contact') ? <a href="#contact" className="hover:text-[var(--accent)]">Contact</a> : null}
           </nav>
         </div>
       </header>
 
       <section className="border-b border-[#e7e8e4] bg-[#f6f7f5]">
-        <div className="mx-auto grid max-w-4xl gap-8 px-6 py-14 sm:grid-cols-[1.3fr_1fr] sm:items-start">
+        <div className="mx-auto grid max-w-4xl gap-8 px-6 py-12 sm:grid-cols-[auto_1fr] sm:items-center">
+          <div className="justify-self-start">
+            <Avatar
+              portfolio={portfolio}
+              size={168}
+              className="border-[#dfe2dc] shadow-[0_0_0_6px_rgba(255,255,255,0.9)]"
+            />
+          </div>
           <div>
-            <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#6b757b]">{profile.title || 'Freelancer'}</p>
-            <h1 className="mt-3 text-[36px] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[44px]">
-              {profile.fullName || 'Your name'}
+            <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-[#6b757b]">
+              {profile.title || 'Freelancer'}
+            </p>
+            <h1 className="mt-2 text-[30px] font-semibold leading-[1.14] tracking-[-0.025em] sm:text-[38px]">
+              Hi, I&apos;m {firstName || profile.fullName || 'your name'}
             </h1>
-            {profile.summary ? <p className="mt-4 max-w-xl text-[15px] leading-7 text-[#3e484f]">{profile.summary}</p> : null}
-            <div className="mt-6 flex flex-wrap items-center gap-2.5">
-              {profile.contactEmail ? (
-                <a href={`mailto:${profile.contactEmail}`} className="rounded-md bg-[var(--accent)] px-3.5 py-2 text-[13px] font-medium text-white">
-                  Start a project
+            {profile.summary ? <p className="mt-3 max-w-xl text-[15px] leading-7 text-[#3e484f]">{profile.summary}</p> : null}
+            <div className="mt-5 flex flex-wrap items-center gap-2.5">
+              {has('projects') ? (
+                <a href="#work" className="rounded-md bg-[var(--accent)] px-3.5 py-2 text-[13px] font-medium text-white">
+                  View Projects
                 </a>
               ) : null}
-              {has('projects') ? (
-                <a href="#work" className="rounded-md border border-[#d5d8d3] bg-white px-3.5 py-2 text-[13px] font-medium text-[#29333a]">
-                  View selected work
+              {has('contact') ? (
+                <a href="#contact" className="rounded-md border border-[#d5d8d3] bg-white px-3.5 py-2 text-[13px] font-medium text-[#29333a]">
+                  Contact Me
                 </a>
               ) : null}
             </div>
-          </div>
-          <div className="rounded-lg border border-[#e0e2dd] bg-white p-5">
-            <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#6b757b]">Details</p>
-            <dl className="mt-3 space-y-3 text-[13px]">
-              {profile.location ? (
-                <div>
-                  <dt className="text-[#6b757b]">Based in</dt>
-                  <dd className="text-[#29333a]">{profile.location}</dd>
-                </div>
-              ) : null}
-              {technical.length ? (
-                <div>
-                  <dt className="text-[#6b757b]">Working with</dt>
-                  <dd className="text-[#29333a]">{technical.slice(0, 5).map((skill) => skill.name).join(', ')}</dd>
-                </div>
-              ) : null}
-              <div>
-                <dt className="text-[#6b757b]">Availability</dt>
-                <dd className="text-[#29333a]">Open to new projects</dd>
-              </div>
-            </dl>
-            <div className="mt-4 border-t border-[#eceee9] pt-3">
-              <SocialLinks portfolio={portfolio} className="text-[12px] text-[#5d676e]" compact />
-              <ContactDetails portfolio={portfolio} className="mt-2 text-[12px] text-[#5d676e]" />
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-[#5d676e]">
+              {profile.location ? <span>{profile.location}</span> : null}
+              <SocialLinks portfolio={portfolio} compact />
             </div>
           </div>
         </div>

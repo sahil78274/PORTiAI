@@ -16,7 +16,7 @@ export const Tooltip = ({ label, children, side = 'top' }) => {
       {children}
       <span
         role="tooltip"
-        className={`pointer-events-none absolute z-50 hidden whitespace-nowrap rounded border border-lineStrong bg-white px-2 py-1 text-[10px] font-medium text-inkSoft shadow-raised group-hover:block group-focus-within:block ${positions[side]}`}
+        className={`pointer-events-none absolute z-50 hidden whitespace-nowrap rounded border border-lineStrong bg-surface px-2 py-1 text-[10px] font-medium text-inkSoft shadow-raised group-hover:block group-focus-within:block ${positions[side]}`}
       >
         {label}
       </span>
@@ -38,8 +38,8 @@ export const SectionHeading = ({ eyebrow, title, description, align = 'left', cl
 
 /* -------------------------------------------------- Stat card -------------------------------------------------- */
 const TONES = {
-  indigo: 'text-accent',
-  violet: 'text-[#7c5a3c]',
+  indigo: 'text-accent-hover',
+  violet: 'text-[#a78bfa]',
   emerald: 'text-success',
   amber: 'text-warning',
 };
@@ -151,7 +151,7 @@ export const Dropdown = ({ trigger, children, align = 'right', className = '' })
       {open ? (
         <div
           role="menu"
-          className={`absolute z-40 mt-2 min-w-[190px] overflow-hidden rounded-lg border border-lineStrong bg-white py-1 shadow-float animate-fadeIn ${
+          className={`absolute z-40 mt-2 min-w-[190px] overflow-hidden rounded-lg border border-lineStrong bg-surface py-1 shadow-float animate-fadeIn ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
           onClick={() => setOpen(false)}

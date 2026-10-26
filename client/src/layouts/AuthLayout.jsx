@@ -13,42 +13,47 @@ export default function AuthLayout() {
     <div className="min-h-screen bg-canvas">
       <a
         href="#auth-form"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:text-ink focus:shadow-raised"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink focus:shadow-raised"
       >
         Skip to form
       </a>
 
       <div className="grid min-h-screen lg:grid-cols-[0.9fr_1fr]">
         {/* Brand panel */}
-        <aside className="hidden border-r border-line bg-[#16233b] px-10 py-9 lg:flex lg:flex-col lg:justify-between">
-          <Link to="/" aria-label="PortiAI home" className="text-white">
+        <aside className="hidden border-r border-line bg-surface px-10 py-9 lg:flex lg:flex-col lg:justify-between">
+          <Link to="/" aria-label="PortiAI home" >
             <Logo size="lg" tone="light" />
           </Link>
 
           <div className="max-w-md">
-            <h1 className="text-[30px] font-semibold leading-[1.2] tracking-[-0.02em] text-white">
-              A portfolio that shows your work properly.
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-hover">
+              Portfolio builder
+            </p>
+            <h1 className="mt-3 text-[30px] font-semibold leading-[1.15] tracking-[-0.025em] text-ink">
+              Create. Customize.
+              <br />
+              Publish.
             </h1>
-            <p className="mt-3 text-[14px] leading-6 text-white/65">
-              PortiAI is a portfolio builder for developers, designers, students and freelancers. Pick a layout, add your
-              details, publish when it is ready.
+            <p className="mt-3 text-[14px] leading-6 text-muted">
+              Build a portfolio that opens doors to new opportunities. Six layouts, a live editor and a public link you
+              can share in minutes.
             </p>
 
             <ul className="mt-7 space-y-2.5">
               {POINTS.map((point) => (
-                <li key={point} className="flex items-start gap-2.5 text-[13px] leading-6 text-white/70">
-                  <Check size={14} className="mt-1 shrink-0 text-white/50" aria-hidden="true" />
+                <li key={point} className="flex items-start gap-2.5 text-[13px] leading-6 text-muted">
+                  <Check size={14} className="mt-1 shrink-0 text-faint" aria-hidden="true" />
                   {point}
                 </li>
               ))}
             </ul>
           </div>
 
-          <p className="text-[12px] text-white/40">© {new Date().getFullYear()} PortiAI</p>
+          <p className="text-[12px] text-faint">© {new Date().getFullYear()} PortiAI</p>
         </aside>
 
         {/* Form panel */}
-        <main id="auth-form" className="flex flex-col bg-white">
+        <main id="auth-form" className="flex flex-col bg-canvas">
           <header className="flex items-center justify-between px-5 py-5 sm:px-8">
             <div className="lg:hidden">
               <Logo />

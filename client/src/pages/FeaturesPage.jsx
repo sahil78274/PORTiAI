@@ -61,7 +61,7 @@ export default function FeaturesPage() {
             does not do.
           </p>
           <div className="mt-6 flex flex-wrap gap-2.5">
-            <Link to="/register" className="btn-primary">
+            <Link to="/signup" className="btn-primary">
               Create an account
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
@@ -72,12 +72,12 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <section className="border-b border-line bg-white">
+      <section className="border-b border-line bg-surface">
         <div className="container-wide py-14">
           <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body, points }) => (
               <div key={title}>
-                <span className="flex h-8 w-8 items-center justify-center rounded-md border border-line bg-canvas text-accent">
+                <span className="flex h-8 w-8 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
                   <Icon size={16} aria-hidden="true" />
                 </span>
                 <h2 className="mt-3 text-[15px] font-semibold">{title}</h2>
@@ -85,7 +85,7 @@ export default function FeaturesPage() {
                 <ul className="mt-3 space-y-1.5 border-t border-line pt-3">
                   {points.map((point) => (
                     <li key={point} className="flex items-start gap-2 text-[12px] text-inkSoft">
-                      <Check size={12} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+                      <Check size={12} className="mt-0.5 shrink-0 text-accent-hover" aria-hidden="true" />
                       {point}
                     </li>
                   ))}
@@ -119,7 +119,7 @@ export default function FeaturesPage() {
             </ul>
           </div>
 
-          <div className="rounded-lg border border-line bg-white p-5">
+          <div className="rounded-lg border border-line bg-surface p-5">
             <h2 className="text-[15px] font-semibold">Not implemented</h2>
             <p className="mt-1.5 text-[13px] leading-6 text-muted">
               These are absent rather than mocked. The interface says so where relevant.

@@ -19,7 +19,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-white p-6 sm:p-7">
+    <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
       <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-warning/25 bg-warningSoft text-warning">
         <KeyRound size={18} aria-hidden="true" />
       </span>
@@ -87,7 +87,7 @@ export default function ForgotPassword() {
         <Link to="/login" className="btn-secondary btn-sm">
           Back to sign in
         </Link>
-        <Link to="/register" className="btn-ghost btn-sm">
+        <Link to="/signup" className="btn-ghost btn-sm">
           Create a new account
         </Link>
       </div>

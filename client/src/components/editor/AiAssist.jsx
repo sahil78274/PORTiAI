@@ -71,9 +71,9 @@ export default function AiAssist({
           onClick={run}
           loading={state === 'loading'}
           disabled={state === 'loading'}
-          className="border-lineStrong text-accent hover:bg-canvasAlt"
+          className="border-lineStrong text-accent-hover hover:bg-canvasAlt"
         >
-          {state === 'loading' ? null : <Sparkles size={13} className="text-accent" aria-hidden="true" />}
+          {state === 'loading' ? null : <Sparkles size={13} className="text-accent-hover" aria-hidden="true" />}
           <span>{state === 'loading' ? 'Generating…' : label}</span>
         </Button>
 
@@ -83,7 +83,7 @@ export default function AiAssist({
             value={tone}
             onChange={(event) => setTone(event.target.value)}
             aria-label="Tone for generated text"
-            className="rounded border border-line bg-white px-2 py-1 text-[11px] text-inkSoft shadow-2xs focus:border-accent focus:outline-none"
+            className="rounded border border-line bg-surface px-2 py-1 text-[11px] text-inkSoft shadow-2xs focus:border-accent focus:outline-none"
           >
             <option value="professional">Professional</option>
             <option value="concise">Concise</option>
@@ -117,7 +117,7 @@ export default function AiAssist({
       ) : null}
 
       {state === 'ready' && result ? (
-        <div className="mt-3 rounded-md border border-line bg-white p-3.5">
+        <div className="mt-3 rounded-md border border-line bg-surface p-3.5">
           <div className="flex items-center justify-between gap-2 border-b border-line pb-2 mb-2">
             <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-accent-hover">
               <Wand2 size={12} aria-hidden="true" />
@@ -146,7 +146,7 @@ export default function AiAssist({
               value={edited}
               onChange={(event) => setEdited(event.target.value)}
               rows={5}
-              className="mt-1 bg-white text-xs leading-relaxed"
+              className="mt-1 bg-surface text-xs leading-relaxed"
               aria-label="Generated text (editable)"
             />
           )}

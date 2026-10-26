@@ -93,7 +93,7 @@ const ALERT_STYLES = {
   info: {
     container: 'border-accent-line/80 bg-accent-soft/80 text-ink',
     icon: Info,
-    iconColor: 'text-accent',
+    iconColor: 'text-accent-hover',
   },
   success: {
     container: 'border-success/30 bg-successSoft text-success',
@@ -137,7 +137,7 @@ export const Alert = ({ tone = 'info', title, children, className = '', actions 
 
 export const Spinner = ({ label = 'Loading', size = 15, className = '' }) => (
   <span role="status" className={`inline-flex items-center gap-2 text-xs font-medium text-muted ${className}`}>
-    <Loader2 size={size} className="animate-spin text-accent" aria-hidden="true" />
+    <Loader2 size={size} className="animate-spin text-accent-hover" aria-hidden="true" />
     <span>{label}</span>
   </span>
 );
@@ -148,10 +148,10 @@ export const Skeleton = ({ className = '' }) => (
 
 export const EmptyState = ({ icon: Icon, title, description, action, className = '' }) => (
   <div
-    className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-lineStrong/80 bg-white px-6 py-14 text-center ${className}`}
+    className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-lineStrong/80 bg-surface px-6 py-14 text-center ${className}`}
   >
     {Icon ? (
-      <span className="mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent ring-1 ring-accent-line/60">
+      <span className="mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-hover ring-1 ring-accent-line/60">
         <Icon size={22} aria-hidden="true" />
       </span>
     ) : null}
@@ -203,12 +203,12 @@ export const ScoreRing = ({ score, size = 132, label = 'Overall score' }) => {
   const radius = size / 2 - strokeWidth;
   const circumference = 2 * Math.PI * radius;
   const dash = (Math.max(0, Math.min(100, score)) / 100) * circumference;
-  const tone = score >= 85 ? '#059669' : score >= 70 ? '#4f46e5' : score >= 55 ? '#d97706' : '#dc2626';
+  const tone = score >= 85 ? '#34d399' : score >= 70 ? '#60a5fa' : score >= 55 ? '#fbbf24' : '#f87171';
 
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} role="img" aria-label={`${label}: ${score} out of 100`} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#1c2745" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#1e2a42" strokeWidth={strokeWidth} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -254,7 +254,7 @@ export const Switch = ({ checked, onChange, label, description, id }) => {
         }`}
       >
         <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200 ease-out ${
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-xs transition-transform duration-200 ease-out ${
             checked ? 'left-[18px]' : 'left-0.5'
           }`}
         />

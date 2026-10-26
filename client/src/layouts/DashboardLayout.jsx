@@ -132,7 +132,7 @@ export default function DashboardLayout() {
           title={collapsed ? label : undefined}
           className={({ isActive }) =>
             `flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors ${
-              isActive ? 'bg-accent-soft text-accent-hover' : 'text-muted hover:bg-canvasAlt hover:text-ink'
+              isActive ? 'bg-accent text-white' : 'text-muted hover:bg-surfaceRaised hover:text-ink'
             } ${collapsed ? 'lg:justify-center lg:px-0' : ''}`
           }
         >
@@ -147,7 +147,7 @@ export default function DashboardLayout() {
     <div className="min-h-screen bg-canvas">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:text-ink focus:shadow-raised"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink focus:shadow-raised"
       >
         Skip to content
       </a>
@@ -157,7 +157,7 @@ export default function DashboardLayout() {
       ) : null}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-line bg-white transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-line bg-surface transition-transform duration-200 lg:translate-x-0 ${
           collapsed ? 'lg:w-[68px]' : ''
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
@@ -212,7 +212,7 @@ export default function DashboardLayout() {
           <button
             type="button"
             onClick={() => setCollapsed((value) => !value)}
-            className={`hidden w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium text-faint transition-colors hover:bg-canvasAlt hover:text-ink lg:flex ${
+            className={`hidden w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium text-faint transition-colors hover:bg-surfaceRaised hover:text-ink lg:flex ${
               collapsed ? 'justify-center px-0' : ''
             }`}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -224,7 +224,7 @@ export default function DashboardLayout() {
       </aside>
 
       <div className={`flex min-h-screen flex-col transition-[padding] duration-200 ${collapsed ? 'lg:pl-[68px]' : 'lg:pl-[248px]'}`}>
-        <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur">
           <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
             <button
               type="button"
@@ -260,11 +260,11 @@ export default function DashboardLayout() {
               <button
                 type="button"
                 onClick={() => setProfileOpen((value) => !value)}
-                className="flex items-center gap-1.5 rounded-md border border-line bg-white py-1 pl-1 pr-1.5 transition-colors hover:bg-canvasAlt"
+                className="flex items-center gap-1.5 rounded-md border border-line bg-surfaceRaised/60 py-1 pl-1 pr-1.5 transition-colors hover:border-lineStrong"
                 aria-expanded={profileOpen}
                 aria-label="Account menu"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#16233b] text-[10px] font-semibold text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white">
                   {initials(user?.name)}
                 </span>
                 <span className="hidden max-w-[110px] truncate text-[12px] font-medium text-ink sm:block">{user?.name}</span>
@@ -272,21 +272,21 @@ export default function DashboardLayout() {
               </button>
 
               {profileOpen ? (
-                <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-lg border border-line bg-white shadow-float animate-fadeIn">
+                <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-lg border border-line bg-surface shadow-float animate-fadeIn">
                   <div className="border-b border-line px-3 py-2.5">
                     <p className="truncate text-[13px] font-medium text-ink">{user?.name}</p>
                     <p className="truncate text-[11px] text-muted">{user?.email}</p>
                   </div>
                   <div className="p-1">
-                    <NavLink to="/dashboard/settings" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-canvasAlt hover:text-ink">
+                    <NavLink to="/dashboard/settings" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
                       <CircleUserRound size={13} aria-hidden="true" />
                       Profile &amp; settings
                     </NavLink>
-                    <NavLink to="/dashboard/portfolios" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-canvasAlt hover:text-ink">
+                    <NavLink to="/dashboard/portfolios" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
                       <FolderOpen size={13} aria-hidden="true" />
                       My portfolios
                     </NavLink>
-                    <a href="/" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-canvasAlt hover:text-ink">
+                    <a href="/" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
                       <ExternalLink size={13} aria-hidden="true" />
                       Public site
                     </a>

@@ -3,10 +3,10 @@
 A full-stack MERN application. Users sign up, draft a portfolio through an AI conversation (or pick one
 of six templates), refine it in a live editor with device previews, review it against a documented
 rubric, optionally run a Website analyzer on any live page, write Markdown blog posts, and publish at a
-public link such as `/p/aarav-mehta`.
+public link such as `/p/farheen`.
 
 The application is complete: real authentication, real MongoDB persistence, six genuinely different
-templates on a restrained light design system, a conversational AI builder backed by a validated server
+templates on a dark navy design system, a conversational AI builder backed by a validated server
 endpoint, server-side AI with graceful quota handling, a deterministic analyzer that works without AI,
 blog publishing, a deterministic website scanner, and public publishing with ownership checks enforced
 in the backend. There is no subscription, plan or payment interface anywhere in the product.
@@ -17,7 +17,7 @@ in the backend. There is no subscription, plan or payment interface anywhere in 
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Design system | Done | Off-white canvas (`#f7f7f5`), charcoal type, a single muted blue accent (`#2563eb`) reserved for primary actions and selected states, navy `#16233b` for dark panels, Inter throughout, Lucide icons only, small radii, responsive and accessible |
+| Design system | Done | Deep navy canvas (`#0a1020`), lighter navy cards (`#111a2b`) with blue-gray borders (`#1e2a42`), soft gray-blue text, a single vivid blue accent (`#2f6bff`) reserved for primary actions and selected states, Inter throughout, Lucide icons only, small radii, no decorative gradients, responsive and accessible |
 | Landing page at `/` | Done | Sticky nav (logo, Features, Templates, How It Works, Login, primary CTA), hero with a reserved portrait area, How it works, Made for your work, Explore templates (six live previews), Useful features, final CTA, footer. No pricing, testimonials or invented statistics |
 | Public pages | Done | `/features`, `/templates`, `/privacy`, `/terms`, `*` not-found |
 | Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation. Email/password only — no OAuth buttons are shown |
@@ -192,6 +192,21 @@ USE_LOCAL_MONGO=0
 
 Generate a secret with `openssl rand -base64 48`. The server refuses to start in production with a
 missing or short `SESSION_SECRET`.
+
+**Sample data for screenshots and demos**
+
+`server/scripts/seed-demo.mjs` creates the `Farheen` sample: a published portfolio at `/p/farheen`
+plus three published blog posts. It is idempotent and prints the demo credentials when it finishes.
+
+```bash
+cd server
+MONGODB_URI=mongodb://127.0.0.1:27017/portiai node scripts/seed-demo.mjs
+# account: farheen@example.com / FarheenDemo123
+```
+
+The landing-page portrait is a deliberate placeholder (initial + role, no generated face). To show a
+real photograph, drop the file in `client/public/` and point `PORTRAIT_SRC` in
+`client/src/components/marketing/HeroPortrait.jsx` at it.
 
 ### 4.3 Frontend
 
@@ -402,8 +417,10 @@ troubleshooting) are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Short versio
   probability, an ATS ranking, or a prediction of career outcomes, and nothing in the UI implies that.
 * Free hosting may sleep after inactivity, so the first API request can take several seconds.
 * No email delivery: password reset by email is not implemented (see `/forgot-password`).
-* Uploaded images are referenced by URL (https); there is no file upload or image storage.
-* Demo content on the marketing pages (the "Aarav Mehta" sample) is clearly labelled sample data.
+* Profile photos can be uploaded (`POST /api/uploads`, PNG/JPEG/WebP, resized to 512 px in the
+  browser, stored in MongoDB capped at 500 KB) or referenced by an https URL. There is no CDN or
+  object storage, and an account can keep 30 stored images.
+* Demo content on the marketing pages (the "Farheen" sample) is clearly labelled sample data.
   There are no fabricated testimonials, customer logos or usage statistics anywhere in the app.
 
 ---

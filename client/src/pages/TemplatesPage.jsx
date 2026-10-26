@@ -11,7 +11,7 @@ export default function TemplatesPage() {
     <div>
       <section className="border-b border-line">
         <div className="container-wide py-14">
-          <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted">Templates</p>
+          <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-accent-hover">Templates</p>
           <h1 className="mt-3 max-w-2xl text-balance text-[32px] font-semibold leading-[1.15] tracking-[-0.03em] sm:text-[40px]">
             Six portfolio layouts, each built for a different kind of work.
           </h1>
@@ -22,13 +22,13 @@ export default function TemplatesPage() {
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-muted">
             {['Live previews with sample content', 'Responsive by default', 'Accent, font and spacing controls'].map((item) => (
               <span key={item} className="inline-flex items-center gap-1.5">
-                <Check size={13} className="text-accent" aria-hidden="true" />
+                <Check size={13} className="text-accent-hover" aria-hidden="true" />
                 {item}
               </span>
             ))}
           </div>
           <div className="mt-6 flex flex-wrap gap-2.5">
-            <Link to={user ? '/dashboard/builder' : '/register'} className="btn-primary">
+            <Link to={user ? '/dashboard/builder' : '/signup'} className="btn-primary">
               {user ? 'Start a portfolio' : 'Create an account'}
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
@@ -45,7 +45,7 @@ export default function TemplatesPage() {
         <TemplateGallery mode="marketing" />
       </section>
 
-      <section className="border-t border-line bg-white">
+      <section className="border-t border-line bg-surface">
         <div className="container-wide py-12">
           <h2 className="text-[20px] font-semibold tracking-[-0.02em]">What changes between templates</h2>
           <p className="mt-2 max-w-2xl text-[14px] leading-7 text-muted">
@@ -62,7 +62,7 @@ export default function TemplatesPage() {
                   <th scope="col" className="px-4 py-2.5 font-semibold">Best for</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line bg-white">
+              <tbody className="divide-y divide-line bg-surface">
                 {TEMPLATES.map((template) => (
                   <tr key={template.id}>
                     <th scope="row" className="whitespace-nowrap px-4 py-3 text-left font-medium">{template.name}</th>

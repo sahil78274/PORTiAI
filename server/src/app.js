@@ -12,6 +12,7 @@ import aiRoutes from './routes/aiRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import analyzeRoutes from './routes/analyzeRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import { isAiEnabled } from './services/geminiService.js';
 
 export const createApp = () => {
@@ -77,6 +78,7 @@ export const createApp = () => {
   app.use('/api/public', publicRoutes);
   app.use('/api/blog', blogRoutes);
   app.use('/api/analyze', analyzeRoutes);
+  app.use('/api/uploads', uploadRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

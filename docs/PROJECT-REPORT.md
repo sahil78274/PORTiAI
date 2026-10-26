@@ -116,9 +116,23 @@ MongoDB (users, portfolios, ai usages)
 | `analysis` | Object | score, grade, categories, issues, recommendations, examples, source, model, contentHash, generatedAt |
 | `createdAt`, `updatedAt` | Date | timestamps |
 
+### `uploads`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `userId` | ObjectId → users | owner, indexed; deleted with the account |
+| `mimeType` | String | `image/png`, `image/jpeg` or `image/webp`, verified by file signature |
+| `size` | Number | decoded bytes, capped at 500 KB |
+| `data` | Buffer | image bytes (`select: false` unless explicitly requested) |
+| `createdAt`, `updatedAt` | Date | timestamps |
+
+Profile photographs are downscaled to 512 px in the browser before upload and served from
+`GET /api/uploads/:id` with an immutable cache header. Read access is public because the image appears
+on published portfolio pages; writes require a session, and a portfolio can only store a URL.
+
 Indexes: `users.email` unique; `portfolios.slug` unique (partial, string only);
 `portfolios { userId, updatedAt }`; `{ userId, published }`; `{ published, slug }`;
-`aiusages { userId, day }` unique.
+`uploads { userId, createdAt }`; `aiusages { userId, day }` unique.
 
 ### Why the analysis is stored with a hash
 

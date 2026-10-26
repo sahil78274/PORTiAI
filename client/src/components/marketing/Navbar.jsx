@@ -44,7 +44,7 @@ export default function Navbar() {
   return (
     <header
       className={`sticky top-0 z-40 border-b transition-colors duration-200 ${
-        scrolled ? 'border-line bg-white/95 backdrop-blur' : 'border-transparent bg-canvas'
+        scrolled ? 'border-line bg-canvas/90 backdrop-blur' : 'border-transparent bg-canvas'
       }`}
     >
       <div className="container-wide flex h-14 items-center justify-between gap-4">
@@ -77,7 +77,7 @@ export default function Navbar() {
               <Link to="/login" className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted transition-colors hover:text-ink">
                 Login
               </Link>
-              <Link to="/register" className="btn-primary btn-sm">
+              <Link to="/signup" className="btn-primary btn-sm">
                 Build Your Portfolio
               </Link>
             </>
@@ -97,7 +97,7 @@ export default function Navbar() {
       </div>
 
       {open ? (
-        <div id="mobile-nav" className="border-t border-line bg-white px-4 py-3 md:hidden">
+        <div id="mobile-nav" className="border-t border-line bg-surface px-4 py-3 md:hidden">
           <nav aria-label="Mobile" className="flex flex-col">
             {LINKS.map((link) => (
               <a
@@ -119,7 +119,7 @@ export default function Navbar() {
                   <Link to="/login" className="btn-secondary w-full justify-center">
                     Login
                   </Link>
-                  <Link to="/register" className="btn-primary w-full justify-center">
+                  <Link to="/signup" className="btn-primary w-full justify-center">
                     Build your portfolio
                   </Link>
                 </>

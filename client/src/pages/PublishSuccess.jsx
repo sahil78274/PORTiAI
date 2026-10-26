@@ -147,7 +147,7 @@ export default function PublishSuccess() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="relative overflow-hidden rounded-lg border border-line bg-white p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-lg border border-line bg-surface p-6 sm:p-8">
 
         <div className="relative text-center">
           <span
@@ -260,7 +260,7 @@ export default function PublishSuccess() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <div className="rounded-lg border border-line bg-white p-4">
+        <div className="rounded-lg border border-line bg-surface p-4">
           <div className="flex items-center justify-between">
             <p className="text-[13px] font-semibold text-ink">Publish checklist</p>
             <span className="badge !py-0.5">{checklist.filter((item) => item.done).length}/{checklist.length} complete</span>
@@ -285,7 +285,7 @@ export default function PublishSuccess() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-lg border border-line bg-white p-4">
+          <div className="rounded-lg border border-line bg-surface p-4">
             <p className="text-[13px] font-semibold text-ink">Next steps</p>
             <ol className="mt-2.5 space-y-2.5 text-xs leading-relaxed text-muted">
               <li className="flex gap-2">
@@ -313,7 +313,7 @@ export default function PublishSuccess() {
               </button>
             </div>
           ) : (
-            <Link to={`/dashboard/portfolio/${id}/edit`} className="flex items-center justify-between rounded-lg border border-line bg-white p-4 transition-colors hover:border-lineStrong">
+            <Link to={`/dashboard/portfolio/${id}/edit`} className="flex items-center justify-between rounded-lg border border-line bg-surface p-4 transition-colors hover:border-lineStrong">
               <div>
                 <p className="text-[13px] font-semibold text-ink">Ready to go live?</p>
                 <p className="mt-0.5 text-[11px] text-muted">Open the editor and press Publish.</p>

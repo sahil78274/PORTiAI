@@ -71,7 +71,7 @@ export default function Register() {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-white p-6 sm:p-7">
+    <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
       <div className="mb-6">
         <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-canvasAlt text-accent-hover">
           <Sparkles size={18} aria-hidden="true" />
