@@ -71,7 +71,7 @@ export default function Modal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-[#050a14]/70 p-0 backdrop-blur-sm sm:items-center sm:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-[#1b2559]/25 p-0 sm:items-center sm:p-6 animate-fadeIn">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
@@ -79,17 +79,17 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-describedby={description ? 'modal-description' : undefined}
-        className={`relative z-10 w-full ${SIZES[size]} rounded-t-xl border border-line bg-surface shadow-float sm:rounded-xl`}
+        className={`relative z-10 w-full ${SIZES[size]} rounded-t-[24px] bg-surface shadow-neu-lg sm:rounded-[24px]`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5">
+        <div className="flex items-start justify-between gap-4 px-6 pb-3 pt-5">
           <div className="min-w-0">
             {title ? (
-              <h2 id="modal-title" className="text-[15px] font-semibold text-ink">
+              <h2 id="modal-title" className="text-[16px] font-semibold text-ink">
                 {title}
               </h2>
             ) : null}
             {description ? (
-              <p id="modal-description" className="mt-0.5 text-xs text-muted">
+              <p id="modal-description" className="mt-1 text-xs leading-5 text-muted">
                 {description}
               </p>
             ) : null}
@@ -97,15 +97,15 @@ export default function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost -mr-2 -mt-1 h-8 w-8 rounded-md p-0 text-muted hover:text-ink"
+            className="icon-btn -mr-1 h-8 w-8"
             aria-label={closeLabel}
           >
             <X size={16} aria-hidden="true" />
           </button>
         </div>
-        <div className="max-h-[72vh] overflow-y-auto px-5 py-4 scroll-slim">{children}</div>
+        <div className="max-h-[72vh] overflow-y-auto px-6 py-4 scroll-slim">{children}</div>
         {footer ? (
-          <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-line bg-canvasAlt/40 px-6 py-3.5 rounded-b-xl">
+          <div className="flex flex-wrap items-center justify-end gap-3 px-6 pb-5 pt-3">
             {footer}
           </div>
         ) : null}

@@ -27,6 +27,7 @@ import { portfolioService } from '../services/portfolioService.js';
 import useDebouncedValue from '../hooks/useDebouncedValue.js';
 import { formatDate, formatRelative } from '../utils/format.js';
 import { getTemplate } from '../utils/templates.js';
+import PortfolioThumb from '../components/dashboard/PortfolioThumb.jsx';
 
 const STATUS_FILTERS = [
   { id: 'all', label: 'All' },
@@ -40,40 +41,6 @@ const SORTS = [
   { value: 'title', label: 'Title A–Z' },
   { value: 'status', label: 'Published first' },
 ];
-
-const Thumbnail = ({ portfolio, large = false }) => {
-  const template = getTemplate(portfolio.templateId);
-  const accent = portfolio.accent || template.accent;
-  const light = template.tone === 'light';
-  return (
-    <div
-      className={`relative overflow-hidden rounded-lg border border-line ${large ? 'aspect-[16/10] w-full' : 'h-16 w-24 shrink-0'}`}
-      style={{ background: light ? '#ffffff' : '#14171c' }}
-      aria-hidden="true"
-    >
-      <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: accent }} />
-      <div className={`absolute ${large ? 'inset-5 space-y-2' : 'inset-2.5 space-y-1'}`}>
-        <div className={`${large ? 'h-2.5 w-24' : 'h-1.5 w-9'} rounded-full`} style={{ background: light ? '#111827' : '#ffffff', opacity: 0.85 }} />
-        <div className={`${large ? 'h-2 w-36' : 'h-1 w-12'} rounded-full`} style={{ background: accent }} />
-        <div className={`${large ? 'mt-4 grid grid-cols-3 gap-2' : 'mt-2 grid grid-cols-2 gap-1'}`}>
-          {[0, 1, 2].slice(0, large ? 3 : 2).map((index) => (
-            <div
-              key={index}
-              className={`${large ? 'h-12' : 'h-4'} rounded`}
-              style={{ background: light ? '#ffffff' : 'rgba(255,255,255,0.08)', border: `1px solid ${light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.1)'}` }}
-            />
-          ))}
-        </div>
-        <div className={`${large ? 'h-1.5 w-20' : 'h-1 w-8'} rounded-full`} style={{ background: light ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.16)' }} />
-      </div>
-      {large ? (
-        <span className="absolute bottom-2 right-2 rounded bg-black/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider" style={{ color: light ? '#00000088' : '#ffffff88' }}>
-          {template.name}
-        </span>
-      ) : null}
-    </div>
-  );
-};
 
 export default function MyPortfolios() {
   const toast = useToast();
@@ -214,7 +181,7 @@ export default function MyPortfolios() {
       />
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-2.5">
+      <div className="card flex flex-wrap items-center gap-3 p-3">
         <div className="relative min-w-[180px] flex-1">
           <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
@@ -223,27 +190,25 @@ export default function MyPortfolios() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by title, name or role…"
             aria-label="Search portfolios"
-            className="input h-9 py-1.5 pl-9 text-xs"
+            className="input h-10 py-1.5 pl-9 text-[13px]"
           />
         </div>
 
-        <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Status filter">
+        <div className="segmented" role="group" aria-label="Status filter">
           {STATUS_FILTERS.map((filter) => (
             <button
               key={filter.id}
               type="button"
               onClick={() => setStatus(filter.id)}
               aria-pressed={status === filter.id}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                status === filter.id ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'
-              }`}
+              className={`segmented-item ${status === filter.id ? 'segmented-item-active' : ''}`}
             >
               {filter.label}
             </button>
           ))}
         </div>
 
-        <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort portfolios" className="select h-9 w-auto py-1.5 text-xs">
+        <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort portfolios" className="select h-10 w-auto py-1.5 text-[13px]">
           {SORTS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -251,13 +216,13 @@ export default function MyPortfolios() {
           ))}
         </select>
 
-        <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Layout">
+        <div className="segmented" role="group" aria-label="Layout">
           <button
             type="button"
             onClick={() => setView('grid')}
             aria-pressed={view === 'grid'}
             aria-label="Grid view"
-            className={`rounded-md p-1.5 ${view === 'grid' ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
+            className={`segmented-item px-2 ${view === 'grid' ? 'segmented-item-active' : ''}`}
           >
             <LayoutGrid size={13} aria-hidden="true" />
           </button>
@@ -266,7 +231,7 @@ export default function MyPortfolios() {
             onClick={() => setView('list')}
             aria-pressed={view === 'list'}
             aria-label="List view"
-            className={`rounded-md p-1.5 ${view === 'list' ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
+            className={`segmented-item px-2 ${view === 'list' ? 'segmented-item-active' : ''}`}
           >
             <List size={13} aria-hidden="true" />
           </button>
@@ -274,7 +239,7 @@ export default function MyPortfolios() {
       </div>
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger/30 bg-dangerSoft px-4 py-3 text-[13px] text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-tile bg-dangerSoft shadow-neu-inset-xs px-4 py-3 text-[13px] text-danger">
           <span>{error}</span>
           <Button variant="secondary" size="sm" onClick={load}>
             Try again
@@ -283,9 +248,9 @@ export default function MyPortfolios() {
       ) : null}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((index) => (
-            <div key={index} className="rounded-lg border border-line bg-surface p-3">
+            <div key={index} className="card p-3">
               <div className="skeleton aspect-[16/10] w-full" />
               <div className="skeleton mt-4 h-4 w-32" />
               <div className="skeleton mt-2 h-3 w-48" />
@@ -328,13 +293,13 @@ export default function MyPortfolios() {
           }
         />
       ) : view === 'grid' ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {portfolios.map((portfolio) => (
-            <article key={portfolio.id} className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-colors hover:border-lineStrong">
+            <article key={portfolio.id} className="card-hover group flex flex-col p-3">
               <button type="button" onClick={() => openPreview(portfolio)} className="text-left" aria-label={`Preview ${portfolio.title}`}>
-                <Thumbnail portfolio={portfolio} large />
+                <PortfolioThumb portfolio={portfolio} />
               </button>
-              <div className="flex flex-1 flex-col p-3.5">
+              <div className="flex flex-1 flex-col px-1.5 pb-1 pt-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="block truncate text-sm font-semibold text-ink hover:text-accent-hover">
@@ -360,22 +325,22 @@ export default function MyPortfolios() {
                   ) : null}
                 </div>
 
-                <div className="mt-3 flex items-center gap-1.5 border-t border-line pt-3">
+                <div className="mt-4 flex items-center gap-1.5 border-t border-line pt-3.5">
                   <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="btn-secondary btn-sm flex-1 justify-center">
                     <Pencil size={12} aria-hidden="true" />
                     Edit
                   </Link>
-                  <button type="button" onClick={() => openPreview(portfolio)} className="btn-ghost btn-sm h-8 w-8 p-0" aria-label={`Preview ${portfolio.title}`} title="Preview">
+                  <button type="button" onClick={() => openPreview(portfolio)} className="icon-btn h-9 w-9" aria-label={`Preview ${portfolio.title}`} title="Preview">
                     <Eye size={14} aria-hidden="true" />
                   </button>
-                  <button type="button" onClick={() => share(portfolio)} className="btn-ghost btn-sm h-8 w-8 p-0" aria-label={`Share ${portfolio.title}`} title={portfolio.published ? 'Copy public link' : 'Publish to share'}>
+                  <button type="button" onClick={() => share(portfolio)} className="icon-btn h-9 w-9" aria-label={`Share ${portfolio.title}`} title={portfolio.published ? 'Copy public link' : 'Publish to share'}>
                     <Copy size={13} aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     onClick={() => duplicate(portfolio)}
                     disabled={busyId === portfolio.id}
-                    className="btn-ghost btn-sm h-8 w-8 p-0"
+                    className="icon-btn h-9 w-9"
                     aria-label={`Duplicate ${portfolio.title}`}
                     title="Duplicate"
                   >
@@ -384,7 +349,7 @@ export default function MyPortfolios() {
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(portfolio)}
-                    className="btn-ghost btn-sm h-8 w-8 p-0 text-danger/80 hover:bg-danger/10 hover:text-danger"
+                    className="icon-btn h-9 w-9 !text-danger"
                     aria-label={`Delete ${portfolio.title}`}
                     title="Delete"
                   >
@@ -396,11 +361,11 @@ export default function MyPortfolios() {
           ))}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-line bg-surface">
-          <ul className="divide-y divide-line">
+        <div className="card p-2">
+          <ul className="space-y-1">
             {portfolios.map((portfolio) => (
-              <li key={portfolio.id} className="flex flex-wrap items-center gap-3 p-3 transition-colors hover:bg-canvasAlt">
-                <Thumbnail portfolio={portfolio} />
+              <li key={portfolio.id} className="flex flex-wrap items-center gap-4 rounded-[16px] p-3 transition-shadow hover:shadow-neu-inset-xs">
+                <PortfolioThumb portfolio={portfolio} size="sm" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="truncate text-sm font-semibold text-ink hover:text-accent-hover">
@@ -413,7 +378,7 @@ export default function MyPortfolios() {
                     {portfolio.projectCount === 1 ? '' : 's'}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-1">
+                <div className="flex w-full items-center gap-1 sm:w-auto">
                   {portfolio.published && portfolio.slug ? (
                     <a href={`/p/${portfolio.slug}`} target="_blank" rel="noopener noreferrer" className="btn-ghost btn-sm" title="Open public page">
                       <ExternalLink size={13} aria-hidden="true" />
@@ -435,7 +400,7 @@ export default function MyPortfolios() {
                   <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="btn-secondary btn-sm">
                     Edit
                   </Link>
-                  <button type="button" onClick={() => setDeleteTarget(portfolio)} className="btn-ghost btn-sm text-danger/80 hover:bg-danger/10 hover:text-danger" title="Delete">
+                  <button type="button" onClick={() => setDeleteTarget(portfolio)} className="btn-ghost btn-sm !text-danger" title="Delete">
                     <Trash2 size={13} aria-hidden="true" />
                   </button>
                 </div>
@@ -446,7 +411,7 @@ export default function MyPortfolios() {
       )}
 
       {!loading && portfolios.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] text-faint">
+        <div className="panel flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 text-[12px] text-faint">
           <span className="inline-flex items-center gap-1.5">
             <Globe2 size={12} aria-hidden="true" />
             Published portfolios are readable by anyone with the link. Drafts return 404 publicly.
@@ -508,8 +473,8 @@ export default function MyPortfolios() {
             <Spinner label="Loading saved portfolio…" />
           </div>
         ) : previewData ? (
-          <div className="overflow-hidden rounded-lg border border-line bg-surface">
-            <div className="h-[60vh] overflow-y-auto">
+          <div className="rounded-[18px] bg-canvas p-2 shadow-neu-inset-sm">
+            <div className="h-[60vh] overflow-y-auto rounded-[12px] bg-white shadow-neu-xs scroll-slim">
               <PortfolioRenderer
                 portfolio={previewData}
                 blogHref={previewData.blog?.enabled && previewData.slug ? `/p/${previewData.slug}/blog` : undefined}

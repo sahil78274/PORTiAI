@@ -91,22 +91,22 @@ export const Select = forwardRef(function Select({ className = '', children, ...
 /* -------------------------------------------------- Feedback -------------------------------------------------- */
 const ALERT_STYLES = {
   info: {
-    container: 'border-accent-line/80 bg-accent-soft/80 text-ink',
+    container: 'bg-accent-soft text-ink',
     icon: Info,
     iconColor: 'text-accent-hover',
   },
   success: {
-    container: 'border-success/30 bg-successSoft text-success',
+    container: 'bg-successSoft text-success',
     icon: CheckCircle2,
     iconColor: 'text-success',
   },
   warning: {
-    container: 'border-warning/30 bg-warningSoft text-warning',
+    container: 'bg-canvas text-warning',
     icon: AlertTriangle,
     iconColor: 'text-warning',
   },
   error: {
-    container: 'border-danger/30 bg-dangerSoft text-danger',
+    container: 'bg-dangerSoft text-danger',
     icon: AlertCircle,
     iconColor: 'text-danger',
   },
@@ -119,13 +119,15 @@ export const Alert = ({ tone = 'info', title, children, className = '', actions 
   return (
     <div
       role={tone === 'error' ? 'alert' : 'status'}
-      className={`flex items-start gap-3 rounded-xl border p-3.5 text-sm ${style.container} ${className}`}
+      className={`flex items-start gap-3 rounded-tile p-4 text-sm shadow-neu-inset-sm ${style.container} ${className}`}
     >
-      <Icon size={16} className={`mt-0.5 shrink-0 ${style.iconColor}`} aria-hidden="true" />
+      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-surface shadow-neu-xs ${style.iconColor}`}>
+        <Icon size={15} aria-hidden="true" />
+      </span>
       <div className="min-w-0 flex-1">
-        {title ? <p className="font-semibold leading-snug">{title}</p> : null}
+        {title ? <p className="pt-1 font-semibold leading-snug">{title}</p> : null}
         {children ? (
-          <div className={`leading-relaxed ${title ? 'mt-1' : ''} ${tone === 'info' ? 'text-inkSoft' : ''}`}>
+          <div className={`leading-relaxed ${title ? 'mt-1' : 'pt-1'} ${tone === 'info' || tone === 'warning' ? 'text-inkSoft' : ''}`}>
             {children}
           </div>
         ) : null}
@@ -148,10 +150,10 @@ export const Skeleton = ({ className = '' }) => (
 
 export const EmptyState = ({ icon: Icon, title, description, action, className = '' }) => (
   <div
-    className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-lineStrong/80 bg-surface px-6 py-14 text-center ${className}`}
+    className={`flex flex-col items-center justify-center rounded-card bg-canvas px-6 py-14 text-center shadow-neu-inset ${className}`}
   >
     {Icon ? (
-      <span className="mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-hover ring-1 ring-accent-line/60">
+      <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] bg-surface text-accent-hover shadow-neu">
         <Icon size={22} aria-hidden="true" />
       </span>
     ) : null}
@@ -182,7 +184,7 @@ export const ProgressBar = ({ value, max = 100, className = '', tone = 'accent',
         </div>
       ) : null}
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-canvasAlt ring-1 ring-line/60"
+        className="h-2.5 w-full overflow-hidden rounded-full bg-canvas p-[2px] shadow-neu-inset-sm"
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -203,12 +205,12 @@ export const ScoreRing = ({ score, size = 132, label = 'Overall score' }) => {
   const radius = size / 2 - strokeWidth;
   const circumference = 2 * Math.PI * radius;
   const dash = (Math.max(0, Math.min(100, score)) / 100) * circumference;
-  const tone = score >= 85 ? '#34d399' : score >= 70 ? '#60a5fa' : score >= 55 ? '#fbbf24' : '#f87171';
+  const tone = score >= 85 ? '#0f9466' : score >= 70 ? '#635bff' : score >= 55 ? '#d18a12' : '#d6434a';
 
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <div className="relative inline-flex items-center justify-center rounded-full bg-surface shadow-neu" style={{ width: size, height: size }}>
       <svg width={size} height={size} role="img" aria-label={`${label}: ${score} out of 100`} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#1e2a42" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#d7ddee" strokeWidth={strokeWidth} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -221,7 +223,7 @@ export const ScoreRing = ({ score, size = 132, label = 'Overall score' }) => {
           className="transition-colors duration-700 ease-out"
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-[18%] flex flex-col items-center justify-center rounded-full bg-canvas shadow-neu-inset-sm">
         <span className="text-[28px] font-semibold tabular-nums tracking-tight text-ink">{score}</span>
         <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">of 100</span>
       </div>
@@ -249,13 +251,13 @@ export const Switch = ({ checked, onChange, label, description, id }) => {
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative mt-0.5 h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-          checked ? 'bg-accent' : 'bg-lineStrong'
+        className={`relative mt-0.5 h-6 w-11 shrink-0 cursor-pointer rounded-full shadow-neu-inset-sm transition-colors duration-200 ${
+          checked ? 'bg-accent' : 'bg-canvas'
         }`}
       >
         <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-xs transition-transform duration-200 ease-out ${
-            checked ? 'left-[18px]' : 'left-0.5'
+          className={`absolute top-[3px] h-[18px] w-[18px] rounded-full bg-surfaceHigh shadow-neu-xs transition-[left] duration-200 ease-out ${
+            checked ? 'left-[23px]' : 'left-[3px]'
           }`}
         />
       </button>
@@ -264,7 +266,7 @@ export const Switch = ({ checked, onChange, label, description, id }) => {
 };
 
 export const Tabs = ({ tabs, active, onChange, className = '', ariaLabel = 'Sections' }) => (
-  <div className={`flex flex-wrap gap-1 border-b border-line ${className}`} role="tablist" aria-label={ariaLabel}>
+  <div className={`segmented flex max-w-full flex-wrap ${className}`} role="tablist" aria-label={ariaLabel}>
     {tabs.map((tab) => {
       const isActive = tab.id === active;
       return (
@@ -274,18 +276,14 @@ export const Tabs = ({ tabs, active, onChange, className = '', ariaLabel = 'Sect
           type="button"
           aria-selected={isActive}
           onClick={() => onChange(tab.id)}
-          className={`-mb-px flex items-center gap-1.5 border-b-2 px-3.5 py-2 text-sm font-medium transition-colors duration-150 ${
-            isActive
-              ? 'border-accent-hover text-accent-hover font-semibold'
-              : 'border-transparent text-muted hover:border-lineStrong hover:text-ink'
-          }`}
+          className={`segmented-item px-3.5 py-2 text-[13px] ${isActive ? 'segmented-item-active font-semibold' : ''}`}
         >
           {tab.icon ? <tab.icon size={14} aria-hidden="true" /> : null}
           <span>{tab.label}</span>
           {tab.count !== undefined ? (
             <span
-              className={`rounded-full px-1.5 py-0.2 font-mono text-2xs ${
-                isActive ? 'bg-accent-soft text-accent-hover' : 'bg-canvasAlt text-muted'
+              className={`rounded-full px-1.5 font-mono text-2xs ${
+                isActive ? 'bg-accent-soft text-accent-hover' : 'bg-canvas text-muted shadow-neu-inset-xs'
               }`}
             >
               {tab.count}

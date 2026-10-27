@@ -48,7 +48,7 @@ export default function TemplatesWorkspace() {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="rounded-lg border border-line bg-surface p-3">
+            <div key={index} className="card p-3">
               <div className="skeleton aspect-[16/11] w-full" />
               <div className="skeleton mt-4 h-4 w-32" />
               <div className="skeleton mt-2 h-3 w-48" />

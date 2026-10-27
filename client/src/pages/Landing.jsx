@@ -1,4 +1,3 @@
-import FarheenPhoto from "../components/FarheenPhoto";
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -113,48 +112,105 @@ export default function Landing() {
   return (
     <div>
       {/* ---------------------------------------------------------------- Hero */}
-      <section className="hero-glow relative border-b border-line">
-        <div className="container-wide grid items-center gap-10 py-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(220px,0.62fr)_minmax(280px,0.95fr)] lg:gap-8 lg:py-12 xl:gap-10">
+      <section className="hero-glow relative overflow-hidden">
+        <div className="container-wide grid items-center gap-12 pb-16 pt-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 lg:pb-20 lg:pt-14">
           {/* Copy */}
-          <div className="max-w-[520px]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-hover">Portfolio builder</p>
-            <h1 className="mt-3 text-balance text-[32px] font-bold leading-[1.12] tracking-[-0.03em] text-ink sm:text-[40px]">
-              Your work deserves a better portfolio.
+          <div className="max-w-[540px]">
+            <span className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-[11.5px] font-semibold text-accent-hover shadow-neu-sm">
+              <Sparkles size={13} aria-hidden="true" />
+              AI-powered portfolio builder
+            </span>
+            <h1 className="mt-5 text-balance text-[36px] font-bold leading-[1.08] tracking-[-0.035em] text-ink sm:text-[48px]">
+              Build a portfolio that does your work justice — with AI.
             </h1>
-            <p className="mt-3.5 max-w-[470px] text-[14px] leading-6 text-muted sm:text-[15px] sm:leading-7">
-              Create a professional portfolio that showcases your skills, projects and experience. Start with a
-              template, customize your details and publish when you&apos;re ready.
+            <p className="mt-5 max-w-[480px] text-[15px] leading-7 text-muted sm:text-[16px]">
+              Answer a few questions and PortiAI drafts your portfolio from the facts you give it. Pick a template,
+              refine every detail in a live editor and publish when you&apos;re ready.
             </p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-2.5">
-              <Link to={startHref} className="btn-primary">
-                Create Your Portfolio
-                <ArrowRight size={15} aria-hidden="true" />
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Link to={startHref} className="btn-primary btn-lg">
+                Get Started
+                <ArrowRight size={16} aria-hidden="true" />
               </Link>
-              <Link to="/templates" className="btn-secondary">
+              <Link to="/templates" className="btn-secondary btn-lg">
+                <LayoutTemplate size={16} aria-hidden="true" />
                 Explore Templates
               </Link>
             </div>
 
-            <ul className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line/70 pt-4 text-[11.5px] text-muted">
+            <ul className="mt-9 grid max-w-[460px] grid-cols-2 gap-3">
               {HERO_BENEFITS.map(({ icon: Icon, label }) => (
-                <li key={label} className="inline-flex items-center gap-1.5">
-                  <Icon size={13} className="shrink-0 text-accent-hover" aria-hidden="true" />
+                <li key={label} className="flex items-center gap-2.5 text-[12.5px] font-medium text-inkSoft">
+                  <span className="icon-tile-sm">
+                    <Icon size={13} aria-hidden="true" />
+                  </span>
                   {label}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Circular portrait */}
-          <div className="mx-auto">
-            <HeroPortrait />
-          </div>
+          {/* Builder preview: the real Minimal Developer template inside a soft UI workspace */}
+          <div className="relative mx-auto w-full max-w-[620px]">
+            <div className="rounded-[28px] bg-surface p-4 shadow-neu-lg sm:p-5">
+              <div className="mb-4 flex items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-2.5">
+                  <span className="icon-tile-accent h-8 w-8 rounded-[10px]">
+                    <Wand2 size={14} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-[12.5px] font-semibold text-ink">Portfolio builder</p>
+                    <p className="text-[10.5px] text-muted">Live preview · autosaved</p>
+                  </div>
+                </div>
+                <div className="segmented hidden sm:inline-flex" aria-hidden="true">
+                  <span className="segmented-item segmented-item-active px-2.5 py-1 text-[10.5px]">Desktop</span>
+                  <span className="segmented-item px-2.5 py-1 text-[10.5px]">Tablet</span>
+                  <span className="segmented-item px-2.5 py-1 text-[10.5px]">Mobile</span>
+                </div>
+              </div>
 
-          {/* Live portfolio preview */}
-          <div className="w-full max-w-[420px] justify-self-center lg:justify-self-end">
-            <HeroPortfolioPreview />
-            <p className="mt-2.5 text-center text-[11px] text-faint lg:text-right">
+              <div className="grid gap-4 sm:grid-cols-[150px_minmax(0,1fr)]">
+                {/* Editor sidebar sketch */}
+                <div className="hidden space-y-2.5 rounded-[18px] bg-canvas p-3 shadow-neu-inset-sm sm:block" aria-hidden="true">
+                  {['Profile', 'Projects', 'Skills', 'Experience'].map((item, index) => (
+                    <div
+                      key={item}
+                      className={`rounded-[10px] px-2.5 py-2 text-[10.5px] font-medium ${
+                        index === 0 ? 'bg-surface text-accent-hover shadow-neu-xs' : 'text-muted'
+                      }`}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                  <div className="!mt-4 rounded-[12px] bg-surface p-2.5 shadow-neu-xs">
+                    <p className="flex items-center gap-1 text-[9.5px] font-semibold text-accent-hover">
+                      <Sparkles size={10} aria-hidden="true" />
+                      AI suggestion
+                    </p>
+                    <div className="mt-1.5 space-y-1">
+                      <div className="h-1 w-full rounded-full bg-lineStrong" />
+                      <div className="h-1 w-4/5 rounded-full bg-lineStrong" />
+                    </div>
+                  </div>
+                </div>
+
+                <HeroPortfolioPreview />
+              </div>
+            </div>
+
+            {/* Floating portrait card */}
+            <div className="relative mt-5 w-fit rounded-[20px] bg-surface py-3 pl-3 pr-5 shadow-neu sm:absolute sm:-bottom-10 sm:-left-8 sm:mt-0">
+              <HeroPortrait compact />
+            </div>
+
+            {/* Floating published pill */}
+            <div className="absolute -right-3 -top-4 hidden items-center gap-2 rounded-full bg-surface px-3.5 py-2 text-[11.5px] font-semibold text-ink shadow-neu sm:flex" aria-hidden="true">
+              <span className="h-2 w-2 rounded-full bg-success" />
+              Published · /p/farheen
+            </div>
+            <p className="mt-3 text-center text-[11px] text-faint sm:mt-14 sm:pl-48 sm:text-right">
               Sample content in the Minimal Developer template
             </p>
           </div>
@@ -162,23 +218,24 @@ export default function Landing() {
       </section>
 
       {/* --------------------------------------------------------- How it works */}
-      <section id="how-it-works" className="border-b border-line">
-        <div className="container-wide py-14">
-          <div className="max-w-2xl">
-            <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-ink sm:text-[26px]">How it works</h2>
-            <p className="mt-2 text-[14px] leading-6 text-muted">
-              Three steps, no design tool required. You can stop at any point — drafts stay saved to your account.
+      <section id="how-it-works" className="scroll-mt-20">
+        <div className="container-wide py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="eyebrow">How it works</p>
+            <h2 className="mt-2 text-[28px] font-bold tracking-[-0.025em] text-ink sm:text-[32px]">Three steps to a published portfolio</h2>
+            <p className="mt-3 text-[14.5px] leading-7 text-muted">
+              No design tool required. You can stop at any point — drafts stay saved to your account.
             </p>
           </div>
 
-          <ol className="mt-8 grid gap-5 md:grid-cols-3">
+          <ol className="mt-10 grid gap-6 md:grid-cols-3">
             {STEPS.map((step, index) => (
-              <li key={step.title} className="rounded-lg border border-line bg-surface p-5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md border border-accent-line bg-accent-soft text-[12px] font-semibold text-accent-hover">
+              <li key={step.title} className="card p-6">
+                <span className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-canvas text-[15px] font-bold text-accent-hover shadow-neu-inset-sm">
                   {index + 1}
                 </span>
-                <h3 className="mt-3 text-[14px] font-semibold text-ink">{step.title}</h3>
-                <p className="mt-1.5 text-[12.5px] leading-6 text-muted">{step.body}</p>
+                <h3 className="mt-5 text-[16px] font-semibold text-ink">{step.title}</h3>
+                <p className="mt-2 text-[13px] leading-6 text-muted">{step.body}</p>
               </li>
             ))}
           </ol>
@@ -186,25 +243,24 @@ export default function Landing() {
       </section>
 
       {/* -------------------------------------------------------------- Features */}
-      <section id="features" className="border-b border-line bg-canvasAlt/60">
-        <div className="container-wide py-14">
-          <div className="max-w-2xl">
-            <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-ink sm:text-[26px]">Built for the whole job</h2>
-            <p className="mt-2 text-[14px] leading-6 text-muted">
+      <section id="features" className="scroll-mt-20">
+        <div className="container-wide py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="eyebrow">Features</p>
+            <h2 className="mt-2 text-[28px] font-bold tracking-[-0.025em] text-ink sm:text-[32px]">Built for the whole job</h2>
+            <p className="mt-3 text-[14.5px] leading-7 text-muted">
               Writing, layout decisions, review and publishing. PortiAI keeps each part straightforward.
             </p>
           </div>
 
-          <div className="mt-8 grid gap-x-8 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="flex gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line bg-surface text-accent-hover">
-                  <Icon size={15} aria-hidden="true" />
+              <div key={title} className="card-hover p-6">
+                <span className="icon-tile h-12 w-12 rounded-[14px]">
+                  <Icon size={19} aria-hidden="true" />
                 </span>
-                <div>
-                  <h3 className="text-[13.5px] font-semibold text-ink">{title}</h3>
-                  <p className="mt-1 text-[12.5px] leading-6 text-muted">{body}</p>
-                </div>
+                <h3 className="mt-5 text-[15px] font-semibold text-ink">{title}</h3>
+                <p className="mt-2 text-[13px] leading-6 text-muted">{body}</p>
               </div>
             ))}
           </div>
@@ -212,45 +268,42 @@ export default function Landing() {
       </section>
 
       {/* ------------------------------------------------------------- Templates */}
-      <section id="templates" className="border-b border-line">
-        <div className="container-wide py-14">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <section id="templates" className="scroll-mt-20">
+        <div className="container-wide py-16">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
-              <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-ink sm:text-[26px]">Six templates</h2>
-              <p className="mt-2 text-[14px] leading-6 text-muted">
+              <p className="eyebrow">Templates</p>
+              <h2 className="mt-2 text-[28px] font-bold tracking-[-0.025em] text-ink sm:text-[32px]">Six templates</h2>
+              <p className="mt-3 text-[14.5px] leading-7 text-muted">
                 Each is a complete layout with its own typography and section treatment. Switch at any time without
                 losing your text.
               </p>
             </div>
-            <Link to="/templates" className="btn-secondary btn-sm w-fit">
+            <Link to="/templates" className="btn-secondary w-fit">
               Open the gallery
-              <ArrowRight size={13} aria-hidden="true" />
+              <ArrowRight size={14} aria-hidden="true" />
             </Link>
           </div>
 
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {TEMPLATES.map((template) => (
-              <article
-                key={template.id}
-                className="overflow-hidden rounded-lg border border-line bg-surface transition-colors hover:border-accent-line"
-              >
-                <div className="border-b border-line">
-                  <TemplateThumb template={template} designHeight={600} />
+              <article key={template.id} className="card-hover flex flex-col p-3">
+                <div className="overflow-hidden rounded-[14px] bg-canvas p-1.5 shadow-neu-inset-sm">
+                  <div className="overflow-hidden rounded-[10px]">
+                    <TemplateThumb template={template} designHeight={600} />
+                  </div>
                 </div>
-                <div className="p-3.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h3 className="text-[13.5px] font-semibold text-ink">{template.name}</h3>
-                    <span className="text-[10.5px] uppercase tracking-[0.08em] text-faint">
+                <div className="flex flex-1 flex-col px-2 pb-2 pt-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-[14.5px] font-semibold text-ink">{template.name}</h3>
+                    <span className={template.tone === 'dark' ? 'badge bg-ink text-white' : 'badge-draft'}>
                       {template.tone === 'dark' ? 'Dark' : 'Light'}
                     </span>
                   </div>
-                  <p className="mt-1 text-[12px] leading-5 text-muted">{template.tagline}</p>
-                  <Link
-                    to="/templates"
-                    className="mt-2.5 inline-flex items-center gap-1 text-[12px] font-medium text-accent-hover hover:text-accent-hover"
-                  >
+                  <p className="mt-1 flex-1 text-[12.5px] leading-5 text-muted">{template.tagline}</p>
+                  <Link to="/templates" className="btn-link mt-3 text-[12.5px]">
                     Preview template
-                    <ArrowRight size={11} aria-hidden="true" />
+                    <ArrowRight size={12} aria-hidden="true" />
                   </Link>
                 </div>
               </article>
@@ -260,21 +313,22 @@ export default function Landing() {
       </section>
 
       {/* ------------------------------------------------------- Portfolio types */}
-      <section className="border-b border-line bg-canvasAlt/60">
-        <div className="container-wide py-14">
-          <div className="max-w-2xl">
-            <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-ink sm:text-[26px]">Made for your work</h2>
-            <p className="mt-2 text-[14px] leading-6 text-muted">
+      <section>
+        <div className="container-wide py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="eyebrow">Who it&apos;s for</p>
+            <h2 className="mt-2 text-[28px] font-bold tracking-[-0.025em] text-ink sm:text-[32px]">Made for your work</h2>
+            <p className="mt-3 text-[14.5px] leading-7 text-muted">
               The same content model, presented four different ways. Pick the layout that matches how you want to be
               read.
             </p>
           </div>
 
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {AUDIENCES.map((item) => (
-              <div key={item.title} className="rounded-lg border border-line bg-surface p-4">
-                <h3 className="text-[13.5px] font-semibold text-ink">{item.title}</h3>
-                <p className="mt-1.5 text-[12.5px] leading-6 text-muted">{item.body}</p>
+              <div key={item.title} className="panel p-6">
+                <h3 className="text-[15px] font-semibold text-ink">{item.title}</h3>
+                <p className="mt-2 text-[13px] leading-6 text-muted">{item.body}</p>
               </div>
             ))}
           </div>
@@ -283,25 +337,28 @@ export default function Landing() {
 
       {/* ------------------------------------------------------------- Final CTA */}
       <section>
-        <div className="container-wide flex flex-col items-start justify-between gap-6 py-14 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-ink sm:text-[26px]">Ready to show your work?</h2>
-            <p className="mt-2 max-w-lg text-[14px] leading-6 text-muted">
-              Create an account, pick a template and publish a portfolio you can share today.
-            </p>
-            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] text-muted">
-              {['Six templates', 'Preview at three screen sizes', 'Private until you publish'].map((item) => (
-                <li key={item} className="inline-flex items-center gap-1.5">
-                  <Check size={12} className="shrink-0 text-accent-hover" aria-hidden="true" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+        <div className="container-wide pb-20 pt-6">
+          <div className="card relative flex flex-col items-start justify-between gap-8 overflow-hidden p-8 sm:p-10 md:flex-row md:items-center">
+            <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-canvas shadow-neu-inset" aria-hidden="true" />
+            <div className="relative">
+              <h2 className="text-[26px] font-bold tracking-[-0.025em] text-ink sm:text-[30px]">Ready to show your work?</h2>
+              <p className="mt-2 max-w-lg text-[14.5px] leading-7 text-muted">
+                Create an account, pick a template and publish a portfolio you can share today.
+              </p>
+              <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[12.5px] font-medium text-inkSoft">
+                {['Six templates', 'Preview at three screen sizes', 'Private until you publish'].map((item) => (
+                  <li key={item} className="inline-flex items-center gap-1.5">
+                    <Check size={13} className="shrink-0 text-accent-hover" aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Link to={startHref} className="btn-primary btn-lg relative shrink-0">
+              <PenLine size={16} aria-hidden="true" />
+              Create Your Portfolio
+            </Link>
           </div>
-          <Link to={startHref} className="btn-primary shrink-0">
-            <PenLine size={15} aria-hidden="true" />
-            Create Your Portfolio
-          </Link>
         </div>
       </section>
     </div>

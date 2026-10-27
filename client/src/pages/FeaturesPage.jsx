@@ -50,17 +50,17 @@ const LIMITS = [
 export default function FeaturesPage() {
   return (
     <div>
-      <section className="border-b border-line">
+      <section className="hero-glow">
         <div className="container-wide py-14">
-          <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted">Features</p>
-          <h1 className="mt-3 max-w-2xl text-balance text-[32px] font-semibold leading-[1.15] tracking-[-0.03em] sm:text-[40px]">
+          <p className="eyebrow">Features</p>
+          <h1 className="mt-3 max-w-2xl text-balance text-[34px] font-bold leading-[1.1] tracking-[-0.035em] sm:text-[44px]">
             A portfolio builder, not a form that generates a page.
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-7 text-muted">
             PortiAI covers writing, layout, review and publishing. Here is what each part does, and what it deliberately
             does not do.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2.5">
+          <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/signup" className="btn-primary">
               Create an account
               <ArrowRight size={15} aria-hidden="true" />
@@ -72,17 +72,17 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <section className="border-b border-line bg-surface">
-        <div className="container-wide py-14">
-          <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      <section>
+        <div className="container-wide pb-14 pt-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body, points }) => (
-              <div key={title}>
-                <span className="flex h-8 w-8 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
+              <div key={title} className="card flex flex-col p-6">
+                <span className="icon-tile h-11 w-11">
                   <Icon size={16} aria-hidden="true" />
                 </span>
-                <h2 className="mt-3 text-[15px] font-semibold">{title}</h2>
+                <h2 className="mt-5 text-[15px] font-semibold">{title}</h2>
                 <p className="mt-1.5 text-[13px] leading-6 text-muted">{body}</p>
-                <ul className="mt-3 space-y-1.5 border-t border-line pt-3">
+                <ul className="neu-inset-sm mt-4 space-y-1.5 p-3.5">
                   {points.map((point) => (
                     <li key={point} className="flex items-start gap-2 text-[12px] text-inkSoft">
                       <Check size={12} className="mt-0.5 shrink-0 text-accent-hover" aria-hidden="true" />
@@ -102,24 +102,24 @@ export default function FeaturesPage() {
             <h2 className="text-[22px] font-semibold tracking-[-0.02em]">How the data is handled</h2>
             <ul className="mt-4 space-y-3 text-[14px] leading-7 text-muted">
               <li className="flex gap-2.5">
-                <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-lineStrong" aria-hidden="true" />
+                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/50" aria-hidden="true" />
                 Passwords are hashed with bcrypt and sessions use an HTTP-only cookie. Signing out invalidates the session on
                 the server, not only in the browser.
               </li>
               <li className="flex gap-2.5">
-                <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-lineStrong" aria-hidden="true" />
+                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/50" aria-hidden="true" />
                 Only published portfolios are readable publicly, and the public payload excludes account data and your
                 analysis results.
               </li>
               <li className="flex gap-2.5">
-                <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-lineStrong" aria-hidden="true" />
+                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/50" aria-hidden="true" />
                 AI requests are made from the server. No API key is present in the browser bundle, and each account has a
                 daily request ceiling.
               </li>
             </ul>
           </div>
 
-          <div className="rounded-lg border border-line bg-surface p-5">
+          <div className="card p-6">
             <h2 className="text-[15px] font-semibold">Not implemented</h2>
             <p className="mt-1.5 text-[13px] leading-6 text-muted">
               These are absent rather than mocked. The interface says so where relevant.
@@ -127,7 +127,7 @@ export default function FeaturesPage() {
             <ul className="mt-3 space-y-2 text-[13px] leading-6 text-muted">
               {LIMITS.map((item) => (
                 <li key={item} className="flex gap-2">
-                  <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-faint" aria-hidden="true" />
+                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/50" aria-hidden="true" />
                   {item}
                 </li>
               ))}

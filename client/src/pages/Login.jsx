@@ -57,23 +57,23 @@ export default function Login() {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
+    <div className="rounded-[24px] bg-surface p-6 shadow-neu-lg sm:p-8">
       <div className="mb-7">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-canvasAlt text-accent-hover">
+        <span className="icon-tile h-12 w-12">
           <LockKeyhole size={18} aria-hidden="true" />
         </span>
-        <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Welcome back</h2>
+        <h2 className="mt-5 text-[24px] font-bold tracking-[-0.025em] text-ink">Welcome back</h2>
         <p className="mt-1.5 text-sm text-muted">Sign in to keep building, editing and publishing your portfolios.</p>
       </div>
 
       {error ? (
-        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-lg border border-danger/30 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-tile bg-dangerSoft p-3 text-xs font-medium leading-relaxed text-danger shadow-neu-inset-xs">
           <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       ) : null}
 
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <form onSubmit={onSubmit} className="space-y-5" noValidate>
         <Field label="Email address" htmlFor="email" required error={fieldErrors.email}>
           <TextInput
             id="email"
@@ -88,7 +88,13 @@ export default function Login() {
         </Field>
 
         <Field label="Password" htmlFor="password" required error={fieldErrors.password}>
-          <PasswordInput id="password" name="password" value={form.password} onChange={update('password')} />
+          <PasswordInput
+            id="password"
+            name="password"
+            value={form.password}
+            onChange={update('password')}
+            aria-invalid={Boolean(fieldErrors.password)}
+          />
         </Field>
 
         <div className="flex items-center justify-between">
@@ -107,12 +113,12 @@ export default function Login() {
         </Button>
       </form>
 
-      <p className="mt-5 rounded-lg border border-line bg-canvas px-3.5 py-2.5 text-[11px] leading-relaxed text-faint">
+      <p className="mt-5 rounded-tile bg-canvas px-3.5 py-2.5 text-[11px] leading-relaxed text-faint shadow-neu-inset-xs">
         Email and password sign-in only. Google and GitHub OAuth are not connected to this deployment yet, so they are
         intentionally not shown here.
       </p>
 
-      <p className="mt-6 border-t border-line pt-5 text-center text-sm text-muted">
+      <p className="mt-7 border-t border-line pt-5 text-center text-sm text-muted">
         New to PortiAI?{' '}
         <Link to="/signup" className="font-semibold text-accent-hover hover:underline">
           Create an account

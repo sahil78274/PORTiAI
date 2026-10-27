@@ -177,7 +177,7 @@ export default function BlogStudio() {
             className="input h-9 py-1.5 pl-9 text-xs"
           />
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Post status">
+        <div className="segmented" role="group" aria-label="Post status">
           {[
             { id: 'all', label: 'All' },
             { id: 'published', label: 'Published' },
@@ -188,9 +188,7 @@ export default function BlogStudio() {
               type="button"
               onClick={() => setStatus(filter.id)}
               aria-pressed={status === filter.id}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                status === filter.id ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'
-              }`}
+              className={`segmented-item ${status === filter.id ? 'segmented-item-active' : ''}`}
             >
               {filter.label}
             </button>
@@ -202,7 +200,7 @@ export default function BlogStudio() {
       </div>
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/30 bg-dangerSoft p-4 text-sm text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-tile bg-dangerSoft shadow-neu-inset-xs p-4 text-sm text-danger">
           <span>{error}</span>
           <Button variant="secondary" size="sm" onClick={load}>
             Try again
@@ -269,7 +267,7 @@ export default function BlogStudio() {
           {posts.map((post) => {
             const portfolio = portfolioMap[post.portfolioId];
             return (
-              <article key={post.id} className="card flex flex-col overflow-hidden transition-colors hover:border-lineStrong sm:flex-row">
+              <article key={post.id} className="card-hover flex flex-col overflow-hidden sm:flex-row">
                 <div className="sm:w-40 sm:shrink-0">
                   <SmartImage src={post.coverUrl} alt="" ratio="aspect-[16/10] sm:h-full sm:aspect-auto" className="h-36 w-full sm:h-full" fallbackSeed={post.title.length} />
                 </div>
@@ -360,7 +358,7 @@ export default function BlogStudio() {
       >
         <form onSubmit={createPost} className="space-y-4">
           {createError ? (
-            <p role="alert" className="rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
+            <p role="alert" className="rounded-tile bg-dangerSoft shadow-neu-inset-xs px-3 py-2 text-xs text-danger">
               {createError}
             </p>
           ) : null}

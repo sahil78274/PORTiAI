@@ -11,7 +11,7 @@ export default function PasswordInput({ id, value, onChange, autoComplete = 'cur
         value={value}
         onChange={onChange}
         autoComplete={autoComplete}
-        className={`input pr-10 ${className}`}
+        className={`input pr-11 ${className}`}
         {...props}
       />
       <button
@@ -19,7 +19,7 @@ export default function PasswordInput({ id, value, onChange, autoComplete = 'cur
         onClick={() => setVisible((current) => !current)}
         aria-label={visible ? 'Hide password' : 'Show password'}
         aria-pressed={visible}
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-xl text-faint transition-colors hover:text-ink focus-visible:text-ink"
+        className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-[10px] text-muted transition-[box-shadow,color] hover:bg-surface hover:text-accent-hover hover:shadow-neu-xs focus-visible:text-accent-hover"
       >
         {visible ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
       </button>

@@ -124,6 +124,14 @@ export default function Builder() {
       later(() => pushAssistant(fieldPrompt(openingField, openingFacts), { fieldId: openingField }), 500);
     }, 250);
     timersRef.current.push(timer);
+    // React StrictMode (development) mounts, unmounts and re-mounts once. The
+    // unmount clears every pending timer, so release the guard as well —
+    // otherwise the re-mount skips the opening and the chat stays empty. The
+    // greeting still renders exactly once in both development and production.
+    return () => {
+      clearTimeout(timer);
+      startedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -342,19 +350,19 @@ export default function Builder() {
         title="AI builder"
         description="A guided conversation collects your real experience, then the AI drafts editable portfolio copy. Nothing is invented, and every answer can be edited before you save."
         actions={
-          <span className="badge border-accent-line/60 bg-accent-soft text-accent-hover">
+          <span className="badge-accent px-2.5 py-1">
             <Sparkles size={11} aria-hidden="true" />
             Gemini-powered · server-side keys
           </span>
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         {/* Chat column */}
-        <section className="card flex min-h-[640px] flex-col overflow-hidden" aria-label="AI builder conversation">
-          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white">
+        <section className="card flex h-[calc(100dvh-15rem)] max-h-[880px] min-h-[540px] flex-col overflow-hidden p-3 sm:p-4" aria-label="AI builder conversation">
+          <div className="flex items-center justify-between gap-3 px-2 pb-4 pt-1">
+            <div className="flex items-center gap-3">
+              <span className="icon-tile-accent h-10 w-10">
                 <Wand2 size={15} aria-hidden="true" />
               </span>
               <div>
@@ -365,18 +373,18 @@ export default function Builder() {
                 </p>
               </div>
             </div>
-            <div className="hidden items-center gap-1.5 text-[11px] text-success sm:flex">
+            <div className="badge-published hidden px-2.5 py-1 sm:inline-flex">
               <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
               Ready
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 scroll-slim sm:px-5">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto rounded-[18px] bg-canvas px-3 py-5 shadow-neu-inset scroll-slim sm:px-5" aria-live="polite">
             {messages.map((message) => (
               <div key={message.id} className={`flex gap-2.5 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <span
-                  className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${
-                    message.role === 'assistant' ? 'bg-accent text-white' : 'border border-line bg-canvasAlt text-inkSoft'
+                  className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] text-[11px] font-semibold ${
+                    message.role === 'assistant' ? 'bg-accent text-white shadow-neu-accent' : 'bg-surface text-accent-hover shadow-neu-xs'
                   }`}
                   aria-hidden="true"
                 >
@@ -384,20 +392,20 @@ export default function Builder() {
                 </span>
                 <div className={`max-w-[85%] ${message.role === 'user' ? 'text-right' : ''}`}>
                   <div
-                    className={`inline-block whitespace-pre-line rounded-lg px-3.5 py-2.5 text-left text-sm leading-relaxed ${
+                    className={`inline-block whitespace-pre-line rounded-[16px] px-4 py-2.5 text-left text-sm leading-relaxed ${
                       message.role === 'user'
-                        ? 'rounded-br-md bg-accent text-white'
+                        ? 'rounded-br-[6px] bg-accent text-white shadow-neu-accent'
                         : message.variant === 'error'
-                          ? 'rounded-bl-md border border-danger/25 bg-dangerSoft text-danger'
+                          ? 'rounded-bl-[6px] bg-surface text-danger shadow-neu-sm ring-1 ring-danger/20'
                           : message.variant === 'success'
-                            ? 'rounded-bl-md border border-success/25 bg-successSoft text-success'
-                            : 'rounded-bl-md border border-line bg-canvasAlt text-inkSoft'
+                            ? 'rounded-bl-[6px] bg-surface text-success shadow-neu-sm ring-1 ring-success/20'
+                            : 'rounded-bl-[6px] bg-surface text-inkSoft shadow-neu-sm'
                     }`}
                   >
                     {message.text}
                   </div>
                   {message.chips?.length ? (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {message.chips.map((chip) => (
                         <button key={chip} type="button" onClick={() => onChip(chip)} className="chip !py-1 !text-[11px]">
                           {chip}
@@ -411,14 +419,14 @@ export default function Builder() {
 
             {typing ? (
               <div className="flex gap-2.5">
-                <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-white" aria-hidden="true">
+                <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-[10px] bg-accent text-white shadow-neu-accent" aria-hidden="true">
                   <Sparkles size={13} />
                 </span>
-                <div className="flex items-center gap-1 rounded-lg rounded-bl-md border border-line bg-canvasAlt px-3.5 py-3">
+                <div className="flex items-center gap-1.5 rounded-[16px] rounded-bl-[6px] bg-surface px-4 py-3.5 shadow-neu-sm">
                   {[0, 1, 2].map((dot) => (
                     <span
                       key={dot}
-                      className="h-1.5 w-1.5 animate-pulse rounded-full bg-faint"
+                      className="h-2 w-2 animate-pulse rounded-full bg-accent/60"
                       style={{ animationDelay: `${dot * 120}ms` }}
                     />
                   ))}
@@ -428,8 +436,8 @@ export default function Builder() {
             ) : null}
 
             {generating ? (
-              <div className="rounded-lg border border-accent-line/40 bg-accent-soft p-4">
-                <div className="flex items-center gap-2.5 text-sm font-medium text-ink">
+              <div className="rounded-[16px] bg-surface p-4 shadow-neu-sm" role="status">
+                <div className="flex items-center gap-2.5 text-sm font-semibold text-ink">
                   <Loader2 size={15} className="animate-spin text-accent-hover" aria-hidden="true" />
                   Drafting your portfolio content…
                 </div>
@@ -455,7 +463,7 @@ export default function Builder() {
 
           {/* Prompt chips */}
           {!generating && stepChips.length ? (
-            <div className="flex flex-wrap gap-1.5 border-t border-line px-4 pt-3 sm:px-5">
+            <div className="flex flex-wrap gap-2 px-1 pt-4">
               {stepChips.map((chip) => (
                 <button key={chip} type="button" onClick={() => onChip(chip)} className="chip !py-1 !text-[11px]">
                   {chip}
@@ -465,9 +473,10 @@ export default function Builder() {
           ) : null}
 
           {/* Composer */}
-          <div className="border-t border-line p-3 sm:p-4">
+          <div className="px-1 pb-1 pt-4">
             {activeField === 'template' ? (
-              <div className="rounded-lg border border-line bg-canvas p-3">
+
+              <div className="neu-inset-sm p-3">
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">Template</p>
                 <div className="flex flex-wrap gap-1.5">
                   {TEMPLATES.map((template) => (
@@ -532,7 +541,7 @@ export default function Builder() {
                   event.preventDefault();
                   submitValue(input);
                 }}
-                className="flex items-end gap-2"
+                className="flex items-end gap-3"
               >
                 <label htmlFor="builder-input" className="sr-only">
                   Your answer
@@ -550,12 +559,12 @@ export default function Builder() {
                     }
                   }}
                   placeholder={activeMeta.placeholder || 'Type your answer…'}
-                  className="min-h-[52px] flex-1 resize-none py-2.5 text-sm"
+                  className="min-h-[56px] flex-1 resize-none rounded-[16px] px-4 py-3 text-sm"
                   disabled={typing}
                 />
                 <button
                   type="submit"
-                  className="btn-primary h-[52px] w-[52px] shrink-0 rounded-lg p-0"
+                  className="btn-primary h-[56px] w-[56px] shrink-0 rounded-[16px] p-0"
                   aria-label="Send answer"
                   disabled={!input.trim() || typing}
                 >
@@ -564,18 +573,18 @@ export default function Builder() {
               </form>
             )}
             {activeMeta.hint && activeField !== 'template' && activeField !== 'generate' && activeField !== 'blog' ? (
-              <p className="mt-2 text-[11px] text-faint">{activeMeta.hint}</p>
+              <p className="mt-2.5 px-1 text-[11px] text-faint">{activeMeta.hint}</p>
             ) : null}
           </div>
         </section>
 
         {/* Details + preview */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <section className="card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-ink">Collected details</p>
-                <span className="badge border-lineStrong bg-canvasAlt text-faint">
+                <span className="badge-draft">
                   {readiness.checks.filter((check) => check.ok).length}/{readiness.checks.length}
                 </span>
               </div>
@@ -662,7 +671,7 @@ export default function Builder() {
                       </div>
                     ))}
                   </div>
-                  <p className="rounded-lg border border-line bg-canvas p-2.5 text-[11px] leading-relaxed text-faint">
+                  <p className="neu-inset-sm p-2.5 text-[11px] leading-relaxed text-faint">
                     Projects, experience and education can be edited in full in the portfolio editor after you create
                     the draft.
                   </p>
@@ -673,7 +682,7 @@ export default function Builder() {
                     <div key={check.id} className="flex items-center gap-2 text-xs">
                       <span
                         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
-                          check.ok ? 'bg-successSoft text-success' : 'border border-lineStrong text-faint'
+                          check.ok ? 'bg-successSoft text-success' : 'bg-canvas text-faint shadow-neu-inset-xs'
                         }`}
                       >
                         {check.ok ? <Check size={10} aria-hidden="true" /> : <X size={9} aria-hidden="true" />}
@@ -686,7 +695,7 @@ export default function Builder() {
                     <div className="mt-3 space-y-1.5 border-t border-line pt-3">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">Projects</p>
                       {facts.projects.map((project, index) => (
-                        <div key={`${project.name}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border border-line bg-canvas px-2.5 py-1.5">
+                        <div key={`${project.name}-${index}`} className="flex items-center justify-between gap-2 neu-inset-sm px-2.5 py-1.5">
                           <span className="truncate text-[11px] text-inkSoft">{project.name}</span>
                           <button
                             type="button"
@@ -706,7 +715,7 @@ export default function Builder() {
                       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">Skills</p>
                       <div className="flex flex-wrap gap-1">
                         {facts.skills.slice(0, 14).map((skill) => (
-                          <span key={skill} className="rounded-full border border-line bg-canvasAlt px-2 py-0.5 text-[10px] text-inkSoft">
+                          <span key={skill} className="rounded-full bg-canvas shadow-neu-inset-xs px-2 py-0.5 text-[10px] text-inkSoft">
                             {skill}
                           </span>
                         ))}
@@ -728,7 +737,7 @@ export default function Builder() {
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-3">
+            <div className="flex items-center justify-between gap-2 border-t border-line px-5 py-4">
               <div className="min-w-0">
                 <p className="truncate text-[11px] text-faint">Template: {templateMeta.name}</p>
                 <p className="text-[11px] text-faint">Tone: {facts.tone}</p>
@@ -766,12 +775,12 @@ export default function Builder() {
 
           {/* Preview */}
           <section className="card overflow-hidden">
-            <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+            <div className="flex items-center justify-between gap-2 px-5 py-4">
               <div className="flex items-center gap-2">
                 <Eye size={14} className="text-accent-hover" aria-hidden="true" />
                 <p className="text-sm font-semibold text-ink">{generated ? 'Draft preview' : 'Template preview'}</p>
               </div>
-              <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvas p-0.5">
+              <div className="segmented">
                 {[
                   { id: 'desktop', Icon: Monitor },
                   { id: 'mobile', Icon: Smartphone },
@@ -782,16 +791,16 @@ export default function Builder() {
                     onClick={() => setPreviewDevice(id)}
                     aria-pressed={previewDevice === id}
                     aria-label={`${id} preview`}
-                    className={`rounded p-1.5 ${previewDevice === id ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
+                    className={`segmented-item px-2 py-1.5 ${previewDevice === id ? 'segmented-item-active' : ''}`}
                   >
                     <Icon size={13} aria-hidden="true" />
                   </button>
                 ))}
               </div>
             </div>
-            <div className="border-t border-line bg-canvasAlt p-2">
+            <div className="mx-4 rounded-[16px] bg-canvas p-2 shadow-neu-inset-sm">
               <div
-                className="mx-auto overflow-hidden rounded-lg border border-line"
+                className="mx-auto overflow-hidden rounded-[11px]"
                 style={{ maxWidth: previewDevice === 'mobile' ? 320 : '100%' }}
               >
                 <TemplatePreviewFrame designWidth={1000} designHeight={previewDevice === 'mobile' ? 640 : 760} label="Portfolio preview">
@@ -799,7 +808,7 @@ export default function Builder() {
                 </TemplatePreviewFrame>
               </div>
             </div>
-            <div className="border-t border-line p-3">
+            <div className="p-4">
               {generated ? (
                 <button type="button" onClick={createDraft} className="btn-primary w-full justify-center" disabled={creating}>
                   {creating ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Rocket size={15} aria-hidden="true" />}
@@ -814,7 +823,7 @@ export default function Builder() {
           </section>
 
           {lastGenerated?.usedAi ? (
-            <p className="flex items-start gap-2 rounded-lg border border-accent-line/30 bg-accent-soft/40 px-3.5 py-2.5 text-[11px] leading-relaxed text-muted">
+            <p className="flex items-start gap-2 rounded-tile bg-accent-soft px-3.5 py-2.5 text-[11px] leading-relaxed text-inkSoft">
               <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
               Content written by the AI model from your answers ({lastGenerated.model}). Review every claim before
               publishing.

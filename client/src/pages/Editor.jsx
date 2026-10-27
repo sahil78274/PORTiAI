@@ -62,7 +62,7 @@ function BlogSettings({ draft, setDraft }) {
   const enabled = Boolean(draft.blog?.enabled);
   return (
     <div className="space-y-5">
-      <div className="rounded-lg border border-line bg-canvasAlt/60 p-4">
+      <div className="neu-inset-sm p-4">
         <Switch
           checked={enabled}
           onChange={(value) => setDraft({ ...draft, blog: { ...draft.blog, enabled: value } })}
@@ -102,7 +102,7 @@ function BlogSettings({ draft, setDraft }) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-line bg-surface p-4">
+      <div className="card p-4">
         <p className="text-sm font-medium text-ink">Writing posts</p>
         <p className="mt-1 text-xs leading-relaxed text-muted">
           Posts live in the Blog studio: draft in Markdown, use AI writing help, and publish when ready. Publishing a
@@ -321,11 +321,11 @@ export default function Editor() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 pb-16 xl:pb-0">
       {/* Toolbar */}
-      <div className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
-          <Link to="/dashboard/portfolios" className="btn-ghost h-8 w-8 shrink-0 p-0" aria-label="Back to portfolios">
+          <Link to="/dashboard/portfolios" className="icon-btn" aria-label="Back to portfolios">
             <ArrowLeft size={16} aria-hidden="true" />
           </Link>
           <div className="min-w-0">
@@ -335,9 +335,9 @@ export default function Editor() {
               onChange={(event) => setDraft({ ...draft, title: event.target.value })}
               maxLength={120}
               aria-label="Portfolio title"
-              className="w-full max-w-xs truncate rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-ink transition-colors hover:border-line focus:border-accent focus:bg-canvas focus:outline-none sm:max-w-sm sm:text-base"
+              className="w-full max-w-xs truncate rounded-[10px] border border-transparent bg-transparent px-1.5 py-0.5 text-sm font-semibold text-ink transition-[box-shadow,background-color] hover:shadow-neu-inset-xs focus:bg-canvas focus:shadow-neu-inset-sm focus:outline-none sm:max-w-sm sm:text-base"
             />
-            <div className="mt-0.5 flex flex-wrap items-center gap-2 px-1 text-[11px] text-faint">
+            <div className="mt-1 flex flex-wrap items-center gap-2 px-1.5 text-[11px] text-faint">
               <span className={portfolio.published ? 'badge-published !py-0' : 'badge-draft !py-0'}>
                 {portfolio.published ? 'Published' : 'Draft'}
               </span>
@@ -349,7 +349,7 @@ export default function Editor() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <Link to={`/dashboard/portfolio/${id}/analyze`} className="btn-ghost btn-sm">
             <Gauge size={13} aria-hidden="true" />
             <span className="hidden sm:inline">Analyze</span>
@@ -381,13 +381,13 @@ export default function Editor() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,440px)_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,620px)_minmax(0,1fr)]">
         {/* Editing panel */}
         <section className={`card overflow-hidden ${mobilePane === 'preview' ? 'hidden xl:block' : ''}`} aria-label="Portfolio editor">
           <div className="sm:flex">
             {/* Vertical rail on wider screens, matching a two-panel editor. */}
             <nav
-              className="hidden w-[168px] shrink-0 flex-col gap-0.5 border-r border-line p-2 sm:flex"
+              className="hidden w-[176px] shrink-0 flex-col gap-1.5 border-r border-line p-3 sm:flex xl:hidden 2xl:flex"
               aria-label="Editor sections"
             >
               {TABS.map(({ id: tabId, label, icon: Icon }) => (
@@ -396,9 +396,7 @@ export default function Editor() {
                   type="button"
                   aria-current={tab === tabId ? 'true' : undefined}
                   onClick={() => setTab(tabId)}
-                  className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-[12px] font-medium transition-colors ${
-                    tab === tabId ? 'bg-accent-soft text-ink ring-1 ring-inset ring-accent-line/60' : 'text-muted hover:bg-canvasAlt hover:text-ink'
-                  }`}
+                  className={`sidebar-link px-3 py-2 text-left text-[12.5px] ${tab === tabId ? 'sidebar-link-active' : ''}`}
                 >
                   <Icon size={13} className="shrink-0" aria-hidden="true" />
                   <span className="leading-4">{label}</span>
@@ -407,7 +405,8 @@ export default function Editor() {
             </nav>
 
             <div className="min-w-0 flex-1">
-              <div className="flex gap-1 overflow-x-auto border-b border-line px-2 py-2 scrollbar-none sm:hidden" role="tablist" aria-label="Editor sections">
+              <div className="px-3 pt-3 sm:hidden xl:block 2xl:hidden">
+              <div className="segmented flex w-full overflow-x-auto scrollbar-none" role="tablist" aria-label="Editor sections">
                 {TABS.map(({ id: tabId, short, icon: Icon }) => (
                   <button
                     key={tabId}
@@ -415,17 +414,16 @@ export default function Editor() {
                     type="button"
                     aria-selected={tab === tabId}
                     onClick={() => setTab(tabId)}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
-                      tab === tabId ? 'bg-accent-soft text-ink' : 'text-muted hover:bg-canvasAlt hover:text-ink'
-                    }`}
+                    className={`segmented-item shrink-0 text-[11.5px] ${tab === tabId ? 'segmented-item-active font-semibold' : ''}`}
                   >
                     <Icon size={12} aria-hidden="true" />
                     {short}
                   </button>
                 ))}
               </div>
+              </div>
 
-              <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-4 scroll-slim">
+              <div className="max-h-[calc(100vh-240px)] overflow-y-auto p-5 scroll-slim">
             {tab === 'profile' ? <ProfileSection draft={draft} setDraft={setDraft} /> : null}
             {tab === 'skills' ? <SkillsSection draft={draft} setDraft={setDraft} /> : null}
             {tab === 'projects' ? <ProjectsSection draft={draft} setDraft={setDraft} /> : null}
@@ -442,7 +440,7 @@ export default function Editor() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2.5">
+          <div className="flex items-center justify-between gap-2 border-t border-line px-5 py-3">
             <Status />
             <p className="text-[10px] text-faint">Autosaves after a pause</p>
           </div>
@@ -450,15 +448,15 @@ export default function Editor() {
 
         {/* Preview panel */}
         <section className={`card overflow-hidden ${mobilePane === 'edit' ? 'hidden xl:block' : ''}`} aria-label="Live preview">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md border border-line bg-canvasAlt text-accent-hover">
-                <Eye size={12} aria-hidden="true" />
+              <span className="icon-tile-sm">
+                <Eye size={13} aria-hidden="true" />
               </span>
-              <p className="text-xs font-semibold text-ink">Live preview</p>
+              <p className="text-[13px] font-semibold text-ink">Live preview</p>
               <span className="hidden text-[10px] text-faint sm:inline">Updates instantly</span>
             </div>
-            <div className="flex items-center gap-0.5 rounded-lg border border-line bg-canvas p-0.5" role="group" aria-label="Preview device">
+            <div className="segmented" role="group" aria-label="Preview device">
               {DEVICES.map(({ id: deviceId, label, icon: Icon }) => (
                 <button
                   key={deviceId}
@@ -467,7 +465,7 @@ export default function Editor() {
                   aria-pressed={device === deviceId}
                   aria-label={`${label} preview`}
                   title={label}
-                  className={`rounded-md p-1.5 transition-colors ${device === deviceId ? 'bg-canvasAlt text-ink' : 'text-faint hover:text-ink'}`}
+                  className={`segmented-item px-2 py-1.5 ${device === deviceId ? 'segmented-item-active' : ''}`}
                 >
                   <Icon size={13} aria-hidden="true" />
                 </button>
@@ -475,8 +473,8 @@ export default function Editor() {
             </div>
           </div>
 
-          <div className="border-t border-line bg-canvasAlt p-2 sm:p-3">
-            <div className="mx-auto overflow-hidden rounded-md border border-line bg-white transition-colors duration-300" style={{ maxWidth: DEVICES.find((item) => item.id === device).width }}>
+          <div className="mx-3 mb-3 rounded-[16px] bg-canvas p-2 shadow-neu-inset-sm sm:p-3">
+            <div className="mx-auto overflow-hidden rounded-[10px] bg-white shadow-neu-xs transition-colors duration-300" style={{ maxWidth: DEVICES.find((item) => item.id === device).width }}>
               <div className="h-[calc(100vh-260px)] min-h-[560px] overflow-y-auto scroll-slim">{preview}</div>
             </div>
           </div>
@@ -484,7 +482,7 @@ export default function Editor() {
       </div>
 
       {/* Mobile pane switch */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-canvas/90 px-4 py-2 backdrop-blur xl:hidden">
+      <div className="fixed inset-x-3 bottom-3 z-30 flex items-center justify-center gap-1 rounded-[18px] bg-surface p-1.5 shadow-neu-lg xl:hidden">
         {[
           { id: 'edit', label: 'Editor', icon: LayoutList },
           { id: 'preview', label: 'Preview', icon: Eye },
@@ -494,8 +492,8 @@ export default function Editor() {
             type="button"
             onClick={() => setMobilePane(paneId)}
             aria-pressed={mobilePane === paneId}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium ${
-              mobilePane === paneId ? 'bg-accent-soft text-ink' : 'text-muted'
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-[12px] py-2.5 text-xs font-semibold transition-[box-shadow,color] ${
+              mobilePane === paneId ? 'bg-canvas text-accent-hover shadow-neu-inset-sm' : 'text-muted hover:text-ink'
             }`}
           >
             <Icon size={13} aria-hidden="true" />
@@ -529,14 +527,14 @@ export default function Editor() {
           </>
         }
       >
-        <div className="overflow-hidden rounded-lg border border-line bg-surface">
-          <div className="h-[65vh] overflow-y-auto">{preview}</div>
+        <div className="rounded-[18px] bg-canvas p-2 shadow-neu-inset-sm">
+          <div className="h-[65vh] overflow-y-auto rounded-[12px] bg-white shadow-neu-xs scroll-slim">{preview}</div>
         </div>
         {portfolio.published && publicUrl ? <p className="mt-3 truncate text-xs text-muted">{publicUrl}</p> : null}
       </Modal>
 
       {dirty ? (
-        <div className="flex items-center gap-2 rounded-lg border border-warning/25 bg-warningSoft px-3.5 py-2 text-[11px] text-warning">
+        <div className="flex items-center gap-2 rounded-tile bg-warningSoft shadow-neu-inset-xs px-3.5 py-2 text-[11px] text-warning">
           <AlertCircle size={13} aria-hidden="true" />
           You have unsaved changes. Autosave will save them shortly, or press Save draft now.
         </div>

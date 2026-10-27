@@ -1,44 +1,55 @@
 /** @type {import('tailwindcss').Config} */
+
+/* Colours are driven by CSS variables declared in src/index.css (:root), so
+   the whole product palette lives in one place. Channels are stored as
+   "R G B" triplets which keeps Tailwind opacity modifiers (bg-accent/40,
+   border-danger/30 …) working.
+
+   Portfolio templates (src/templates) set their own colours and never use
+   these tokens, so changing the product palette never alters a published
+   portfolio. For the same reason the existing radius scale keys
+   (DEFAULT / sm / md / lg) and the default `shadow` are left as they were —
+   templates use them. The product chrome uses the neumorphic tokens below. */
+const channel = (name) => `rgb(var(${name}) / <alpha-value>)`;
+
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        /* Deep navy product surface with one vivid blue accent.
-           Semantic names are shared by every page; portfolio templates set
-           their own colours and never depend on these tokens. */
-        canvas: '#0a1020',
-        canvasAlt: '#0d1425',
-        canvasDeep: '#070c17',
-        surface: '#111a2b',
-        surfaceRaised: '#162136',
-        surfaceHigh: '#1b2740',
-        ink: '#eef2f8',
-        inkSoft: '#c3cede',
-        muted: '#93a1b8',
-        faint: '#7f93b2',
-        line: '#1e2a42',
-        lineStrong: '#2b3a56',
-        navy: '#0d1626',
-        navySoft: '#16233b',
+        canvas: channel('--c-canvas'),
+        canvasAlt: channel('--c-canvas-alt'),
+        canvasDeep: channel('--c-canvas-deep'),
+        surface: channel('--c-surface'),
+        surfaceRaised: channel('--c-surface-raised'),
+        surfaceHigh: channel('--c-surface-high'),
+        ink: channel('--c-ink'),
+        inkSoft: channel('--c-ink-soft'),
+        muted: channel('--c-muted'),
+        faint: channel('--c-faint'),
+        line: channel('--c-line'),
+        lineStrong: channel('--c-line-strong'),
+        navy: channel('--c-ink'),
+        navySoft: channel('--c-ink-soft'),
         accent: {
-          DEFAULT: '#2f6bff',
-          hover: '#4b82ff',
-          soft: 'rgba(47, 107, 255, 0.14)',
-          line: 'rgba(47, 107, 255, 0.38)',
+          DEFAULT: channel('--c-accent'),
+          hover: channel('--c-accent-hover'),
+          secondary: channel('--c-accent-secondary'),
+          soft: 'rgb(var(--c-accent) / 0.10)',
+          line: 'rgb(var(--c-accent) / 0.32)',
         },
         brand: {
-          blue: '#2f6bff',
-          indigo: '#4b82ff',
-          violet: '#6d7ff0',
-          cyan: '#38bdf8',
+          blue: channel('--c-accent'),
+          indigo: channel('--c-accent-hover'),
+          violet: channel('--c-accent-secondary'),
+          cyan: channel('--c-accent-secondary'),
         },
-        success: '#34d399',
-        successSoft: 'rgba(52, 211, 153, 0.12)',
-        warning: '#fbbf24',
-        warningSoft: 'rgba(251, 191, 36, 0.12)',
-        danger: '#f87171',
-        dangerSoft: 'rgba(248, 113, 113, 0.12)',
+        success: channel('--c-success'),
+        successSoft: 'rgb(var(--c-success) / 0.10)',
+        warning: channel('--c-warning'),
+        warningSoft: 'rgb(var(--c-warning) / 0.10)',
+        danger: channel('--c-danger'),
+        dangerSoft: 'rgb(var(--c-danger) / 0.08)',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
@@ -70,17 +81,32 @@ export default {
         '2xl': '18px',
         '3xl': '22px',
         full: '9999px',
+        /* Neumorphic product radii */
+        control: 'var(--radius-control)',
+        card: 'var(--radius-card)',
+        tile: 'var(--radius-tile)',
       },
       boxShadow: {
-        '2xs': '0 1px 1px rgba(0, 0, 0, 0.25)',
-        xs: '0 1px 2px rgba(0, 0, 0, 0.3)',
-        card: '0 1px 2px rgba(0, 0, 0, 0.28)',
-        raised: '0 2px 6px rgba(0, 0, 0, 0.28), 0 16px 36px -24px rgba(0, 0, 0, 0.8)',
-        float: '0 24px 60px -30px rgba(0, 0, 0, 0.9)',
-        glow: '0 0 0 1px rgba(47, 107, 255, 0.22)',
-        glowStrong: '0 0 0 1px rgba(47, 107, 255, 0.38)',
-        focus: '0 0 0 3px rgba(47, 107, 255, 0.28)',
-        ring: 'inset 0 0 0 1px rgba(47, 107, 255, 0.45)',
+        /* Neumorphic depth — composed in index.css from --shadow-light / --shadow-dark. */
+        'neu-xs': 'var(--neu-xs)',
+        'neu-sm': 'var(--neu-sm)',
+        neu: 'var(--neu)',
+        'neu-lg': 'var(--neu-lg)',
+        'neu-inset-xs': 'var(--neu-inset-xs)',
+        'neu-inset-sm': 'var(--neu-inset-sm)',
+        'neu-inset': 'var(--neu-inset)',
+        'neu-accent': 'var(--neu-accent)',
+        'neu-pressed': 'var(--neu-pressed)',
+        /* Legacy names, remapped so existing usages adopt the soft system. */
+        '2xs': 'var(--neu-xs)',
+        xs: 'var(--neu-xs)',
+        card: 'var(--neu-sm)',
+        raised: 'var(--neu)',
+        float: 'var(--neu-lg)',
+        glow: '0 0 0 1px rgb(var(--c-accent) / 0.22)',
+        glowStrong: '0 0 0 1px rgb(var(--c-accent) / 0.38)',
+        focus: '0 0 0 3px rgb(var(--c-accent) / 0.28)',
+        ring: 'inset 0 0 0 1px rgb(var(--c-accent) / 0.45)',
       },
       maxWidth: {
         content: '1120px',
@@ -97,9 +123,9 @@ export default {
         smooth: 'cubic-bezier(0.2, 0.7, 0.3, 1)',
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(#2f6bff, #2f6bff)',
-        'brand-gradient-soft': 'linear-gradient(rgba(47,107,255,0.14), rgba(47,107,255,0.14))',
-        'grid-fade': 'linear-gradient(#0a1020, #0a1020)',
+        'brand-gradient': 'linear-gradient(135deg, rgb(var(--c-accent)), rgb(var(--c-accent-secondary)))',
+        'brand-gradient-soft': 'linear-gradient(rgb(var(--c-accent) / 0.10), rgb(var(--c-accent) / 0.10))',
+        'grid-fade': 'linear-gradient(rgb(var(--c-canvas)), rgb(var(--c-canvas)))',
       },
       keyframes: {
         shimmer: {

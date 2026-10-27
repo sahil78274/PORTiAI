@@ -21,24 +21,20 @@ export default function HeroPortrait({
   name = PORTRAIT_NAME,
   role = PORTRAIT_ROLE,
   className = '',
+  compact = false,
 }) {
   const [failed, setFailed] = useState(false);
   const showImage = Boolean(src) && !failed;
 
-  return (
-    <figure className={`flex flex-col items-center text-center ${className}`}>
-      <div className="relative">
-        {/* Thin accent ring, offset so the circle never touches the ring itself. */}
-        <span
-          className="pointer-events-none absolute -inset-[10px] rounded-full border border-accent/50"
-          aria-hidden="true"
-        />
-        <span
-          className="pointer-events-none absolute -inset-[3px] rounded-full border border-accent/25"
-          aria-hidden="true"
-        />
+  const circle = compact
+    ? 'h-[64px] w-[64px]'
+    : 'h-[208px] w-[208px] sm:h-[248px] sm:w-[248px] lg:h-[268px] lg:w-[268px]';
 
-        <div className="relative h-[208px] w-[208px] overflow-hidden rounded-full border border-lineStrong bg-canvasAlt sm:h-[248px] sm:w-[248px] lg:h-[268px] lg:w-[268px]">
+  return (
+    <figure className={`flex items-center ${compact ? 'gap-3.5 text-left' : 'flex-col text-center'} ${className}`}>
+      {/* Raised soft ring with the photo recessed inside it. */}
+      <div className={`shrink-0 rounded-full bg-surface shadow-neu ${compact ? 'p-1.5' : 'p-3'}`}>
+        <div className={`relative overflow-hidden rounded-full bg-canvas shadow-neu-inset-sm ${circle}`}>
           {showImage ? (
             <img
               src={src}
@@ -50,25 +46,21 @@ export default function HeroPortrait({
             />
           ) : (
             <div
-              className="flex h-full w-full flex-col items-center justify-center bg-canvasAlt"
+              className="flex h-full w-full flex-col items-center justify-center bg-canvas"
               role="img"
               aria-label={`Portrait placeholder for ${name}, ${role}`}
             >
-              <span className="text-[64px] font-semibold leading-none tracking-[-0.04em] text-inkSoft sm:text-[76px]">
+              <span className={`font-semibold leading-none tracking-[-0.04em] text-inkSoft ${compact ? 'text-[24px]' : 'text-[64px] sm:text-[76px]'}`}>
                 {name.slice(0, 1)}
-              </span>
-              <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
-                {role}
               </span>
             </div>
           )}
         </div>
       </div>
 
-      <figcaption className="mt-5">
-        <p className="text-[17px] font-semibold tracking-[-0.01em] text-ink">Hi, I&apos;m {name}</p>
+      <figcaption className={compact ? 'min-w-0' : 'mt-5'}>
+        <p className={`font-semibold tracking-[-0.01em] text-ink ${compact ? 'text-[14px]' : 'text-[17px]'}`}>Hi, I&apos;m {name}</p>
         <p className="mt-0.5 text-[12px] text-muted">{role}</p>
-
       </figcaption>
     </figure>
   );

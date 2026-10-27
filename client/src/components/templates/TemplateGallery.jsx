@@ -55,22 +55,22 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
 
   return (
     <div className={className}>
-      <div className="flex flex-col gap-3 border-b border-line pb-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
+          <Search size={14} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search templates"
             aria-label="Search templates"
-            className="input h-9 pl-9 text-[13px]"
+            className="input h-10 pl-10 text-[13px]"
           />
           {search ? (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-faint hover:text-ink"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-[8px] p-1 text-faint transition-[box-shadow,color] hover:text-ink hover:shadow-neu-xs"
               aria-label="Clear search"
             >
               <X size={12} aria-hidden="true" />
@@ -78,18 +78,14 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
           ) : null}
         </div>
 
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter templates by category">
+        <div className="segmented flex-wrap" role="group" aria-label="Filter templates by category">
           {TEMPLATE_CATEGORIES.map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => setCategory(item)}
               aria-pressed={category === item}
-              className={`rounded-md border px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
-                category === item
-                  ? 'border-accent/40 bg-accent-soft text-accent-hover'
-                  : 'border-line bg-surface text-muted hover:border-lineStrong hover:text-ink'
-              }`}
+              className={`segmented-item text-[12px] ${category === item ? 'segmented-item-active font-semibold' : ''}`}
             >
               {item}
             </button>
@@ -97,7 +93,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
         </div>
       </div>
 
-      <p className="mt-3 text-[12px] text-faint">
+      <p className="mt-5 text-[12px] text-faint">
         {filtered.length} template{filtered.length === 1 ? '' : 's'}
         {category !== 'All' ? ` in ${category}` : ''}
         {search ? ` matching “${search}”` : ''}
@@ -105,7 +101,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
       </p>
 
       {filtered.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-lineStrong px-6 py-12 text-center">
+        <div className="panel mt-6 px-6 py-12 text-center">
           <p className="text-sm font-medium">No templates match those filters</p>
           <p className="mt-1 text-[13px] text-muted">Try a different search term, or reset to see all six templates.</p>
           <button
@@ -120,7 +116,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
           </button>
         </div>
       ) : (
-        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((template) => (
             <TemplateCard
               key={template.id}

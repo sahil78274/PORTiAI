@@ -284,7 +284,7 @@ export default function BlogEditor() {
       <div className="grid gap-4 lg:grid-cols-[1.4fr_0.85fr]">
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-            <div className="flex items-center gap-1 rounded-lg border border-line bg-canvas p-0.5" role="tablist" aria-label="Editor mode">
+            <div className="segmented" role="tablist" aria-label="Editor mode">
               {[
                 { id: 'write', label: 'Write', icon: Pencil },
                 { id: 'preview', label: 'Preview', icon: Eye },
@@ -295,9 +295,7 @@ export default function BlogEditor() {
                   role="tab"
                   aria-selected={tab === tabId}
                   onClick={() => setTab(tabId)}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium ${
-                    tab === tabId ? 'bg-canvasAlt text-ink' : 'text-muted hover:text-ink'
-                  }`}
+                  className={`segmented-item ${tab === tabId ? 'segmented-item-active' : ''}`}
                 >
                   <Icon size={11} aria-hidden="true" />
                   {label}
@@ -408,7 +406,7 @@ export default function BlogEditor() {
                       key={url}
                       type="button"
                       onClick={() => update({ coverUrl: url })}
-                      className={`overflow-hidden rounded-md border ${post.coverUrl === url ? 'border-accent-hover ring-1 ring-accent-hover' : 'border-line hover:border-lineStrong'}`}
+                      className={`overflow-hidden rounded-[12px] transition-shadow ${post.coverUrl === url ? 'shadow-neu-inset-sm ring-2 ring-accent' : 'shadow-neu-xs hover:shadow-neu-sm'}`}
                       aria-label={`Use suggested cover ${index + 1}`}
                     >
                       <SmartImage src={url} alt="" ratio="aspect-[4/3]" fallbackSeed={index} />
@@ -442,7 +440,7 @@ export default function BlogEditor() {
           {aiError ? (
             <Alert tone="warning" title="AI writing help unavailable">{aiError}</Alert>
           ) : (
-            <div className="rounded-lg border border-line bg-surface p-4 text-[11px] leading-relaxed text-muted">
+            <div className="card p-4 text-[11px] leading-relaxed text-muted">
               <p className="flex items-center gap-1.5 font-medium text-inkSoft">
                 <Sparkles size={12} className="text-accent-hover" aria-hidden="true" />
                 AI writing help
@@ -468,7 +466,7 @@ export default function BlogEditor() {
       />
 
       {post.published && portfolio?.published && publicHref ? (
-        <p className="flex items-center gap-2 rounded-lg border border-success/25 bg-successSoft px-3.5 py-2.5 text-[11px] text-success">
+        <p className="flex items-center gap-2 rounded-tile bg-successSoft shadow-neu-inset-xs px-3.5 py-2.5 text-[11px] text-success">
           <Globe2 size={12} aria-hidden="true" />
           Live at {portfolio.slug && `${window.location.origin}${publicHref}`}
           {dirty ? <span className="ml-auto inline-flex items-center gap-1 text-warning"><AlertCircle size={11} aria-hidden="true" />Unsaved edits are not live yet</span> : null}

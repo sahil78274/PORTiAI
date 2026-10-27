@@ -71,7 +71,7 @@ export default function AiAssist({
           onClick={run}
           loading={state === 'loading'}
           disabled={state === 'loading'}
-          className="border-lineStrong text-accent-hover hover:bg-canvasAlt"
+          className="!text-accent-hover"
         >
           {state === 'loading' ? null : <Sparkles size={13} className="text-accent-hover" aria-hidden="true" />}
           <span>{state === 'loading' ? 'Generating…' : label}</span>
@@ -83,7 +83,7 @@ export default function AiAssist({
             value={tone}
             onChange={(event) => setTone(event.target.value)}
             aria-label="Tone for generated text"
-            className="rounded border border-line bg-surface px-2 py-1 text-[11px] text-inkSoft shadow-2xs focus:border-accent focus:outline-none"
+            className="cursor-pointer rounded-[10px] bg-canvas px-2.5 py-1.5 text-[11px] text-inkSoft shadow-neu-inset-xs focus:outline-none"
           >
             <option value="professional">Professional</option>
             <option value="concise">Concise</option>
@@ -94,7 +94,7 @@ export default function AiAssist({
       </div>
 
       {state === 'error' && error ? (
-        <div role="alert" className="mt-2.5 rounded-md border border-danger/25 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+        <div role="alert" className="mt-2.5 rounded-tile bg-dangerSoft shadow-neu-inset-xs p-3 text-xs leading-relaxed text-danger">
           <p className="flex items-center gap-1.5 font-semibold">
             <AlertCircle size={14} className="shrink-0 text-danger" aria-hidden="true" />
             <span>
@@ -117,7 +117,7 @@ export default function AiAssist({
       ) : null}
 
       {state === 'ready' && result ? (
-        <div className="mt-3 rounded-md border border-line bg-surface p-3.5">
+        <div className="mt-3 rounded-[14px] bg-surface p-3.5 shadow-neu-sm ring-1 ring-accent/15">
           <div className="flex items-center justify-between gap-2 border-b border-line pb-2 mb-2">
             <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-accent-hover">
               <Wand2 size={12} aria-hidden="true" />
@@ -132,11 +132,11 @@ export default function AiAssist({
 
           {applyShape === 'skills' ? (
             <div className="my-2 grid gap-2 text-xs sm:grid-cols-2">
-              <div className="rounded border border-line bg-canvas p-2.5">
+              <div className="rounded-[8px] bg-canvas shadow-neu-inset-xs p-2.5">
                 <p className="font-semibold text-ink">Technical</p>
                 <p className="text-inkSoft">{result.technical?.join(', ') || '—'}</p>
               </div>
-              <div className="rounded border border-line bg-canvas p-2.5">
+              <div className="rounded-[8px] bg-canvas shadow-neu-inset-xs p-2.5">
                 <p className="font-semibold text-ink">Soft Skills</p>
                 <p className="text-inkSoft">{result.soft?.join(', ') || '—'}</p>
               </div>

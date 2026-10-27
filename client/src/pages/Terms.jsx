@@ -83,18 +83,18 @@ const SECTIONS = [
 export default function Terms() {
   return (
     <div className="container-wide max-w-3xl py-14">
-      <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-ink">
+      <Link to="/" className="btn-ghost btn-sm -ml-3">
         <ArrowLeft size={13} aria-hidden="true" />
         Back to home
       </Link>
       <p className="eyebrow mt-6">Terms</p>
-      <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.03em] text-ink sm:text-[36px]">Terms of use</h1>
+      <h1 className="mt-3 text-[32px] font-bold tracking-[-0.03em] text-ink sm:text-[42px]">Terms of use</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
         The rules for using PortiAI, written plainly. Last updated{' '}
         {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
       </p>
 
-      <div className="mt-5 flex gap-3 rounded-xl border border-warning/25 bg-warningSoft px-4 py-3 text-xs leading-relaxed text-warning">
+      <div className="mt-5 flex gap-3 rounded-tile bg-warningSoft shadow-neu-inset-xs px-4 py-3 text-xs leading-relaxed text-warning">
         <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
         <p>
           These terms describe how this independent project behaves. They have not been reviewed by a lawyer and are not a
@@ -102,7 +102,7 @@ export default function Terms() {
         </p>
       </div>
 
-      <div className="mt-9 space-y-8">
+      <div className="card mt-9 space-y-8 p-6 sm:p-9">
         {SECTIONS.map(({ id, title, body }) => (
           <section key={id} id={id} className="scroll-mt-24">
             <h2 className="text-base font-semibold text-ink">{title}</h2>
@@ -111,7 +111,7 @@ export default function Terms() {
         ))}
       </div>
 
-      <div className="mt-10 flex flex-wrap gap-3 border-t border-line pt-6 text-xs text-muted">
+      <div className="mt-10 flex flex-wrap gap-3 text-xs text-muted">
         <Link to="/privacy" className="btn-secondary btn-sm">
           Privacy information
         </Link>

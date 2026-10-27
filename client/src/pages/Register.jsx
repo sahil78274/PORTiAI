@@ -71,17 +71,17 @@ export default function Register() {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
+    <div className="rounded-[24px] bg-surface p-6 shadow-neu-lg sm:p-8">
       <div className="mb-6">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-canvasAlt text-accent-hover">
+        <span className="icon-tile h-12 w-12">
           <Sparkles size={18} aria-hidden="true" />
         </span>
-        <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Create your account</h2>
+        <h2 className="mt-5 text-[24px] font-bold tracking-[-0.025em] text-ink">Create your account</h2>
         <p className="mt-1.5 text-sm text-muted">
           Create an account, build a portfolio and publish it to a public link. No payment details are requested.
         </p>
         {templateMeta ? (
-          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent-line/60 bg-accent-soft px-3 py-1 text-[11px] font-medium text-accent-hover">
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium text-accent-hover">
             <Check size={11} aria-hidden="true" />
             {templateMeta.name} will be applied after sign-up
           </p>
@@ -89,13 +89,13 @@ export default function Register() {
       </div>
 
       {error ? (
-        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-lg border border-danger/30 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-tile bg-dangerSoft p-3 text-xs font-medium leading-relaxed text-danger shadow-neu-inset-xs">
           <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       ) : null}
 
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      <form onSubmit={onSubmit} className="space-y-5" noValidate>
         <Field label="Full name" htmlFor="name" required error={fieldErrors.name}>
           <TextInput
             id="name"
@@ -129,6 +129,7 @@ export default function Register() {
             value={form.password}
             onChange={update('password')}
             aria-describedby="password-rules"
+            aria-invalid={Boolean(fieldErrors.password)}
           />
         </Field>
 
@@ -174,7 +175,7 @@ export default function Register() {
         </Button>
       </form>
 
-      <p className="mt-6 border-t border-line pt-5 text-center text-sm text-muted">
+      <p className="mt-7 border-t border-line pt-5 text-center text-sm text-muted">
         Already have an account?{' '}
         <Link to="/login" className="font-semibold text-accent-hover hover:underline">
           Log in

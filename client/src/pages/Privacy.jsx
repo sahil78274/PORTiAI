@@ -35,9 +35,9 @@ const SECTIONS = [
     body: (
       <p className="mt-2">
         Only portfolios you explicitly publish are served at{' '}
-        <code className="rounded border border-line bg-canvasAlt px-1 py-0.5 font-mono text-xs">/p/&lt;slug&gt;</code>.
+        <code className="rounded-[8px] bg-canvas shadow-neu-inset-xs px-1 py-0.5 font-mono text-xs">/p/&lt;slug&gt;</code>.
         Published blog posts appear at{' '}
-        <code className="rounded border border-line bg-canvasAlt px-1 py-0.5 font-mono text-xs">/p/&lt;slug&gt;/blog</code>{' '}
+        <code className="rounded-[8px] bg-canvas shadow-neu-inset-xs px-1 py-0.5 font-mono text-xs">/p/&lt;slug&gt;/blog</code>{' '}
         on the same basis. The public response contains portfolio and post content only — never your account id, account email,
         analysis results or private metadata. Your contact email appears publicly only if you type it into the portfolio&apos;s
         contact field yourself. Unpublishing removes public access immediately.
@@ -86,18 +86,18 @@ const SECTIONS = [
 export default function Privacy() {
   return (
     <div className="container-wide max-w-3xl py-14">
-      <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-ink">
+      <Link to="/" className="btn-ghost btn-sm -ml-3">
         <ArrowLeft size={13} aria-hidden="true" />
         Back to home
       </Link>
       <p className="eyebrow mt-6">Privacy</p>
-      <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.03em] text-ink sm:text-[36px]">Privacy information</h1>
+      <h1 className="mt-3 text-[32px] font-bold tracking-[-0.03em] text-ink sm:text-[42px]">Privacy information</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
         A plain-language description of what PortiAI stores, what it publishes and who else processes your data. Last updated{' '}
         {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
       </p>
 
-      <div className="mt-5 flex gap-3 rounded-xl border border-warning/25 bg-warningSoft px-4 py-3 text-xs leading-relaxed text-warning">
+      <div className="mt-5 flex gap-3 rounded-tile bg-warningSoft shadow-neu-inset-xs px-4 py-3 text-xs leading-relaxed text-warning">
         <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
         <p>
           This document is written for an independent project rather than by a legal team. It accurately describes how this build
@@ -105,11 +105,13 @@ export default function Privacy() {
         </p>
       </div>
 
-      <div className="mt-9 space-y-8">
+      <div className="card mt-9 space-y-8 p-6 sm:p-9">
         {SECTIONS.map(({ id, title, icon: Icon, body }) => (
           <section key={id} id={id} className="scroll-mt-24">
-            <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
-              <Icon size={15} className="text-accent-hover" aria-hidden="true" />
+            <h2 className="flex items-center gap-3 text-base font-semibold text-ink">
+              <span className="icon-tile-sm">
+                <Icon size={14} aria-hidden="true" />
+              </span>
               {title}
             </h2>
             <div className="text-sm leading-7 text-inkSoft">{body}</div>
@@ -117,7 +119,7 @@ export default function Privacy() {
         ))}
       </div>
 
-      <div className="mt-10 flex flex-wrap gap-3 border-t border-line pt-6 text-xs text-muted">
+      <div className="mt-10 flex flex-wrap gap-3 text-xs text-muted">
         <Link to="/terms" className="btn-secondary btn-sm">
           Terms of use
         </Link>

@@ -4,8 +4,9 @@
   aspect-ratio: 1;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #3478ff;
-  background: #101e34;
+  border: 6px solid var(--surface, #e9edfa);
+  background: var(--bg, #e9edfa);
+  box-shadow: var(--neu, 8px 8px 20px #cbd2e5, -8px -8px 20px #ffffff);
   flex-shrink: 0;
 }
 

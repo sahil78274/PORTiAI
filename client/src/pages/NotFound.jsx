@@ -7,7 +7,7 @@ export default function NotFound() {
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
-      <header className="border-b border-line">
+      <header>
         <div className="container-wide flex h-16 items-center justify-between">
           <Link to="/" aria-label="PortiAI home">
             <Logo />
@@ -28,11 +28,11 @@ export default function NotFound() {
 
       <main id="main" className="flex flex-1 items-center">
         <div className="container-wide max-w-xl py-20">
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-line bg-surface text-accent-hover">
+          <span className="icon-tile h-16 w-16 rounded-[20px] shadow-neu">
             <Compass size={20} aria-hidden="true" />
           </span>
           <p className="mt-5 font-mono text-2xs uppercase tracking-[0.2em] text-faint">Error 404</p>
-          <h1 className="mt-1.5 text-[30px] font-semibold tracking-[-0.03em] text-ink sm:text-[36px]">Page not found</h1>
+          <h1 className="mt-1.5 text-[32px] font-bold tracking-[-0.03em] text-ink sm:text-[40px]">Page not found</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             The URL may be mistyped or the page may have moved. If you followed a portfolio link, that portfolio might be a
             draft or have been unpublished by its owner.

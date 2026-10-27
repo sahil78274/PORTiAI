@@ -10,7 +10,7 @@ export default function Logo({ to = '/', size = 'md', className = '', withWordma
   const content = (
     <span className={`inline-flex select-none items-center gap-2 ${className}`}>
       <span
-        className="flex shrink-0 items-center justify-center rounded-[7px] bg-accent text-white shadow-2xs"
+        className="flex shrink-0 items-center justify-center rounded-[9px] bg-accent text-white shadow-neu-accent"
         style={{ width: markSize, height: markSize }}
         aria-hidden="true"
       >
@@ -34,7 +34,7 @@ export default function Logo({ to = '/', size = 'md', className = '', withWordma
 
   if (!to) return content;
   return (
-    <Link to={to} className="rounded-md transition-opacity hover:opacity-85" aria-label="PortiAI home">
+    <Link to={to} className="rounded-[10px] transition-opacity hover:opacity-85" aria-label="PortiAI home">
       {content}
     </Link>
   );

@@ -19,11 +19,11 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
-      <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-warning/25 bg-warningSoft text-warning">
+    <div className="rounded-[24px] bg-surface p-6 shadow-neu-lg sm:p-8">
+      <span className="icon-tile h-12 w-12 !text-warning">
         <KeyRound size={18} aria-hidden="true" />
       </span>
-      <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Reset your password</h2>
+      <h2 className="mt-5 text-[24px] font-bold tracking-[-0.025em] text-ink">Reset your password</h2>
       <p className="mt-1.5 text-sm leading-relaxed text-muted">
         Automated reset emails are not enabled in this deployment. Here is what you can do instead.
       </p>
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
         </form>
       ) : (
         <div className="mt-6 space-y-4">
-          <div className="flex items-start gap-3 rounded-lg border border-warning/25 bg-warningSoft p-3.5 text-xs leading-relaxed text-warning">
+          <div className="flex items-start gap-3 rounded-tile bg-warningSoft p-3.5 shadow-neu-inset-xs text-xs leading-relaxed text-warning">
             <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
             <div>
               <p className="font-semibold">No reset email will arrive.</p>
@@ -64,7 +64,7 @@ export default function ForgotPassword() {
             </div>
           </div>
 
-          <div className="space-y-2.5 rounded-lg border border-line bg-canvas p-4 text-xs leading-relaxed text-inkSoft">
+          <div className="space-y-2.5 rounded-tile bg-canvas p-4 shadow-neu-inset-sm text-xs leading-relaxed text-inkSoft">
             <p className="flex items-start gap-2">
               <Settings size={14} className="mt-0.5 shrink-0 text-accent-hover" aria-hidden="true" />
               <span>

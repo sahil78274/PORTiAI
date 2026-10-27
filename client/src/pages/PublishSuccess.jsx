@@ -147,7 +147,7 @@ export default function PublishSuccess() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="relative overflow-hidden rounded-lg border border-line bg-surface p-6 sm:p-8">
+      <div className="relative overflow-hidden card p-6 sm:p-8">
 
         <div className="relative text-center">
           <span
@@ -168,7 +168,7 @@ export default function PublishSuccess() {
 
           {publicUrl ? (
             <div className="mx-auto mt-5 flex max-w-xl flex-col gap-2 sm:flex-row">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-canvas px-3 py-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[10px] bg-canvas shadow-neu-inset-xs px-3 py-2">
                 <Globe2 size={14} className="shrink-0 text-faint" aria-hidden="true" />
                 <span className="truncate font-mono text-xs text-inkSoft">{publicUrl}</span>
               </div>
@@ -211,8 +211,8 @@ export default function PublishSuccess() {
         </div>
 
         <div className="relative mt-7 grid gap-3 border-t border-line pt-5 sm:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-lg border border-line bg-canvas px-3 py-2.5">
-            <div className="w-16 shrink-0 overflow-hidden rounded border border-line">
+          <div className="flex items-center gap-3 neu-inset-sm px-3 py-2.5">
+            <div className="w-16 shrink-0 overflow-hidden rounded-[10px] shadow-neu-xs">
               <SmartImage src={portfolio.thumbnailUrl} alt="" ratio="aspect-[4/3]" fallbackSeed={portfolio.title?.length || 1} />
             </div>
             <div className="min-w-0">
@@ -227,7 +227,7 @@ export default function PublishSuccess() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-line bg-canvas px-3 py-2.5">
+          <div className="neu-inset-sm px-3 py-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">Quick links</p>
             <ul className="mt-2 space-y-1.5 text-xs">
               <li>
@@ -260,7 +260,7 @@ export default function PublishSuccess() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <div className="rounded-lg border border-line bg-surface p-4">
+        <div className="card p-4">
           <div className="flex items-center justify-between">
             <p className="text-[13px] font-semibold text-ink">Publish checklist</p>
             <span className="badge !py-0.5">{checklist.filter((item) => item.done).length}/{checklist.length} complete</span>
@@ -270,7 +270,7 @@ export default function PublishSuccess() {
               <li key={item.label} className="flex items-start gap-2.5 py-2.5">
                 <span
                   className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
-                    item.done ? 'bg-success/20 text-success' : 'border border-lineStrong text-faint'
+                    item.done ? 'bg-successSoft text-success' : 'bg-canvas text-faint shadow-neu-inset-xs'
                   }`}
                 >
                   {item.done ? <Check size={10} aria-hidden="true" /> : <span className="h-1 w-1 rounded-full bg-faint" aria-hidden="true" />}
@@ -285,7 +285,7 @@ export default function PublishSuccess() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-lg border border-line bg-surface p-4">
+          <div className="card p-4">
             <p className="text-[13px] font-semibold text-ink">Next steps</p>
             <ol className="mt-2.5 space-y-2.5 text-xs leading-relaxed text-muted">
               <li className="flex gap-2">
@@ -304,7 +304,7 @@ export default function PublishSuccess() {
           </div>
 
           {portfolio.published ? (
-            <div className="rounded-lg border border-line bg-canvas p-3.5">
+            <div className="neu-inset-sm p-3.5">
               <p className="text-[11px] font-medium text-inkSoft">Need to take it down?</p>
               <p className="mt-1 text-[11px] leading-relaxed text-muted">Unpublishing removes public access immediately and keeps your content intact.</p>
               <button type="button" onClick={unpublish} disabled={unpublishing} className="btn-ghost btn-sm mt-2 text-warning hover:bg-warningSoft">
@@ -313,7 +313,7 @@ export default function PublishSuccess() {
               </button>
             </div>
           ) : (
-            <Link to={`/dashboard/portfolio/${id}/edit`} className="flex items-center justify-between rounded-lg border border-line bg-surface p-4 transition-colors hover:border-lineStrong">
+            <Link to={`/dashboard/portfolio/${id}/edit`} className="card-link flex items-center justify-between p-4">
               <div>
                 <p className="text-[13px] font-semibold text-ink">Ready to go live?</p>
                 <p className="mt-0.5 text-[11px] text-muted">Open the editor and press Publish.</p>

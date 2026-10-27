@@ -9,10 +9,11 @@ const ICONS = {
   info: Info,
 };
 
+// Icon well tone per type; the toast body itself is always a raised neutral card.
 const STYLES = {
-  success: 'border-success/25 bg-successSoft text-success',
-  error: 'border-danger/25 bg-dangerSoft text-danger',
-  info: 'border-lineStrong bg-surface text-ink',
+  success: 'text-success',
+  error: 'text-danger',
+  info: 'text-accent-hover',
 };
 
 export function ToastProvider({ children }) {
@@ -57,17 +58,19 @@ export function ToastProvider({ children }) {
             <div
               key={toast.id}
               role="status"
-              className={`pointer-events-auto flex w-full max-w-sm items-start gap-2.5 rounded-md border px-3.5 py-3 shadow-raised ${STYLES[toast.type]}`}
+              className="pointer-events-auto flex w-full max-w-sm animate-fadeUp items-start gap-3 rounded-[16px] bg-surface px-3.5 py-3 text-ink shadow-neu-lg"
             >
-              <Icon size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-              <div className="min-w-0 flex-1">
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-canvas shadow-neu-inset-sm ${STYLES[toast.type]}`}>
+                <Icon size={16} aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1 pt-1">
                 <p className="text-sm font-medium leading-5">{toast.message}</p>
                 {toast.description ? <p className="mt-1 text-xs text-inkSoft">{toast.description}</p> : null}
               </div>
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}
-                className="shrink-0 rounded p-0.5 text-current/70 hover:bg-black/5"
+                className="shrink-0 rounded-[8px] p-1 text-muted transition-[box-shadow,color] hover:text-ink hover:shadow-neu-xs"
                 aria-label="Dismiss notification"
               >
                 <X size={14} aria-hidden="true" />

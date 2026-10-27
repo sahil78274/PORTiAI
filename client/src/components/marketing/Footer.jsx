@@ -38,8 +38,8 @@ const COLUMNS = [
 
 export default function Footer() {
   return (
-    <footer id="footer" className="border-t border-line bg-canvas">
-      <div className="container-wide py-12">
+    <footer id="footer" className="px-3 pb-3 sm:px-4">
+      <div className="container-wide rounded-[28px] bg-canvas py-12 shadow-neu-inset">
         <div className="grid gap-10 md:grid-cols-[1.3fr_2fr]">
           <div>
             <Logo size="md" />
@@ -59,7 +59,7 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {COLUMNS.map((column) => (
               <div key={column.title}>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ink">{column.title}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink">{column.title}</p>
                 <ul className="mt-3 space-y-2">
                   {column.links.map((link) =>
                     link.to.startsWith('/#') ? (

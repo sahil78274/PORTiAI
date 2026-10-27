@@ -21,8 +21,8 @@ function Shell({ portfolio, children, slug }) {
   const { style } = usePortfolioTheme(portfolio);
   return (
     <div className="min-h-screen bg-canvas text-ink" style={style}>
-      <header className="border-b border-line bg-canvas/90 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-5 py-4">
+      <header className="px-4 pt-4">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 rounded-[18px] bg-surface px-5 py-3 shadow-neu-sm">
           <Link to={`/p/${slug}`} className="inline-flex items-center gap-1.5 text-xs font-medium text-inkSoft transition-colors hover:text-ink">
             <ArrowLeft size={13} aria-hidden="true" />
             {portfolio?.profile?.fullName || 'Portfolio'}
@@ -33,8 +33,8 @@ function Shell({ portfolio, children, slug }) {
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-5 py-10 sm:py-14">{children}</main>
-      <footer className="border-t border-line px-5 py-6">
-        <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-2 text-[11px] text-muted sm:flex-row">
+      <footer className="px-5 pb-8 pt-2">
+        <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-2 border-t border-line pt-6 text-[11px] text-muted sm:flex-row">
           <span>
             {portfolio?.profile?.fullName || 'Portfolio'} · {new Date().getFullYear()}
           </span>
@@ -50,25 +50,29 @@ function Shell({ portfolio, children, slug }) {
 
 function Notice({ title, body, slug, retry }) {
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 text-center">
-      <span className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-muted">
-        <Lock size={18} aria-hidden="true" />
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-5">
+    <div className="card w-full max-w-md p-8 text-center sm:p-10">
+      <div className="flex flex-col items-center">
+      <span className="icon-tile h-14 w-14 rounded-[18px] shadow-neu">
+        <Lock size={20} aria-hidden="true" />
       </span>
-      <h1 className="mt-4 text-lg font-semibold">{title}</h1>
+      <h1 className="mt-5 text-lg font-bold text-ink">{title}</h1>
       <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
-      <div className="mt-5 flex gap-2">
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
         {retry ? (
-          <button type="button" onClick={retry} className="rounded-lg border border-lineStrong px-3 py-2 text-xs font-medium hover:bg-surface">
-            <RefreshCw size={12} className="mr-1 inline" aria-hidden="true" />
+          <button type="button" onClick={retry} className="btn-secondary btn-sm">
+            <RefreshCw size={13} aria-hidden="true" />
             Try again
           </button>
         ) : null}
         {slug ? (
-          <Link to={`/p/${slug}`} className="rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent-hover">
+          <Link to={`/p/${slug}`} className="btn-primary btn-sm">
             Back to portfolio
           </Link>
         ) : null}
       </div>
+      </div>
+    </div>
     </div>
   );
 }
@@ -142,26 +146,26 @@ export function PublicBlogList() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search posts…"
             aria-label="Search posts"
-            className="w-full rounded-lg border border-line bg-surface py-2 pl-9 pr-3 text-sm outline-none focus:border-accent"
+            className="input h-10 pl-9 text-sm"
           />
         </div>
       ) : null}
 
       {filtered.length === 0 ? (
-        <p className="mt-12 rounded-lg border border-dashed border-line px-5 py-10 text-center text-sm text-muted">
+        <p className="panel mt-12 px-5 py-10 text-center text-sm text-muted">
           {posts.length === 0 ? 'No posts have been published yet.' : 'No posts match that search.'}
         </p>
       ) : (
-        <ul className="mt-8 divide-y divide-line border-t border-line">
+        <ul className="mt-8 space-y-4">
           {filtered.map((post) => (
             <li key={post.id}>
-              <Link to={`/p/${slug}/blog/${post.slug}`} className="group flex flex-col gap-3 py-6 sm:flex-row sm:items-start sm:gap-5">
+              <Link to={`/p/${slug}/blog/${post.slug}`} className="card-link group flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:gap-5 sm:p-5">
                 {post.coverUrl ? (
                   <img
                     src={post.coverUrl}
                     alt=""
                     loading="lazy"
-                    className="h-32 w-full shrink-0 rounded-lg object-cover sm:h-24 sm:w-36"
+                    className="h-32 w-full shrink-0 rounded-[12px] object-cover shadow-neu-xs sm:h-24 sm:w-36"
                     onError={(event) => {
                       event.currentTarget.style.display = 'none';
                     }}
@@ -258,7 +262,7 @@ export function PublicBlogPost() {
           <img
             src={post.coverUrl}
             alt=""
-            className="mt-6 aspect-[16/8] w-full rounded-lg object-cover"
+            className="mt-6 aspect-[16/8] w-full rounded-[18px] object-cover shadow-neu-sm"
             onError={(event) => {
               event.currentTarget.style.display = 'none';
             }}
@@ -275,7 +279,7 @@ export function PublicBlogPost() {
         {post.tags?.length ? (
           <ul className="mt-8 flex flex-wrap gap-1.5">
             {post.tags.map((tag) => (
-              <li key={tag} className="rounded-full border border-line px-2.5 py-0.5 text-[10px] font-medium text-muted">
+              <li key={tag} className="rounded-full bg-canvas px-2.5 py-0.5 text-[10px] font-medium text-muted shadow-neu-inset-xs">
                 {tag}
               </li>
             ))}

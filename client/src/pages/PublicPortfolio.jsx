@@ -67,11 +67,12 @@ export default function PublicPortfolio() {
 
   if (status !== 'ready' || !portfolio) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-6 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full border border-line bg-canvasAlt text-muted">
+      <div className="flex min-h-screen items-center justify-center bg-canvas px-5">
+        <div className="card flex w-full max-w-md flex-col items-center p-8 text-center sm:p-10">
+        <span className="icon-tile h-14 w-14 rounded-[18px] shadow-neu">
           <Lock size={20} aria-hidden="true" />
         </span>
-        <h1 className="mt-4 text-[18px] font-semibold text-ink">
+        <h1 className="mt-5 text-[18px] font-bold text-ink">
           {status === 'missing' ? 'This portfolio is not available' : 'Something went wrong'}
         </h1>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
@@ -79,7 +80,7 @@ export default function PublicPortfolio() {
             ? 'The link may be incorrect, or the owner has unpublished this portfolio. Published portfolios are always reachable at their exact URL.'
             : error}
         </p>
-        <div className="mt-5 flex gap-2">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           {status === 'error' ? (
             <button type="button" onClick={load} className="btn-secondary btn-sm">
               <RefreshCw size={13} aria-hidden="true" />
@@ -91,6 +92,7 @@ export default function PublicPortfolio() {
             Build your own with PortiAI
           </Link>
         </div>
+        </div>
       </div>
     );
   }
@@ -98,10 +100,10 @@ export default function PublicPortfolio() {
   return (
     <div className="min-h-screen">
       <PortfolioRenderer portfolio={portfolio} blogHref={blogEnabled ? `/p/${portfolio.slug}/blog` : undefined} />
-      <div className="border-t border-line bg-canvasAlt px-4 py-4 text-center">
+      <div className="bg-canvas px-4 py-5 text-center">
         <Link
           to="/?ref=portfolio-footer"
-          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-faint transition-colors hover:text-ink"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-[11px] font-medium text-muted shadow-neu-xs transition-[box-shadow,color] hover:text-ink hover:shadow-neu-sm"
         >
           Built with PortiAI
           <ArrowUpRight size={11} aria-hidden="true" />

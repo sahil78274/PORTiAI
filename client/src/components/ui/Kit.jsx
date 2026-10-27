@@ -16,7 +16,7 @@ export const Tooltip = ({ label, children, side = 'top' }) => {
       {children}
       <span
         role="tooltip"
-        className={`pointer-events-none absolute z-50 hidden whitespace-nowrap rounded border border-lineStrong bg-surface px-2 py-1 text-[10px] font-medium text-inkSoft shadow-raised group-hover:block group-focus-within:block ${positions[side]}`}
+        className={`pointer-events-none absolute z-50 hidden whitespace-nowrap rounded-[8px] bg-ink px-2 py-1 text-[11px] font-medium text-white shadow-neu-sm group-hover:block group-focus-within:block ${positions[side]}`}
       >
         {label}
       </span>
@@ -29,7 +29,7 @@ export const SectionHeading = ({ eyebrow, title, description, align = 'left', cl
   <div className={`flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${className}`}>
     <div className={align === 'center' ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}>
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <h2 className="mt-2 text-balance text-[26px] font-semibold tracking-[-0.025em] text-ink">{title}</h2>
+      <h2 className="mt-2 text-balance text-[28px] font-semibold tracking-[-0.025em] text-ink">{title}</h2>
       {description ? <p className="mt-3 text-sm leading-relaxed text-muted">{description}</p> : null}
     </div>
     {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
@@ -39,7 +39,7 @@ export const SectionHeading = ({ eyebrow, title, description, align = 'left', cl
 /* -------------------------------------------------- Stat card -------------------------------------------------- */
 const TONES = {
   indigo: 'text-accent-hover',
-  violet: 'text-[#a78bfa]',
+  violet: 'text-accent-secondary',
   emerald: 'text-success',
   amber: 'text-warning',
 };
@@ -48,11 +48,11 @@ export const StatCard = ({ icon: Icon, label, value, hint, tone = 'indigo', load
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <span className={`flex h-7 w-7 items-center justify-center rounded-md border border-line bg-canvas ${TONES[tone] || TONES.indigo}`}>
+        <span className={`icon-tile ${TONES[tone] || TONES.indigo}`}>
           {Icon ? <Icon size={16} aria-hidden="true" /> : null}
         </span>
         {trend ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-success/25 bg-successSoft px-1.5 py-0.5 text-[10px] font-medium text-success">
+          <span className="inline-flex items-center gap-1 rounded-full bg-successSoft px-2 py-0.5 text-[10px] font-semibold text-success">
             <TrendingUp size={9} aria-hidden="true" />
             {trend}
           </span>
@@ -66,20 +66,20 @@ export const StatCard = ({ icon: Icon, label, value, hint, tone = 'indigo', load
 
   if (to) {
     return (
-      <Link to={to} className="card group p-4">
+      <Link to={to} className="card-hover group block p-5">
         {body}
       </Link>
     );
   }
-  return <div className="card p-4">{body}</div>;
+  return <div className="card p-5">{body}</div>;
 };
 
 /* -------------------------------------------------- Page header -------------------------------------------------- */
 export const PageHeader = ({ eyebrow, title, description, actions, className = '' }) => (
-  <header className={`flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between ${className}`}>
+  <header className={`flex flex-col gap-4 pb-1 sm:flex-row sm:items-end sm:justify-between ${className}`}>
     <div className="min-w-0">
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <h1 className="mt-1.5 text-balance text-[20px] font-semibold tracking-[-0.02em] text-ink">{title}</h1>
+      <h1 className="mt-1.5 text-balance text-[24px] font-semibold leading-tight tracking-[-0.025em] text-ink sm:text-[26px]">{title}</h1>
       {description ? <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{description}</p> : null}
     </div>
     {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
@@ -96,7 +96,7 @@ export const SmartImage = ({ src, alt = '', className = '', ratio = 'aspect-[16/
   if (!src || failed) {
     return (
       <div
-        className={`flex items-center justify-center overflow-hidden border border-line bg-canvasAlt ${ratio} ${className}`}
+        className={`flex items-center justify-center overflow-hidden bg-canvas shadow-neu-inset-sm ${ratio} ${className}`}
         role={alt ? 'img' : 'presentation'}
         aria-label={alt || undefined}
       >
@@ -151,7 +151,7 @@ export const Dropdown = ({ trigger, children, align = 'right', className = '' })
       {open ? (
         <div
           role="menu"
-          className={`absolute z-40 mt-2 min-w-[190px] overflow-hidden rounded-lg border border-lineStrong bg-surface py-1 shadow-float animate-fadeIn ${
+          className={`menu-surface absolute z-40 mt-2 min-w-[200px] p-1.5 animate-fadeIn ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
           onClick={() => setOpen(false)}
@@ -164,9 +164,7 @@ export const Dropdown = ({ trigger, children, align = 'right', className = '' })
 };
 
 export const DropdownItem = ({ icon: Icon, children, onClick, to, danger = false, ...props }) => {
-  const className = `flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors ${
-    danger ? 'text-danger hover:bg-danger/10' : 'text-inkSoft hover:bg-canvasAlt hover:text-ink'
-  }`;
+  const className = `menu-item text-xs ${danger ? '!text-danger hover:!bg-dangerSoft' : ''}`;
   const content = (
     <>
       {Icon ? <Icon size={13} aria-hidden="true" /> : null}

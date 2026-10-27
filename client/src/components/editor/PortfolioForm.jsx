@@ -60,9 +60,9 @@ const PhotoField = ({ value, onChange }) => {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-surfaceRaised/40 p-3">
+    <div className="neu-inset-sm p-3">
       <div className="flex items-center gap-3">
-        <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-lineStrong bg-canvasAlt">
+        <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-canvas shadow-neu-inset-xs">
           {preview ? (
             <img
               src={preview}
@@ -132,8 +132,8 @@ const PhotoField = ({ value, onChange }) => {
 };
 
 const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel = 'Remove' }) => (
-  <div className="rounded-lg border border-line bg-surface p-4 shadow-xs">
-    <div className="mb-3 flex items-center justify-between gap-2 border-b border-line pb-2.5">
+  <div className="neu-raised-sm rounded-[16px] p-4">
+    <div className="mb-3.5 flex items-center justify-between gap-2 border-b border-line pb-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">
         {title} {index + 1}
       </p>
@@ -142,7 +142,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
           type="button"
           onClick={() => onMove(index, -1)}
           disabled={index === 0}
-          className="rounded-md p-1 text-faint hover:bg-canvasAlt hover:text-ink disabled:opacity-30 transition-colors"
+          className="icon-btn h-7 w-7 rounded-[9px]"
           aria-label={`Move ${title} ${index + 1} up`}
         >
           <ArrowUp size={13} aria-hidden="true" />
@@ -151,7 +151,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
           type="button"
           onClick={() => onMove(index, 1)}
           disabled={index === total - 1}
-          className="rounded-md p-1 text-faint hover:bg-canvasAlt hover:text-ink disabled:opacity-30 transition-colors"
+          className="icon-btn h-7 w-7 rounded-[9px]"
           aria-label={`Move ${title} ${index + 1} down`}
         >
           <ArrowDown size={13} aria-hidden="true" />
@@ -159,7 +159,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
         <button
           type="button"
           onClick={() => onRemove(index)}
-          className="rounded-md p-1 text-danger hover:bg-danger/15 hover:text-danger transition-colors"
+          className="icon-btn h-7 w-7 rounded-[9px] !text-danger"
           aria-label={`${removeLabel} ${title} ${index + 1}`}
         >
           <Trash2 size={13} aria-hidden="true" />
@@ -296,7 +296,7 @@ export function ProfileSection({ draft, setDraft }) {
         onApply={(text) => setProfile('bio', text)}
       />
 
-      <fieldset className="rounded border border-line p-3">
+      <fieldset className="neu-inset-sm p-3.5">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-muted">Professional links</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="GitHub" htmlFor="github">
@@ -451,7 +451,7 @@ export function SkillsSection({ draft, setDraft }) {
       {draft.skills.length ? (
         <ul className="space-y-1.5">
           {draft.skills.map((skill, index) => (
-            <li key={`${skill.name}-${index}`} className="flex items-center gap-2 rounded border border-line bg-surface px-2.5 py-1.5">
+            <li key={`${skill.name}-${index}`} className="flex items-center gap-2 rounded-[12px] bg-surface px-3 py-2 shadow-neu-xs">
               <input
                 value={skill.name}
                 onChange={(event) =>
@@ -468,10 +468,10 @@ export function SkillsSection({ draft, setDraft }) {
                     type="button"
                     onClick={() => setDraft({ ...draft, skills: updateListItem(draft.skills, index, { category: option }) })}
                     aria-pressed={skill.category === option}
-                    className={`rounded-sm border px-1.5 py-0.5 text-2xs ${
+                    className={`rounded-[8px] px-2 py-0.5 text-2xs font-medium transition-[box-shadow,color] ${
                       skill.category === option
-                        ? 'border-accent bg-accent-soft text-accent-hover'
-                        : 'border-lineStrong bg-surface text-muted hover:bg-canvasAlt'
+                        ? 'bg-canvas text-accent-hover shadow-neu-inset-xs'
+                        : 'text-muted hover:text-ink hover:shadow-neu-xs'
                     }`}
                   >
                     {option === 'technical' ? 'Technical' : 'Soft'}
@@ -483,7 +483,7 @@ export function SkillsSection({ draft, setDraft }) {
                   type="button"
                   onClick={() => setDraft({ ...draft, skills: moveListItem(draft.skills, index, -1) })}
                   disabled={index === 0}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
+                  className="icon-btn h-7 w-7 rounded-[9px]"
                   aria-label={`Move ${skill.name} up`}
                 >
                   <ArrowUp size={12} aria-hidden="true" />
@@ -492,7 +492,7 @@ export function SkillsSection({ draft, setDraft }) {
                   type="button"
                   onClick={() => setDraft({ ...draft, skills: moveListItem(draft.skills, index, 1) })}
                   disabled={index === draft.skills.length - 1}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
+                  className="icon-btn h-7 w-7 rounded-[9px]"
                   aria-label={`Move ${skill.name} down`}
                 >
                   <ArrowDown size={12} aria-hidden="true" />
@@ -510,7 +510,7 @@ export function SkillsSection({ draft, setDraft }) {
           ))}
         </ul>
       ) : (
-        <p className="rounded border border-dashed border-lineStrong px-3 py-4 text-center text-sm text-muted">
+        <p className="neu-inset-sm px-3 py-5 text-center text-sm text-muted">
           No skills added yet. Five or six technical skills and one or two transferable skills is a good start.
         </p>
       )}
@@ -535,7 +535,7 @@ export function EducationSection({ draft, setDraft }) {
   return (
     <div className="space-y-3">
       {items.length === 0 ? (
-        <p className="rounded border border-dashed border-lineStrong px-3 py-4 text-center text-sm text-muted">
+        <p className="neu-inset-sm px-3 py-5 text-center text-sm text-muted">
           Add your current course. Dates can be approximate, e.g. “2023” and “2026 (expected)”.
         </p>
       ) : null}
@@ -631,7 +631,7 @@ export function ProjectsSection({ draft, setDraft }) {
   return (
     <div className="space-y-3">
       {items.length === 0 ? (
-        <p className="rounded border border-dashed border-lineStrong px-3 py-4 text-center text-sm text-muted">
+        <p className="neu-inset-sm px-3 py-5 text-center text-sm text-muted">
           Projects are the strongest part of a student portfolio. Two or three with clear descriptions beat six vague ones.
         </p>
       ) : null}
@@ -926,7 +926,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
     <div className="space-y-4">
       <fieldset>
         <legend className="label">Template</legend>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           {TEMPLATES.map((template) => {
             const active = draft.templateId === template.id;
             return (
@@ -935,8 +935,8 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
                 type="button"
                 onClick={() => handleSelectTemplate(template)}
                 aria-pressed={active}
-                className={`rounded-lg border p-3.5 text-left transition-colors ${
-                  active ? 'border-accent bg-accent-soft ring-1 ring-accent shadow-xs' : 'border-line bg-surface hover:border-lineStrong hover:bg-canvasAlt'
+                className={`rounded-[14px] p-3.5 text-left transition-[box-shadow] duration-150 ${
+                  active ? 'bg-canvas shadow-neu-inset-sm ring-1 ring-accent/40' : 'bg-surface shadow-neu-xs hover:shadow-neu-sm'
                 }`}
               >
                 <span className="flex items-center justify-between">
@@ -962,7 +962,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
               aria-label={swatch.label}
               title={swatch.label}
               className={`h-7 w-7 rounded-full transition-transform hover:scale-110 shadow-2xs ${
-                draft.theme.accent === swatch.value ? 'ring-2 ring-accent ring-offset-2 scale-105' : 'ring-1 ring-lineStrong'
+                draft.theme.accent === swatch.value ? 'ring-2 ring-accent ring-offset-2 ring-offset-canvas scale-105' : 'ring-2 ring-surface'
               }`}
               style={{ backgroundColor: swatch.value }}
             />
@@ -973,7 +973,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
               type="color"
               value={draft.theme.accent}
               onChange={(event) => setTheme('accent', event.target.value)}
-              className="h-7 w-9 cursor-pointer rounded-lg border border-line bg-surface p-0.5 shadow-2xs"
+              className="h-7 w-9 cursor-pointer card p-0.5 shadow-2xs"
               aria-label="Custom accent colour"
             />
           </label>
@@ -1003,8 +1003,8 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
       </div>
 
       {showPreview ? (
-        <div className="rounded border border-line">
-          <p className="border-b border-line bg-canvasAlt/60 px-3 py-1.5 text-2xs uppercase tracking-widest text-muted">
+        <div className="overflow-hidden rounded-[16px] bg-canvas p-2 shadow-neu-inset-sm">
+          <p className="px-2 pb-2 pt-1 text-2xs uppercase tracking-widest text-muted">
             Template preview
           </p>
           <TemplatePreviewFrame designWidth={1000} designHeight={420} label="Selected template preview">
@@ -1041,7 +1041,7 @@ export function SectionsSection({ draft, setDraft }) {
       <p className="text-xs text-muted">
         Sections without content are skipped automatically, even when they are switched on.
       </p>
-      <ul className="divide-y divide-line overflow-hidden rounded border border-line bg-surface">
+      <ul className="divide-y divide-line overflow-hidden rounded-[10px] bg-surface shadow-neu-xs">
         {sections.map((section, index) => {
           const definition = SECTION_DEFINITIONS.find((item) => item.id === section.id);
           return (
@@ -1057,7 +1057,7 @@ export function SectionsSection({ draft, setDraft }) {
                   type="button"
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
+                  className="icon-btn h-7 w-7 rounded-[9px]"
                   aria-label={`Move ${definition?.label || section.id} up`}
                 >
                   <ArrowUp size={13} aria-hidden="true" />
@@ -1066,7 +1066,7 @@ export function SectionsSection({ draft, setDraft }) {
                   type="button"
                   onClick={() => move(index, 1)}
                   disabled={index === sections.length - 1}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
+                  className="icon-btn h-7 w-7 rounded-[9px]"
                   aria-label={`Move ${definition?.label || section.id} down`}
                 >
                   <ArrowDown size={13} aria-hidden="true" />

@@ -43,11 +43,13 @@ export default function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b transition-colors duration-200 ${
-        scrolled ? 'border-line bg-canvas/90 backdrop-blur' : 'border-transparent bg-canvas'
-      }`}
+      className="sticky top-0 z-40 px-3 pt-3 sm:px-4"
     >
-      <div className="container-wide flex h-14 items-center justify-between gap-4">
+      <div
+        className={`container-wide flex h-16 items-center justify-between gap-4 rounded-[20px] transition-[box-shadow,background-color] duration-200 ${
+          scrolled ? 'bg-canvas shadow-neu-sm' : 'bg-transparent shadow-none'
+        }`}
+      >
         <div className="flex items-center gap-8">
           <Logo />
           <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
@@ -56,7 +58,7 @@ export default function Navbar() {
                 key={link.label}
                 href={link.hash ? `/#${link.hash}` : link.to}
                 onClick={(event) => go(event, link)}
-                className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted transition-colors hover:text-ink"
+                className="rounded-[10px] px-3 py-2 text-[13px] font-medium text-muted transition-[box-shadow,color] hover:text-ink hover:shadow-neu-xs"
               >
                 {link.label}
               </a>
@@ -66,18 +68,18 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-1.5 md:flex">
           {loading ? (
-            <span className="h-8 w-28 animate-pulse rounded-md bg-canvasAlt" aria-hidden="true" />
+            <span className="skeleton h-9 w-28" aria-hidden="true" />
           ) : user ? (
-            <Link to="/dashboard" className="btn-primary btn-sm">
+            <Link to="/dashboard" className="btn-primary">
               <LayoutDashboard size={13} aria-hidden="true" />
               Dashboard
             </Link>
           ) : (
             <>
-              <Link to="/login" className="rounded-md px-3 py-1.5 text-[13px] font-medium text-muted transition-colors hover:text-ink">
+              <Link to="/login" className="btn-ghost">
                 Login
               </Link>
-              <Link to="/signup" className="btn-primary btn-sm">
+              <Link to="/signup" className="btn-primary">
                 Build Your Portfolio
               </Link>
             </>
@@ -86,7 +88,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="btn-ghost h-9 w-9 rounded-md p-0 md:hidden"
+          className="icon-btn h-10 w-10 md:hidden"
           aria-expanded={open}
           aria-controls="mobile-nav"
           aria-label={open ? 'Close menu' : 'Open menu'}
@@ -97,19 +99,19 @@ export default function Navbar() {
       </div>
 
       {open ? (
-        <div id="mobile-nav" className="border-t border-line bg-surface px-4 py-3 md:hidden">
+        <div id="mobile-nav" className="mx-auto mt-2 max-w-wide rounded-[20px] bg-surface p-3 shadow-neu md:hidden">
           <nav aria-label="Mobile" className="flex flex-col">
             {LINKS.map((link) => (
               <a
                 key={link.label}
                 href={link.hash ? `/#${link.hash}` : link.to}
                 onClick={(event) => go(event, link)}
-                className="rounded-md px-2 py-2.5 text-sm font-medium text-inkSoft hover:bg-canvasAlt hover:text-ink"
+                className="menu-item py-2.5 text-sm font-medium"
               >
                 {link.label}
               </a>
             ))}
-            <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
+            <div className="mt-3 flex flex-col gap-3 border-t border-line px-1 pb-1 pt-4">
               {user ? (
                 <Link to="/dashboard" className="btn-primary w-full justify-center">
                   Open dashboard

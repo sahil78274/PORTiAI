@@ -9,14 +9,14 @@ import { heroPortfolio } from '../../utils/demoPortfolio.js';
  */
 export default function HeroPortfolioPreview({ className = '' }) {
   return (
-    <div className={`overflow-hidden rounded-lg border border-line bg-surface shadow-float ${className}`}>
-      <div className="flex items-center gap-2 border-b border-line bg-surfaceRaised px-3 py-2">
+    <div className={`overflow-hidden rounded-[16px] bg-surface shadow-neu-sm ${className}`}>
+      <div className="flex items-center gap-2 px-3 py-2">
         <span className="flex gap-1.5" aria-hidden="true">
-          <span className="h-[6px] w-[6px] rounded-full bg-lineStrong" />
-          <span className="h-[6px] w-[6px] rounded-full bg-lineStrong" />
-          <span className="h-[6px] w-[6px] rounded-full bg-lineStrong" />
+          <span className="h-[7px] w-[7px] rounded-full bg-canvas shadow-neu-inset-xs" />
+          <span className="h-[7px] w-[7px] rounded-full bg-canvas shadow-neu-inset-xs" />
+          <span className="h-[7px] w-[7px] rounded-full bg-canvas shadow-neu-inset-xs" />
         </span>
-        <span className="mx-auto rounded border border-line bg-canvasAlt px-2 py-px text-[9.5px] text-faint">
+        <span className="mx-auto rounded-full bg-canvas px-2.5 py-0.5 text-[9.5px] text-faint shadow-neu-inset-xs">
           farheen · Minimal Developer
         </span>
       </div>

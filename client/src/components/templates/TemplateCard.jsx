@@ -43,10 +43,10 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-[12px] text-muted">
-          <span className="rounded border border-line px-1.5 py-0.5 text-[11px]">{template.categories.join(' · ')}</span>
+          <span className="badge-draft">{template.categories.join(' · ')}</span>
           <span>Best for {template.bestFor.toLowerCase()}</span>
         </div>
-        <div className="flex items-center gap-0.5 rounded-md border border-line bg-canvas p-0.5" role="group" aria-label="Preview width">
+        <div className="segmented" role="group" aria-label="Preview width">
           {[
             { id: 'desktop', Icon: Monitor, label: 'Desktop' },
             { id: 'tablet', Icon: Tablet, label: 'Tablet' },
@@ -58,9 +58,7 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
               onClick={() => setDevice(id)}
               aria-pressed={device === id}
               aria-label={`${label} preview`}
-              className={`rounded p-1.5 transition-colors ${
-                device === id ? 'bg-surface text-ink ' : 'text-faint hover:text-ink'
-              }`}
+              className={`segmented-item px-2 py-1.5 ${device === id ? 'segmented-item-active' : ''}`}
             >
               <Icon size={14} aria-hidden="true" />
             </button>
@@ -68,8 +66,8 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-line bg-canvas">
-        <div className="flex items-center justify-between border-b border-line bg-surface px-3 py-1.5 text-[11px] text-muted">
+      <div className="overflow-hidden neu-inset-sm">
+        <div className="flex items-center justify-between px-3 py-2 text-[11px] text-muted">
           <span className="font-medium text-inkSoft">{template.name}</span>
           <span className="capitalize">{device} preview · sample content</span>
         </div>
@@ -90,17 +88,17 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
 
 export default function TemplateCard({ template, selected = false, onPreview, onUse, useHref }) {
   return (
-    <article className={`overflow-hidden rounded-lg border bg-surface transition-colors ${selected ? 'border-accent/50' : 'border-line hover:border-lineStrong'}`}>
-      <div className="relative border-b border-line">
-        <TemplateThumb template={template} designHeight={620} />
+    <article className="card-hover flex flex-col p-3">
+      <div className="relative overflow-hidden rounded-[14px] bg-canvas p-1.5 shadow-neu-inset-sm">
+        <TemplateThumb template={template} designHeight={620} className="overflow-hidden rounded-[10px]" />
         {selected ? (
-          <span className="absolute left-2.5 top-2.5 rounded border border-accent/30 bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-hover">
+          <span className="badge absolute left-3.5 top-3.5 bg-accent text-white shadow-neu-accent">
             In use
           </span>
         ) : null}
       </div>
 
-      <div className="p-4">
+      <div className="flex flex-1 flex-col px-2 pb-2 pt-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="text-[15px] font-semibold">{template.name}</h3>
@@ -108,20 +106,20 @@ export default function TemplateCard({ template, selected = false, onPreview, on
           </div>
           <div className="flex shrink-0 gap-1 pt-1" aria-hidden="true">
             {template.swatches.map((color) => (
-              <span key={color} className="h-3 w-3 rounded-full border border-lineStrong" style={{ background: color }} />
+              <span key={color} className="h-3.5 w-3.5 rounded-full shadow-neu-xs ring-2 ring-surface" style={{ background: color }} />
             ))}
           </div>
         </div>
 
-        <ul className="mt-2.5 flex flex-wrap gap-1.5">
+        <ul className="mt-3 flex flex-1 flex-wrap content-start gap-1.5">
           {template.traits.map((trait) => (
-            <li key={trait} className="rounded border border-line bg-canvas px-1.5 py-0.5 text-[11px] text-muted">
+            <li key={trait} className="rounded-full bg-canvas px-2 py-0.5 text-[11px] text-muted shadow-neu-inset-xs">
               {trait}
             </li>
           ))}
         </ul>
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-4 flex items-center gap-2.5">
           <button type="button" onClick={() => onPreview?.(template)} className="btn-secondary btn-sm">
             Preview
           </button>

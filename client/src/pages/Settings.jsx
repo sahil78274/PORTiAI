@@ -159,9 +159,9 @@ export default function Settings() {
       />
 
       {/* Profile */}
-      <form onSubmit={saveProfile} className="rounded-lg border border-line bg-surface p-5">
+      <form onSubmit={saveProfile} className="card p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-canvas shadow-neu-inset-xs text-accent-hover">
             <User size={16} aria-hidden="true" />
           </span>
           <div>
@@ -198,7 +198,7 @@ export default function Settings() {
         </div>
 
         {profileError ? (
-          <p role="alert" className="mt-3 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
+          <p role="alert" className="mt-3 rounded-tile bg-dangerSoft shadow-neu-inset-xs px-3 py-2 text-xs text-danger">
             {profileError}
           </p>
         ) : null}
@@ -224,9 +224,9 @@ export default function Settings() {
       </form>
 
       {/* Password */}
-      <form onSubmit={savePassword} className="rounded-lg border border-line bg-surface p-5">
+      <form onSubmit={savePassword} className="card p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-canvas shadow-neu-inset-xs text-accent-hover">
             <KeyRound size={16} aria-hidden="true" />
           </span>
           <div>
@@ -290,7 +290,7 @@ export default function Settings() {
         </div>
 
         {passwordError ? (
-          <p role="alert" className="mt-3 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
+          <p role="alert" className="mt-3 rounded-tile bg-dangerSoft shadow-neu-inset-xs px-3 py-2 text-xs text-danger">
             {passwordError}
           </p>
         ) : null}
@@ -304,9 +304,9 @@ export default function Settings() {
       </form>
 
       {/* Appearance */}
-      <div className="rounded-lg border border-line bg-surface p-5">
+      <div className="card p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-canvas shadow-neu-inset-xs text-accent-hover">
             <Palette size={16} aria-hidden="true" />
           </span>
           <div>
@@ -329,9 +329,9 @@ export default function Settings() {
       </div>
 
       {/* Notifications */}
-      <div className="rounded-lg border border-line bg-surface p-5">
+      <div className="card p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-canvas shadow-neu-inset-xs text-accent-hover">
             <Bell size={16} aria-hidden="true" />
           </span>
           <div>
@@ -373,7 +373,7 @@ export default function Settings() {
       {/* Account / danger */}
       <div className="card border-danger/25 p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-danger/25 bg-dangerSoft text-danger">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-tile bg-dangerSoft shadow-neu-inset-xs text-danger">
             <AlertTriangle size={16} aria-hidden="true" />
           </span>
           <div>
