@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Monitor, Smartphone, Tablet, Sparkles } from 'lucide-react';
+import { Monitor, Smartphone, Tablet } from 'lucide-react';
 import PortfolioRenderer from '../../templates/PortfolioRenderer.jsx';
 import TemplatePreviewFrame from '../marketing/TemplatePreviewFrame.jsx';
 import Modal from '../ui/Modal.jsx';
@@ -35,7 +35,6 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
             </button>
           ) : null}
           <button type="button" onClick={() => onUse?.(template)} className="btn-primary" disabled={busy}>
-            <Sparkles size={14} aria-hidden="true" />
             {busy ? 'Preparing…' : useLabel}
           </button>
         </>
@@ -90,11 +89,11 @@ export function TemplatePreviewModal({ template, onClose, onUse, onCustomize, us
 
 export default function TemplateCard({ template, selected = false, onPreview, onUse, useHref }) {
   return (
-    <article className={`overflow-hidden rounded-lg border bg-surface transition-colors ${selected ? 'border-accent/50' : 'border-line hover:border-lineStrong'}`}>
+    <article className={`overflow-hidden rounded-lg border bg-surface transition-colors ${selected ? 'border-accent-line' : 'border-line hover:border-lineStrong'}`}>
       <div className="relative border-b border-line">
         <TemplateThumb template={template} designHeight={620} />
         {selected ? (
-          <span className="absolute left-2.5 top-2.5 rounded border border-accent/30 bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-hover">
+          <span className="absolute left-2.5 top-2.5 rounded border border-accent-line bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-hover">
             In use
           </span>
         ) : null}

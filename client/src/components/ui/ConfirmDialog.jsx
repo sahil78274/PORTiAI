@@ -33,7 +33,7 @@ export default function ConfirmDialog({
     >
       <div className="flex gap-3.5 items-start">
         {tone === 'danger' ? (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-dangerSoft text-danger ring-1 ring-danger/20">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-dangerSoft text-danger ring-1 ring-dangerLine">
             <AlertTriangle size={18} aria-hidden="true" />
           </span>
         ) : null}

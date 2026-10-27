@@ -1,48 +1,74 @@
 /** @type {import('tailwindcss').Config} */
+
+/*
+ * Colour tokens are CSS variables declared in `src/index.css` (`:root` = light,
+ * `.dark` = dark). Keeping them as variables means one theme switch repaints the
+ * whole app, including pages that know nothing about the toggle.
+ *
+ * Opacity modifiers (`bg-accent/20`) do not work on `var()` colours, so every
+ * translucent shade has its own token instead (`accentLine`, `successSoft`, ...).
+ */
+const token = (name) => `var(--${name})`;
+
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
+  darkMode: ['class'],
   theme: {
     extend: {
       colors: {
-        /* Deep navy product surface with one vivid blue accent.
-           Semantic names are shared by every page; portfolio templates set
-           their own colours and never depend on these tokens. */
-        canvas: '#0a1020',
-        canvasAlt: '#0d1425',
-        canvasDeep: '#070c17',
-        surface: '#111a2b',
-        surfaceRaised: '#162136',
-        surfaceHigh: '#1b2740',
-        ink: '#eef2f8',
-        inkSoft: '#c3cede',
-        muted: '#93a1b8',
-        faint: '#7f93b2',
-        line: '#1e2a42',
-        lineStrong: '#2b3a56',
-        navy: '#0d1626',
-        navySoft: '#16233b',
+        canvas: token('canvas'),
+        canvasAlt: token('canvas-alt'),
+        canvasDeep: token('canvas-deep'),
+        surface: token('surface'),
+        surfaceRaised: token('surface-raised'),
+        surfaceHigh: token('surface-high'),
+        ink: token('ink'),
+        inkSoft: token('ink-soft'),
+        muted: token('muted'),
+        faint: token('faint'),
+        line: token('line'),
+        lineStrong: token('line-strong'),
+        overlay: token('overlay'),
+        navy: token('navy'),
+        navySoft: token('navy-soft'),
         accent: {
-          DEFAULT: '#2f6bff',
-          hover: '#4b82ff',
-          soft: 'rgba(47, 107, 255, 0.14)',
-          line: 'rgba(47, 107, 255, 0.38)',
+          DEFAULT: token('accent'),
+          hover: token('accent-hover'),
+          strong: token('accent-strong'),
+          soft: token('accent-soft'),
+          line: token('accent-line'),
+          contrast: token('accent-contrast'),
         },
-        brand: {
-          blue: '#2f6bff',
-          indigo: '#4b82ff',
-          violet: '#6d7ff0',
-          cyan: '#38bdf8',
-        },
-        success: '#34d399',
-        successSoft: 'rgba(52, 211, 153, 0.12)',
-        warning: '#fbbf24',
-        warningSoft: 'rgba(251, 191, 36, 0.12)',
-        danger: '#f87171',
-        dangerSoft: 'rgba(248, 113, 113, 0.12)',
+        success: token('success'),
+        successSoft: token('success-soft'),
+        successLine: token('success-line'),
+        warning: token('warning'),
+        warningSoft: token('warning-soft'),
+        warningLine: token('warning-line'),
+        danger: token('danger'),
+        dangerSoft: token('danger-soft'),
+        dangerLine: token('danger-line'),
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        display: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: [
+          'Inter',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+        ],
+        display: [
+          'Inter',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'sans-serif',
+        ],
         serif: ['"Iowan Old Style"', '"Palatino Linotype"', 'Palatino', 'Georgia', 'Cambria', 'serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
       },
@@ -62,25 +88,22 @@ export default {
       },
       borderRadius: {
         DEFAULT: '6px',
-        xs: '4px',
-        sm: '6px',
-        md: '8px',
-        lg: '10px',
-        xl: '14px',
-        '2xl': '18px',
-        '3xl': '22px',
+        xs: '3px',
+        sm: '4px',
+        md: '6px',
+        lg: '8px',
+        xl: '10px',
+        '2xl': '12px',
+        '3xl': '14px',
         full: '9999px',
       },
       boxShadow: {
-        '2xs': '0 1px 1px rgba(0, 0, 0, 0.25)',
-        xs: '0 1px 2px rgba(0, 0, 0, 0.3)',
-        card: '0 1px 2px rgba(0, 0, 0, 0.28)',
-        raised: '0 2px 6px rgba(0, 0, 0, 0.28), 0 16px 36px -24px rgba(0, 0, 0, 0.8)',
-        float: '0 24px 60px -30px rgba(0, 0, 0, 0.9)',
-        glow: '0 0 0 1px rgba(47, 107, 255, 0.22)',
-        glowStrong: '0 0 0 1px rgba(47, 107, 255, 0.38)',
-        focus: '0 0 0 3px rgba(47, 107, 255, 0.28)',
-        ring: 'inset 0 0 0 1px rgba(47, 107, 255, 0.45)',
+        /* Flat design: shadows carry almost no weight, borders do the work. */
+        none: 'none',
+        card: '0 1px 2px rgba(16, 24, 40, 0.04)',
+        raised: '0 1px 2px rgba(16, 24, 40, 0.06), 0 4px 12px -6px rgba(16, 24, 40, 0.12)',
+        float: '0 12px 32px -12px rgba(16, 24, 40, 0.22), 0 2px 6px -2px rgba(16, 24, 40, 0.08)',
+        focus: '0 0 0 3px var(--accent-soft)',
       },
       maxWidth: {
         content: '1120px',
@@ -96,17 +119,12 @@ export default {
       transitionTimingFunction: {
         smooth: 'cubic-bezier(0.2, 0.7, 0.3, 1)',
       },
-      backgroundImage: {
-        'brand-gradient': 'linear-gradient(#2f6bff, #2f6bff)',
-        'brand-gradient-soft': 'linear-gradient(rgba(47,107,255,0.14), rgba(47,107,255,0.14))',
-        'grid-fade': 'linear-gradient(#0a1020, #0a1020)',
-      },
       keyframes: {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
         fadeUp: {
-          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '0%': { opacity: '0', transform: 'translateY(4px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         fadeIn: {
@@ -116,8 +134,8 @@ export default {
       },
       animation: {
         shimmer: 'shimmer 1.6s infinite',
-        fadeUp: 'fadeUp 0.28s ease-out both',
-        fadeIn: 'fadeIn 0.2s ease-out both',
+        fadeUp: 'fadeUp 0.2s ease-out both',
+        fadeIn: 'fadeIn 0.16s ease-out both',
       },
     },
   },

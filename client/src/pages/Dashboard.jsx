@@ -12,7 +12,7 @@ import {
   LayoutTemplate,
   Newspaper,
   Plus,
-  Sparkles,
+  Wand2,
 } from 'lucide-react';
 import { PageHeader } from '../components/ui/Kit.jsx';
 import { EmptyState } from '../components/ui/Primitives.jsx';
@@ -26,7 +26,7 @@ const QUICK_ACTIONS = [
   {
     title: 'Create with AI',
     body: 'Answer a few questions and get a draft you can edit.',
-    icon: Sparkles,
+    icon: Wand2,
     to: '/dashboard/builder',
   },
   {
@@ -152,7 +152,7 @@ export default function Dashboard() {
       />
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger/30 bg-dangerSoft px-4 py-3 text-[13px] text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-dangerLine bg-dangerSoft px-4 py-3 text-[13px] text-danger">
           <span>{error}</span>
           <button type="button" onClick={load} className="btn-secondary btn-sm">
             Try again
@@ -210,7 +210,6 @@ export default function Dashboard() {
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link to="/dashboard/builder" className="btn-primary btn-sm">
-                <Sparkles size={13} aria-hidden="true" />
                 Start with the builder
               </Link>
               <Link to="/dashboard/templates" className="btn-secondary btn-sm">

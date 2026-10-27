@@ -39,7 +39,7 @@ export const SectionHeading = ({ eyebrow, title, description, align = 'left', cl
 /* -------------------------------------------------- Stat card -------------------------------------------------- */
 const TONES = {
   indigo: 'text-accent-hover',
-  violet: 'text-[#a78bfa]',
+  violet: 'text-accent',
   emerald: 'text-success',
   amber: 'text-warning',
 };
@@ -52,7 +52,7 @@ export const StatCard = ({ icon: Icon, label, value, hint, tone = 'indigo', load
           {Icon ? <Icon size={16} aria-hidden="true" /> : null}
         </span>
         {trend ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-success/25 bg-successSoft px-1.5 py-0.5 text-[10px] font-medium text-success">
+          <span className="inline-flex items-center gap-1 rounded-full border border-successLine bg-successSoft px-1.5 py-0.5 text-[10px] font-medium text-success">
             <TrendingUp size={9} aria-hidden="true" />
             {trend}
           </span>
@@ -165,7 +165,7 @@ export const Dropdown = ({ trigger, children, align = 'right', className = '' })
 
 export const DropdownItem = ({ icon: Icon, children, onClick, to, danger = false, ...props }) => {
   const className = `flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors ${
-    danger ? 'text-danger hover:bg-danger/10' : 'text-inkSoft hover:bg-canvasAlt hover:text-ink'
+    danger ? 'text-danger hover:bg-dangerSoft' : 'text-inkSoft hover:bg-canvasAlt hover:text-ink'
   }`;
   const content = (
     <>

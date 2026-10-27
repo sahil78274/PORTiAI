@@ -13,7 +13,6 @@ import {
   Loader2,
   RefreshCw,
   ScanLine,
-  Sparkles,
   Upload,
   Wand2,
 } from 'lucide-react';
@@ -29,8 +28,8 @@ import { draftFromPortfolio, draftToPayload } from '../utils/portfolioDraft.js';
 import { getTemplate } from '../utils/templates.js';
 
 const SEVERITY_TONE = {
-  high: { label: 'High', dot: 'bg-danger', chip: 'border-danger/30 bg-dangerSoft text-danger' },
-  medium: { label: 'Medium', dot: 'bg-warning', chip: 'border-warning/30 bg-warningSoft text-warning' },
+  high: { label: 'High', dot: 'bg-danger', chip: 'border-dangerLine bg-dangerSoft text-danger' },
+  medium: { label: 'Medium', dot: 'bg-warning', chip: 'border-warningLine bg-warningSoft text-warning' },
   low: { label: 'Low', dot: 'bg-faint', chip: 'border-lineStrong bg-canvasAlt text-muted' },
 };
 
@@ -351,10 +350,9 @@ export default function Analyzer() {
             </div>
 
             {portfolios.length === 0 && !loadingList ? (
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-lineStrong/70 p-4">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-lineStrong p-4">
                 <p className="text-sm text-muted">You need a portfolio before you can analyse one.</p>
                 <Link to="/dashboard/builder" className="btn-primary btn-sm">
-                  <Sparkles size={13} aria-hidden="true" />
                   Create with AI
                 </Link>
               </div>
@@ -425,13 +423,13 @@ export default function Analyzer() {
                         AI feedback {aiStatus?.configured ? 'is configured' : 'is not configured'} on this server.
                       </div>
                       {stale ? (
-                        <div className="flex items-start gap-2 rounded-lg border border-warning/25 bg-warningSoft px-2.5 py-2 text-[11px] text-warning">
+                        <div className="flex items-start gap-2 rounded-lg border border-warningLine bg-warningSoft px-2.5 py-2 text-[11px] text-warning">
                           <AlertTriangle size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
                           You edited this portfolio after the analysis. Rescan for an accurate score.
                         </div>
                       ) : null}
                       {highCount ? (
-                        <div className="flex items-start gap-2 rounded-lg border border-danger/25 bg-dangerSoft px-2.5 py-2 text-[11px] text-danger">
+                        <div className="flex items-start gap-2 rounded-lg border border-dangerLine bg-dangerSoft px-2.5 py-2 text-[11px] text-danger">
                           <AlertTriangle size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
                           {highCount} high-severity issue{highCount === 1 ? '' : 's'} to address.
                         </div>
@@ -463,7 +461,7 @@ export default function Analyzer() {
                           {analysis.issues.map((issue) => {
                             const tone = SEVERITY_TONE[issue.severity] || SEVERITY_TONE.low;
                             return (
-                              <li key={issue.id} className="flex items-start gap-3 rounded-lg border border-line bg-canvasAlt/40 p-3">
+                              <li key={issue.id} className="flex items-start gap-3 rounded-lg border border-line bg-canvasAlt p-3">
                                 <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${tone.dot}`} aria-hidden="true" />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-xs leading-relaxed text-inkSoft">{issue.message}</p>
@@ -478,7 +476,7 @@ export default function Analyzer() {
                           })}
                         </ul>
                       ) : (
-                        <div className="mt-4 flex items-center gap-2 rounded-lg border border-success/25 bg-successSoft p-3 text-xs text-success">
+                        <div className="mt-4 flex items-center gap-2 rounded-lg border border-successLine bg-successSoft p-3 text-xs text-success">
                           <CheckCircle2 size={14} aria-hidden="true" />
                           No issues were detected by the rubric.
                         </div>
@@ -490,9 +488,9 @@ export default function Analyzer() {
                         <p className="text-sm font-semibold text-ink">Recommendations</p>
                         <ol className="mt-4 space-y-3">
                           {analysis.recommendations.map((recommendation, index) => (
-                            <li key={`${recommendation.title}-${index}`} className="rounded-lg border border-line bg-canvasAlt/40 p-3">
+                            <li key={`${recommendation.title}-${index}`} className="rounded-lg border border-line bg-canvasAlt p-3">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full border border-accent-line/50 bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-hover">
+                                <span className="rounded-full border border-accent-line bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-hover">
                                   {recommendation.priority === 'now' ? 'Fix first' : recommendation.priority === 'next' ? 'Next' : 'Later'}
                                 </span>
                                 <span className="text-[10px] uppercase tracking-wider text-faint">
@@ -517,7 +515,7 @@ export default function Analyzer() {
                         </p>
                         <ul className="mt-4 space-y-3">
                           {applyableExamples.map((example) => (
-                            <li key={example.label} className="rounded-lg border border-line bg-canvasAlt/40 p-3">
+                            <li key={example.label} className="rounded-lg border border-line bg-canvasAlt p-3">
                               <label className="flex items-start gap-2.5">
                                 <input
                                   type="checkbox"
@@ -712,7 +710,7 @@ export default function Analyzer() {
                           <p className="text-[32px] font-semibold tabular-nums tracking-[-0.02em] text-ink">{scanResult.score}</p>
                           <p className="text-[10px] uppercase tracking-widest text-faint">of 100</p>
                         </div>
-                        <span className="badge border-accent-line/50 bg-accent-soft text-accent-hover">{scanResult.grade}</span>
+                        <span className="badge border-accent-line bg-accent-soft text-accent-hover">{scanResult.grade}</span>
                       </div>
                     </div>
 
@@ -731,7 +729,7 @@ export default function Analyzer() {
                         {scanResult.issues.map((issue) => {
                           const tone = SEVERITY_TONE[issue.severity] || SEVERITY_TONE.low;
                           return (
-                            <li key={issue.id} className="rounded-lg border border-line bg-canvasAlt/40 p-3">
+                            <li key={issue.id} className="rounded-lg border border-line bg-canvasAlt p-3">
                               <div className="flex items-start gap-2.5">
                                 <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${tone.dot}`} aria-hidden="true" />
                                 <div className="min-w-0 flex-1">
@@ -756,7 +754,7 @@ export default function Analyzer() {
                         })}
                       </ul>
                     ) : (
-                      <div className="mt-4 flex items-center gap-2 rounded-lg border border-success/25 bg-successSoft p-3 text-xs text-success">
+                      <div className="mt-4 flex items-center gap-2 rounded-lg border border-successLine bg-successSoft p-3 text-xs text-success">
                         <CheckCircle2 size={14} aria-hidden="true" />
                         No issues detected in the delivered HTML.
                       </div>

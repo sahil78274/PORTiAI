@@ -87,7 +87,7 @@ export default function TemplateGallery({ mode = 'workspace', usedTemplateIds = 
               aria-pressed={category === item}
               className={`rounded-md border px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
                 category === item
-                  ? 'border-accent/40 bg-accent-soft text-accent-hover'
+                  ? 'border-accent-line bg-accent-soft text-accent-hover'
                   : 'border-line bg-surface text-muted hover:border-lineStrong hover:text-ink'
               }`}
             >

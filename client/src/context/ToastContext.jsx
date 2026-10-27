@@ -10,8 +10,8 @@ const ICONS = {
 };
 
 const STYLES = {
-  success: 'border-success/25 bg-successSoft text-success',
-  error: 'border-danger/25 bg-dangerSoft text-danger',
+  success: 'border-successLine bg-successSoft text-success',
+  error: 'border-dangerLine bg-dangerSoft text-danger',
   info: 'border-lineStrong bg-surface text-ink',
 };
 
@@ -67,7 +67,7 @@ export function ToastProvider({ children }) {
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}
-                className="shrink-0 rounded p-0.5 text-current/70 hover:bg-black/5"
+                className="shrink-0 rounded p-0.5 text-current hover:bg-surfaceRaised"
                 aria-label="Dismiss notification"
               >
                 <X size={14} aria-hidden="true" />

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Database, Eye, Lock, Sparkles, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Database, Eye, Lock, Server, Trash2 } from 'lucide-react';
 
 const SECTIONS = [
   {
@@ -47,7 +47,7 @@ const SECTIONS = [
   {
     id: 'third-party',
     title: 'Third-party services',
-    icon: Sparkles,
+    icon: Server,
     body: (
       <p className="mt-2">
         When you use an AI feature, only the facts relevant to that request (for example a project description and your listed
@@ -97,7 +97,7 @@ export default function Privacy() {
         {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
       </p>
 
-      <div className="mt-5 flex gap-3 rounded-xl border border-warning/25 bg-warningSoft px-4 py-3 text-xs leading-relaxed text-warning">
+      <div className="mt-5 flex gap-3 rounded-lg border border-warningLine bg-warningSoft px-4 py-3 text-xs leading-relaxed text-warning">
         <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
         <p>
           This document is written for an independent project rather than by a legal team. It accurately describes how this build

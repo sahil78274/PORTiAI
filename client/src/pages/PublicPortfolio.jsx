@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowUpRight, Loader2, Lock, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Loader2, Lock, RefreshCw } from 'lucide-react';
 import PortfolioRenderer from '../templates/PortfolioRenderer.jsx';
 import { portfolioService } from '../services/portfolioService.js';
 
@@ -87,7 +87,6 @@ export default function PublicPortfolio() {
             </button>
           ) : null}
           <Link to="/" className="btn-primary btn-sm">
-            <Sparkles size={13} aria-hidden="true" />
             Build your own with PortiAI
           </Link>
         </div>

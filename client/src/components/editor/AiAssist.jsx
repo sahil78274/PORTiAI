@@ -94,7 +94,7 @@ export default function AiAssist({
       </div>
 
       {state === 'error' && error ? (
-        <div role="alert" className="mt-2.5 rounded-md border border-danger/25 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+        <div role="alert" className="mt-2.5 rounded-md border border-dangerLine bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
           <p className="flex items-center gap-1.5 font-semibold">
             <AlertCircle size={14} className="shrink-0 text-danger" aria-hidden="true" />
             <span>

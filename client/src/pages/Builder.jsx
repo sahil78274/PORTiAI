@@ -342,7 +342,7 @@ export default function Builder() {
         title="AI builder"
         description="A guided conversation collects your real experience, then the AI drafts editable portfolio copy. Nothing is invented, and every answer can be edited before you save."
         actions={
-          <span className="badge border-accent-line/60 bg-accent-soft text-accent-hover">
+          <span className="badge border-accent-line bg-accent-soft text-accent-hover">
             <Sparkles size={11} aria-hidden="true" />
             Gemini-powered · server-side keys
           </span>
@@ -388,9 +388,9 @@ export default function Builder() {
                       message.role === 'user'
                         ? 'rounded-br-md bg-accent text-white'
                         : message.variant === 'error'
-                          ? 'rounded-bl-md border border-danger/25 bg-dangerSoft text-danger'
+                          ? 'rounded-bl-md border border-dangerLine bg-dangerSoft text-danger'
                           : message.variant === 'success'
-                            ? 'rounded-bl-md border border-success/25 bg-successSoft text-success'
+                            ? 'rounded-bl-md border border-successLine bg-successSoft text-success'
                             : 'rounded-bl-md border border-line bg-canvasAlt text-inkSoft'
                     }`}
                   >
@@ -428,7 +428,7 @@ export default function Builder() {
             ) : null}
 
             {generating ? (
-              <div className="rounded-lg border border-accent-line/40 bg-accent-soft p-4">
+              <div className="rounded-lg border border-accent-line bg-accent-soft p-4">
                 <div className="flex items-center gap-2.5 text-sm font-medium text-ink">
                   <Loader2 size={15} className="animate-spin text-accent-hover" aria-hidden="true" />
                   Drafting your portfolio content…
@@ -814,7 +814,7 @@ export default function Builder() {
           </section>
 
           {lastGenerated?.usedAi ? (
-            <p className="flex items-start gap-2 rounded-lg border border-accent-line/30 bg-accent-soft/40 px-3.5 py-2.5 text-[11px] leading-relaxed text-muted">
+            <p className="flex items-start gap-2 rounded-lg border border-accent-line bg-accent-soft px-3.5 py-2.5 text-[11px] leading-relaxed text-muted">
               <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />
               Content written by the AI model from your answers ({lastGenerated.model}). Review every claim before
               publishing.

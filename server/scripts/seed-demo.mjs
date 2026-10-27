@@ -1,5 +1,5 @@
 /**
- * Seeds the sample "Farheen" portfolio used in the marketing screenshots.
+ * Seeds the sample "Alex Morgan" portfolio used in the marketing screenshots.
  *
  * Usage (API does not need to be running, only MongoDB):
  *   cd server
@@ -16,32 +16,32 @@ import { User } from '../src/models/User.js';
 import { Portfolio } from '../src/models/Portfolio.js';
 import { BlogPost } from '../src/models/BlogPost.js';
 
-const EMAIL = 'farheen@example.com';
-const PASSWORD = 'FarheenDemo123';
-const SLUG = 'farheen';
+const EMAIL = 'alex.morgan@example.com';
+const PASSWORD = 'AlexDemo123';
+const SLUG = 'alex-morgan';
 
 const portfolioContent = {
-  title: 'Farheen — Full Stack Developer',
+  title: 'Alex Morgan — Full Stack Developer',
   templateId: 'freelancer',
   theme: { accent: '#215b7a', font: 'sans' },
   published: true,
   profile: {
-    fullName: 'Farheen',
+    fullName: 'Alex Morgan',
     title: 'Full Stack Developer',
     location: 'Sonipat, Haryana',
-    contactEmail: 'farheen@example.com',
+    contactEmail: 'alex.morgan@example.com',
     summary:
       'Full stack developer building calm, fast web products with React, Node.js and PostgreSQL. I care about clear interfaces, honest error states and code someone else can pick up.',
     bio: 'I started out building small internal tools for a logistics company and stayed for the part I liked most: turning a messy spreadsheet workflow into a product people actually enjoy using. These days I work across the stack — React and TypeScript on the front end, Node.js and PostgreSQL behind it, with tests around the parts that hurt when they break.\n\nI write about the parts of engineering that rarely make it into tutorials: migrations that never fail quietly, empty states that explain themselves, and forms that do not lose what someone typed.',
     links: [
-      { label: 'GitHub', url: 'https://github.com/farheen-dev' },
-      { label: 'LinkedIn', url: 'https://www.linkedin.com/in/farheen-dev' },
-      { label: 'Email', url: 'mailto:farheen@example.com' },
+      { label: 'GitHub', url: 'https://github.com/alexmorgan-dev' },
+      { label: 'LinkedIn', url: 'https://www.linkedin.com/in/alexmorgan-dev' },
+      { label: 'Email', url: 'mailto:alex.morgan@example.com' },
     ],
   },
   socialLinks: {
-    github: 'https://github.com/farheen-dev',
-    linkedin: 'https://www.linkedin.com/in/farheen-dev',
+    github: 'https://github.com/alexmorgan-dev',
+    linkedin: 'https://www.linkedin.com/in/alexmorgan-dev',
     website: '',
     twitter: '',
   },
@@ -64,7 +64,7 @@ const portfolioContent = {
         'A shared expense ledger for studios of 5–20 people. Handles split bills, receipt uploads and a monthly export the accountant accepts without edits.',
       technologies: ['React', 'Node.js', 'PostgreSQL', 'Docker'],
       projectUrl: 'https://example.com/ledgerly',
-      githubUrl: 'https://github.com/farheen-dev/ledgerly',
+      githubUrl: 'https://github.com/alexmorgan-dev/ledgerly',
       contributions:
         'Designed the schema and the PDF export pipeline; wrote the integration tests that catch rounding errors before they reach a customer.',
     },
@@ -74,7 +74,7 @@ const portfolioContent = {
         'Internal tool that turns a day of delivery requests into a route sheet with realistic time windows. Cut planning time from 90 minutes to under 10.',
       technologies: ['TypeScript', 'Express', 'MongoDB', 'MapLibre'],
       projectUrl: '',
-      githubUrl: 'https://github.com/farheen-dev/routewise',
+      githubUrl: 'https://github.com/alexmorgan-dev/routewise',
       contributions: 'Built the scheduling API and the drag-and-drop planning board used by four dispatchers every morning.',
     },
     {
@@ -83,7 +83,7 @@ const portfolioContent = {
         'A small open-source project that lets students check which university syllabi have changed since they enrolled. Runs on a nightly GitHub Action.',
       technologies: ['React', 'Node.js', 'GitHub Actions'],
       projectUrl: 'https://example.com/syllabus',
-      githubUrl: 'https://github.com/farheen-dev/syllabus-tracker',
+      githubUrl: 'https://github.com/alexmorgan-dev/syllabus-tracker',
       contributions: 'Maintained the scraper and wrote the contributor guide that brought in eleven outside pull requests.',
     },
   ],
@@ -199,7 +199,7 @@ const run = async () => {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
   const user = await User.findOneAndUpdate(
     { email: EMAIL },
-    { name: 'Farheen', email: EMAIL, passwordHash, headline: 'Full Stack Developer' },
+    { name: 'Alex Morgan', email: EMAIL, passwordHash, headline: 'Full Stack Developer' },
     { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
   );
 

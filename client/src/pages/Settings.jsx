@@ -9,8 +9,9 @@ import {
   KeyRound,
   Loader2,
   Palette,
+  Moon,
   ShieldCheck,
-  Sparkles,
+  Sun,
   Trash2,
   User,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ import { Alert, Button, Field, TextInput } from '../components/ui/Primitives.jsx
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 import { authService } from '../services/authService.js';
 import { formatDate } from '../utils/format.js';
 
@@ -38,6 +40,7 @@ const NOTIFICATION_ROWS = [
 export default function Settings() {
   const { user, refresh, logout } = useAuth();
   const toast = useToast();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState({ name: '', headline: '' });
@@ -198,7 +201,7 @@ export default function Settings() {
         </div>
 
         {profileError ? (
-          <p role="alert" className="mt-3 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
+          <p role="alert" className="mt-3 rounded-lg border border-dangerLine bg-dangerSoft px-3 py-2 text-xs text-danger">
             {profileError}
           </p>
         ) : null}
@@ -290,7 +293,7 @@ export default function Settings() {
         </div>
 
         {passwordError ? (
-          <p role="alert" className="mt-3 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
+          <p role="alert" className="mt-3 rounded-lg border border-dangerLine bg-dangerSoft px-3 py-2 text-xs text-danger">
             {passwordError}
           </p>
         ) : null}
@@ -306,19 +309,49 @@ export default function Settings() {
       {/* Appearance */}
       <div className="rounded-lg border border-line bg-surface p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent-hover">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-canvas text-accent">
             <Palette size={16} aria-hidden="true" />
           </span>
           <div>
             <h2 className="text-[14px] font-semibold text-ink">Appearance</h2>
             <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted">
-              PortiAI uses a single dark interface, so there is no dashboard theme to choose. The look of your
-              public portfolio — template, accent colour, font and section order — is set per portfolio in the
-              editor.
+              Choose how the PortiAI interface looks. Your choice applies to every page and is remembered on this
+              device. The design of a public portfolio — template, accent colour, font and section order — is set
+              per portfolio in the editor.
             </p>
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {[
+            { id: 'light', label: 'Light', description: 'White surfaces, dark text.', Icon: Sun },
+            { id: 'dark', label: 'Dark', description: 'Deep navy surfaces, soft white text.', Icon: Moon },
+          ].map(({ id, label, description, Icon }) => {
+            const active = theme === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTheme(id)}
+                aria-pressed={active}
+                className={`flex items-start gap-3 rounded-md border p-3 text-left transition-colors ${
+                  active
+                    ? 'border-accent-line bg-accent-soft'
+                    : 'border-line bg-surface hover:border-lineStrong'
+                }`}
+              >
+                <Icon size={16} className={`mt-0.5 shrink-0 ${active ? 'text-accent-hover' : 'text-faint'}`} aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className={`block text-[13px] font-medium ${active ? 'text-accent-hover' : 'text-ink'}`}>{label}</span>
+                  <span className="mt-0.5 block text-[11.5px] leading-5 text-muted">{description}</span>
+                </span>
+                {active ? <Check size={14} className="ml-auto mt-0.5 shrink-0 text-accent-hover" aria-hidden="true" /> : null}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
           <Link to="/dashboard/templates" className="btn-secondary btn-sm">
             Browse templates
           </Link>
@@ -371,9 +404,9 @@ export default function Settings() {
       </div>
 
       {/* Account / danger */}
-      <div className="card border-danger/25 p-5">
+      <div className="card border-dangerLine p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-danger/25 bg-dangerSoft text-danger">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-dangerLine bg-dangerSoft text-danger">
             <AlertTriangle size={16} aria-hidden="true" />
           </span>
           <div>
@@ -385,8 +418,7 @@ export default function Settings() {
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="inline-flex items-center gap-1.5 text-[11px] text-faint">
-            <Sparkles size={11} aria-hidden="true" />
+          <p className="text-[11px] text-faint">
             Prefer a break? You can simply log out — your work stays saved.
           </p>
           <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
@@ -428,7 +460,7 @@ export default function Settings() {
       </ConfirmDialog>
 
       {deleting ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay">
           <Loader2 size={22} className="animate-spin text-accent-hover" aria-hidden="true" />
           <span className="sr-only">Deleting account</span>
         </div>
