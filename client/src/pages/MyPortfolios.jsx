@@ -13,7 +13,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Sparkles,
   Trash2,
   Undo2,
 } from 'lucide-react';
@@ -274,7 +273,7 @@ export default function MyPortfolios() {
       </div>
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger/30 bg-dangerSoft px-4 py-3 text-[13px] text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-dangerLine bg-dangerSoft px-4 py-3 text-[13px] text-danger">
           <span>{error}</span>
           <Button variant="secondary" size="sm" onClick={load}>
             Try again
@@ -316,7 +315,6 @@ export default function MyPortfolios() {
             ) : (
               <div className="flex flex-wrap justify-center gap-2">
                 <Link to="/dashboard/builder" className="btn-primary btn-sm">
-                  <Sparkles size={13} aria-hidden="true" />
                   Create with AI
                 </Link>
                 <Link to="/dashboard/templates" className="btn-secondary btn-sm">
@@ -384,7 +382,7 @@ export default function MyPortfolios() {
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(portfolio)}
-                    className="btn-ghost btn-sm h-8 w-8 p-0 text-danger/80 hover:bg-danger/10 hover:text-danger"
+                    className="btn-ghost btn-sm h-8 w-8 p-0 text-danger hover:bg-dangerSoft hover:text-danger"
                     aria-label={`Delete ${portfolio.title}`}
                     title="Delete"
                   >
@@ -435,7 +433,7 @@ export default function MyPortfolios() {
                   <Link to={`/dashboard/portfolio/${portfolio.id}/edit`} className="btn-secondary btn-sm">
                     Edit
                   </Link>
-                  <button type="button" onClick={() => setDeleteTarget(portfolio)} className="btn-ghost btn-sm text-danger/80 hover:bg-danger/10 hover:text-danger" title="Delete">
+                  <button type="button" onClick={() => setDeleteTarget(portfolio)} className="btn-ghost btn-sm text-danger hover:bg-dangerSoft hover:text-danger" title="Delete">
                     <Trash2 size={13} aria-hidden="true" />
                   </button>
                 </div>

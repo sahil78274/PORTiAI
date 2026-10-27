@@ -202,7 +202,7 @@ export default function BlogStudio() {
       </div>
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-danger/30 bg-dangerSoft p-4 text-sm text-danger">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dangerLine bg-dangerSoft p-4 text-sm text-danger">
           <span>{error}</span>
           <Button variant="secondary" size="sm" onClick={load}>
             Try again
@@ -327,7 +327,7 @@ export default function BlogStudio() {
                     <button
                       type="button"
                       onClick={() => setDeleteTarget(post)}
-                      className="btn-ghost btn-sm ml-auto h-8 w-8 p-0 text-danger/80 hover:bg-danger/10 hover:text-danger"
+                      className="btn-ghost btn-sm ml-auto h-8 w-8 p-0 text-danger hover:bg-dangerSoft hover:text-danger"
                       aria-label={`Delete ${post.title}`}
                       title="Delete"
                     >
@@ -360,7 +360,7 @@ export default function BlogStudio() {
       >
         <form onSubmit={createPost} className="space-y-4">
           {createError ? (
-            <p role="alert" className="rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-xs text-danger">
+            <p role="alert" className="rounded-lg border border-dangerLine bg-dangerSoft px-3 py-2 text-xs text-danger">
               {createError}
             </p>
           ) : null}

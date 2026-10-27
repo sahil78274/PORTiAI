@@ -20,7 +20,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
-      <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-warning/25 bg-warningSoft text-warning">
+      <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-warningLine bg-warningSoft text-warning">
         <KeyRound size={18} aria-hidden="true" />
       </span>
       <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Reset your password</h2>
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
         </form>
       ) : (
         <div className="mt-6 space-y-4">
-          <div className="flex items-start gap-3 rounded-lg border border-warning/25 bg-warningSoft p-3.5 text-xs leading-relaxed text-warning">
+          <div className="flex items-start gap-3 rounded-lg border border-warningLine bg-warningSoft p-3.5 text-xs leading-relaxed text-warning">
             <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
             <div>
               <p className="font-semibold">No reset email will arrive.</p>

@@ -483,7 +483,41 @@ cd client && cp .env.example .env && npm run dev
 
 ---
 
-## 3d. Dark navy interface and image uploads (2026-10-26)
+## 3d. Flat redesign, light/dark theme and image uploads (2026-10-27)
+
+The interface was rebuilt as a flat product UI: solid surfaces, 1px borders, no inset or elevated
+shadow effects, no gradients, no glow, no decorative sparkles and a typographic PortiAI wordmark in
+place of the old rounded "P" tile. Every colour is now a CSS variable with a light palette on
+`:root` and a dark palette on `.dark` (canvas `#0b1120`, cards `#111a2b`), so all routes share one
+theme. A segmented Sun/Moon toggle sits in the landing navigation, the dashboard header and the auth
+screens; `ThemeContext` persists the choice in `localStorage` and falls back to the OS preference, and
+an inline script in `index.html` applies the class before first paint.
+
+Verified (jsdom, real bundle, real API):
+
+```
+first visit follows dark system preference        PASS
+first visit follows light system preference       PASS
+stored dark preference restored                   PASS
+landing page shows a dark-theme toggle            PASS
+clicking the toggle switches to dark              PASS
+preference persisted to localStorage              PASS
+clicking light switches back                      PASS
+light preference persisted                        PASS
+```
+
+`docs/screenshots/` still holds captures of the earlier light build and was not regenerated for this
+pass (no browser was available in the environment used for the redesign), so the images predate the
+flat palette, the new wordmark and the theme toggle. The checks below were run against the running
+application instead.
+
+All 19 public routes plus all 11 authenticated routes (dashboard, builder, create, workspace
+templates, my portfolios, editor, analyzer, blog, settings, publish success) rendered with no console
+errors and no render crashes. Nested-anchor markup found in the auth layout and the 404 page was fixed
+in the same pass. Production build: `✓ built`, `npm test` in `client/` 32/32, `npm test` in `server/`
+61/61.
+
+## 3e. Dark navy interface and image uploads (2026-10-26)
 
 The interface was re-skinned from the off-white build to a dark navy product surface: canvas `#0a1020`,
 cards `#111a2b`, borders `#1e2a42`, headings `#eef2f8`, secondary text `#93a1b8`, one vivid blue accent
@@ -518,15 +552,15 @@ rejection of non-image payloads, mismatched signatures and oversized files.
 ```
 200 /            200 /features     200 /templates      200 /gallery
 200 /login       200 /signup       200 /forgot-password 200 /privacy   200 /terms
-200 /p/farheen   200 /p/farheen/blog   200 /p/farheen/blog/migrations-that-never-fail-quietly
+200 /p/alex-morgan   200 /p/alex-morgan/blog   200 /p/alex-morgan/blog/migrations-that-never-fail-quietly
 200 /nope-404    (client-rendered NotFound page)
 ```
 
 Public data comes from the seeded account, not hardcoded markup:
 
 ```
-GET /api/public/farheen        -> Farheen · Full Stack Developer · freelancer template
-GET /api/public/farheen/blog   -> 3 published posts
+GET /api/public/alex-morgan        -> Alex Morgan · Full Stack Developer · freelancer template
+GET /api/public/alex-morgan/blog   -> 3 published posts
 ```
 
 **d. Image upload round trip**

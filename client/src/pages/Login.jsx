@@ -67,7 +67,7 @@ export default function Login() {
       </div>
 
       {error ? (
-        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-lg border border-danger/30 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-lg border border-dangerLine bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
           <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>

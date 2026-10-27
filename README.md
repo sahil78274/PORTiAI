@@ -3,10 +3,10 @@
 A full-stack MERN application. Users sign up, draft a portfolio through an AI conversation (or pick one
 of six templates), refine it in a live editor with device previews, review it against a documented
 rubric, optionally run a Website analyzer on any live page, write Markdown blog posts, and publish at a
-public link such as `/p/farheen`.
+public link such as `/p/alex-morgan`.
 
 The application is complete: real authentication, real MongoDB persistence, six genuinely different
-templates on a dark navy design system, a conversational AI builder backed by a validated server
+templates on a flat light/dark design system with a one-click theme switch, a conversational AI builder backed by a validated server
 endpoint, server-side AI with graceful quota handling, a deterministic analyzer that works without AI,
 blog publishing, a deterministic website scanner, and public publishing with ownership checks enforced
 in the backend. There is no subscription, plan or payment interface anywhere in the product.
@@ -17,8 +17,8 @@ in the backend. There is no subscription, plan or payment interface anywhere in 
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Design system | Done | Deep navy canvas (`#0a1020`), lighter navy cards (`#111a2b`) with blue-gray borders (`#1e2a42`), soft gray-blue text, a single vivid blue accent (`#2f6bff`) reserved for primary actions and selected states, Inter throughout, Lucide icons only, small radii, no decorative gradients, responsive and accessible |
-| Landing page at `/` | Done | Sticky nav (logo, Features, Templates, How It Works, Login, primary CTA), hero with a reserved portrait area, How it works, Made for your work, Explore templates (six live previews), Useful features, final CTA, footer. No pricing, testimonials or invented statistics |
+| Design system | Done | Flat surfaces, 1px borders and no decorative shadows. Every colour is a CSS variable (`client/src/index.css`) with a light palette on `:root` and a dark palette on `.dark`: white/very-light-gray canvas with white cards in light, deep navy canvas (`#0b1120`) with lighter navy cards (`#111a2b`) in dark, one restrained blue accent (`#2563eb` light / `#336bff` dark) reserved for primary actions and selected states, Inter throughout, typographic PortiAI wordmark, Lucide icons only, small radii, no gradients or glow, responsive and accessible |
+| Landing page at `/` | Done | Sticky nav (wordmark, Features, Templates, How It Works, Login, Get Started and a visible light/dark toggle), hero with a live render of the Minimal Developer template, How it works, features, six template previews, Made for your work, final CTA, footer. No pricing, testimonials or invented statistics |
 | Public pages | Done | `/features`, `/templates`, `/privacy`, `/terms`, `*` not-found |
 | Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation. Email/password only — no OAuth buttons are shown |
 | Dashboard `/dashboard` | Done | Collapsible sidebar, real counts from MongoDB, next-step suggestion, recent portfolios, quick links, profile menu |
@@ -97,12 +97,12 @@ portiai/
 │   ├── public/                 # favicon, robots.txt
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ui/             # Primitives, Kit, Modal, ConfirmDialog, Logo, PasswordInput
-│   │   │   ├── marketing/      # Navbar, Footer, HeroPortrait, TemplatePreviewFrame
+│   │   │   ├── ui/             # Primitives, Kit, Modal, ConfirmDialog, Logo, ThemeToggle, PasswordInput
+│   │   │   ├── marketing/      # Navbar, Footer, HeroPortfolioPreview, TemplatePreviewFrame
 │   │   │   ├── templates/      # TemplateCard, TemplateGallery, TemplateThumb
 │   │   │   ├── dashboard/      # ProtectedRoute
 │   │   │   └── editor/         # PortfolioForm sections, AiAssist, useUnsavedWarning
-│   │   ├── context/            # AuthContext, ToastContext
+│   │   ├── context/            # AuthContext, ToastContext, ThemeContext
 │   │   ├── hooks/              # useAiStatus, useDebouncedValue
 │   │   ├── layouts/            # MarketingLayout, AuthLayout, DashboardLayout
 │   │   ├── pages/              # Landing, FeaturesPage, TemplatesPage, Login, Register, Dashboard,
@@ -195,18 +195,31 @@ missing or short `SESSION_SECRET`.
 
 **Sample data for screenshots and demos**
 
-`server/scripts/seed-demo.mjs` creates the `Farheen` sample: a published portfolio at `/p/farheen`
+`server/scripts/seed-demo.mjs` creates the `Alex Morgan` sample: a published portfolio at `/p/alex-morgan`
 plus three published blog posts. It is idempotent and prints the demo credentials when it finishes.
 
 ```bash
 cd server
 MONGODB_URI=mongodb://127.0.0.1:27017/portiai node scripts/seed-demo.mjs
-# account: farheen@example.com / FarheenDemo123
+# account: alex.morgan@example.com / AlexDemo123
 ```
 
-The landing-page portrait is a deliberate placeholder (initial + role, no generated face). To show a
-real photograph, drop the file in `client/public/` and point `PORTRAIT_SRC` in
-`client/src/components/marketing/HeroPortrait.jsx` at it.
+The landing hero renders the same `PortfolioRenderer` a published portfolio uses, with clearly
+labelled sample content (`client/src/utils/demoPortfolio.js`). The sample owner is a fictional
+`Alex Morgan`; no customer photographs, logos or testimonials are used anywhere.
+
+**Light / dark theme**
+
+`ThemeContext` (`client/src/context/ThemeContext.jsx`) owns the single theme state. The toggle in the
+landing navigation, the dashboard header and the auth pages all call into it, so one click repaints
+the whole application — every route, modal, form and toast reads the same CSS variables.
+
+* The choice is stored in `localStorage` under `portiai.theme` and restored on the next visit.
+* With nothing stored, the operating-system preference (`prefers-color-scheme`) is used.
+* An inline script in `client/index.html` applies the class before first paint, so there is no flash
+  of the wrong theme.
+* Settings → Appearance exposes the same control and explains that a public portfolio's own design
+  (template, accent, font, section order) is set per portfolio in the editor.
 
 ### 4.3 Frontend
 
@@ -420,7 +433,7 @@ troubleshooting) are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Short versio
 * Profile photos can be uploaded (`POST /api/uploads`, PNG/JPEG/WebP, resized to 512 px in the
   browser, stored in MongoDB capped at 500 KB) or referenced by an https URL. There is no CDN or
   object storage, and an account can keep 30 stored images.
-* Demo content on the marketing pages (the "Farheen" sample) is clearly labelled sample data.
+* Demo content on the marketing pages (the "Alex Morgan" sample) is clearly labelled sample data.
   There are no fabricated testimonials, customer logos or usage statistics anywhere in the app.
 
 ---

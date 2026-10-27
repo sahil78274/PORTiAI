@@ -62,7 +62,7 @@ function BlogSettings({ draft, setDraft }) {
   const enabled = Boolean(draft.blog?.enabled);
   return (
     <div className="space-y-5">
-      <div className="rounded-lg border border-line bg-canvasAlt/60 p-4">
+      <div className="rounded-lg border border-line bg-canvasAlt p-4">
         <Switch
           checked={enabled}
           onChange={(value) => setDraft({ ...draft, blog: { ...draft.blog, enabled: value } })}
@@ -397,7 +397,7 @@ export default function Editor() {
                   aria-current={tab === tabId ? 'true' : undefined}
                   onClick={() => setTab(tabId)}
                   className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-[12px] font-medium transition-colors ${
-                    tab === tabId ? 'bg-accent-soft text-ink ring-1 ring-inset ring-accent-line/60' : 'text-muted hover:bg-canvasAlt hover:text-ink'
+                    tab === tabId ? 'bg-accent-soft text-ink ring-1 ring-inset ring-accent-line' : 'text-muted hover:bg-canvasAlt hover:text-ink'
                   }`}
                 >
                   <Icon size={13} className="shrink-0" aria-hidden="true" />
@@ -484,7 +484,7 @@ export default function Editor() {
       </div>
 
       {/* Mobile pane switch */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-canvas/90 px-4 py-2 backdrop-blur xl:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 border-t border-line bg-canvas px-4 py-2 xl:hidden">
         {[
           { id: 'edit', label: 'Editor', icon: LayoutList },
           { id: 'preview', label: 'Preview', icon: Eye },
@@ -536,7 +536,7 @@ export default function Editor() {
       </Modal>
 
       {dirty ? (
-        <div className="flex items-center gap-2 rounded-lg border border-warning/25 bg-warningSoft px-3.5 py-2 text-[11px] text-warning">
+        <div className="flex items-center gap-2 rounded-lg border border-warningLine bg-warningSoft px-3.5 py-2 text-[11px] text-warning">
           <AlertCircle size={13} aria-hidden="true" />
           You have unsaved changes. Autosave will save them shortly, or press Save draft now.
         </div>

@@ -4,7 +4,6 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  Sparkles,
   Check,
   X,
   ImagePlus,
@@ -60,7 +59,7 @@ const PhotoField = ({ value, onChange }) => {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-surfaceRaised/40 p-3">
+    <div className="rounded-lg border border-line bg-surfaceRaised p-3">
       <div className="flex items-center gap-3">
         <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-lineStrong bg-canvasAlt">
           {preview ? (
@@ -159,7 +158,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
         <button
           type="button"
           onClick={() => onRemove(index)}
-          className="rounded-md p-1 text-danger hover:bg-danger/15 hover:text-danger transition-colors"
+          className="rounded-md p-1 text-danger hover:bg-dangerSoft hover:text-danger transition-colors"
           aria-label={`${removeLabel} ${title} ${index + 1}`}
         >
           <Trash2 size={13} aria-hidden="true" />
@@ -1004,7 +1003,7 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
 
       {showPreview ? (
         <div className="rounded border border-line">
-          <p className="border-b border-line bg-canvasAlt/60 px-3 py-1.5 text-2xs uppercase tracking-widest text-muted">
+          <p className="border-b border-line bg-canvasAlt px-3 py-1.5 text-2xs uppercase tracking-widest text-muted">
             Template preview
           </p>
           <TemplatePreviewFrame designWidth={1000} designHeight={420} label="Selected template preview">
@@ -1081,9 +1080,7 @@ export function SectionsSection({ draft, setDraft }) {
           );
         })}
       </ul>
-      <p className="flex items-center gap-1.5 text-2xs text-faint">
-        <Sparkles size={11} aria-hidden="true" /> Section order and visibility are saved with the portfolio.
-      </p>
+      <p className="text-2xs text-faint">Section order and visibility are saved with the portfolio.</p>
     </div>
   );
 }

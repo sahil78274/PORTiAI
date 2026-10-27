@@ -94,7 +94,7 @@ export default function Terms() {
         {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.
       </p>
 
-      <div className="mt-5 flex gap-3 rounded-xl border border-warning/25 bg-warningSoft px-4 py-3 text-xs leading-relaxed text-warning">
+      <div className="mt-5 flex gap-3 rounded-lg border border-warningLine bg-warningSoft px-4 py-3 text-xs leading-relaxed text-warning">
         <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
         <p>
           These terms describe how this independent project behaves. They have not been reviewed by a lawyer and are not a

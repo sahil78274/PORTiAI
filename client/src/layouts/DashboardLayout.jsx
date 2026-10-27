@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import Logo from '../components/ui/Logo.jsx';
+import ThemeToggle from '../components/ui/ThemeToggle.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { initials } from '../utils/format.js';
@@ -132,8 +133,10 @@ export default function DashboardLayout() {
           onClick={onNavigate}
           title={collapsed ? label : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors ${
-              isActive ? 'bg-accent text-white' : 'text-muted hover:bg-surfaceRaised hover:text-ink'
+            `flex items-center gap-2.5 rounded-md py-2 pl-2 pr-2.5 text-[13px] font-medium transition-colors ${
+              isActive
+                ? 'border-l-2 border-accent bg-accent-soft text-accent-hover'
+                : 'border-l-2 border-transparent text-muted hover:bg-surfaceRaised hover:text-ink'
             } ${collapsed ? 'lg:justify-center lg:px-0' : ''}`
           }
         >
@@ -154,7 +157,7 @@ export default function DashboardLayout() {
       </a>
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-40 bg-ink/25 lg:hidden" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+        <div className="fixed inset-0 z-40 bg-overlay lg:hidden" onClick={() => setMobileOpen(false)} aria-hidden="true" />
       ) : null}
 
       <aside
@@ -225,7 +228,7 @@ export default function DashboardLayout() {
       </aside>
 
       <div className={`flex min-h-screen flex-col transition-[padding] duration-200 ${collapsed ? 'lg:pl-[68px]' : 'lg:pl-[248px]'}`}>
-        <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-line bg-surface">
           <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
             <button
               type="button"
@@ -257,54 +260,57 @@ export default function DashboardLayout() {
               </div>
             </form>
 
-            <div className="relative ml-auto flex items-center gap-2 sm:ml-2" ref={profileRef}>
-              <button
-                type="button"
-                onClick={() => setProfileOpen((value) => !value)}
-                className="flex items-center gap-1.5 rounded-md border border-line bg-surfaceRaised/60 py-1 pl-1 pr-1.5 transition-colors hover:border-lineStrong"
-                aria-expanded={profileOpen}
-                aria-label="Account menu"
-              >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white">
-                  {initials(user?.name)}
-                </span>
-                <span className="hidden max-w-[110px] truncate text-[12px] font-medium text-ink sm:block">{user?.name}</span>
-                <ChevronRight size={12} className={`hidden text-faint transition-transform sm:block ${profileOpen ? 'rotate-90' : ''}`} aria-hidden="true" />
-              </button>
+            <div className="ml-auto flex items-center gap-2 sm:ml-2">
+              <ThemeToggle size="sm" />
+              <div className="relative flex items-center gap-2" ref={profileRef}>
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((value) => !value)}
+                  className="flex items-center gap-1.5 rounded-md border border-line bg-surfaceRaised py-1 pl-1 pr-1.5 transition-colors hover:border-lineStrong"
+                  aria-expanded={profileOpen}
+                  aria-label="Account menu"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white">
+                    {initials(user?.name)}
+                  </span>
+                  <span className="hidden max-w-[110px] truncate text-[12px] font-medium text-ink sm:block">{user?.name}</span>
+                  <ChevronRight size={12} className={`hidden text-faint transition-transform sm:block ${profileOpen ? 'rotate-90' : ''}`} aria-hidden="true" />
+                </button>
 
-              {profileOpen ? (
-                <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-lg border border-line bg-surface shadow-float animate-fadeIn">
-                  <div className="border-b border-line px-3 py-2.5">
-                    <p className="truncate text-[13px] font-medium text-ink">{user?.name}</p>
-                    <p className="truncate text-[11px] text-muted">{user?.email}</p>
+                {profileOpen ? (
+                  <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-lg border border-line bg-surface shadow-float animate-fadeIn">
+                    <div className="border-b border-line px-3 py-2.5">
+                      <p className="truncate text-[13px] font-medium text-ink">{user?.name}</p>
+                      <p className="truncate text-[11px] text-muted">{user?.email}</p>
+                    </div>
+                    <div className="p-1">
+                      <NavLink to="/dashboard/settings" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
+                        <CircleUserRound size={13} aria-hidden="true" />
+                        Profile &amp; settings
+                      </NavLink>
+                      <NavLink to="/dashboard/portfolios" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
+                        <FolderOpen size={13} aria-hidden="true" />
+                        My portfolios
+                      </NavLink>
+                      <a href="/" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
+                        <ExternalLink size={13} aria-hidden="true" />
+                        Public site
+                      </a>
+                    </div>
+                    <div className="border-t border-line p-1">
+                      <button
+                        type="button"
+                        onClick={onLogout}
+                        disabled={signingOut}
+                        className="flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-danger hover:bg-dangerSoft"
+                      >
+                        <LogOut size={13} aria-hidden="true" />
+                        {signingOut ? 'Signing out…' : 'Sign out'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="p-1">
-                    <NavLink to="/dashboard/settings" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
-                      <CircleUserRound size={13} aria-hidden="true" />
-                      Profile &amp; settings
-                    </NavLink>
-                    <NavLink to="/dashboard/portfolios" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
-                      <FolderOpen size={13} aria-hidden="true" />
-                      My portfolios
-                    </NavLink>
-                    <a href="/" className="flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-inkSoft hover:bg-surfaceRaised hover:text-ink">
-                      <ExternalLink size={13} aria-hidden="true" />
-                      Public site
-                    </a>
-                  </div>
-                  <div className="border-t border-line p-1">
-                    <button
-                      type="button"
-                      onClick={onLogout}
-                      disabled={signingOut}
-                      className="flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-[13px] text-danger hover:bg-dangerSoft"
-                    >
-                      <LogOut size={13} aria-hidden="true" />
-                      {signingOut ? 'Signing out…' : 'Sign out'}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
+                ) : null}
+            </div>
             </div>
           </div>
         </header>

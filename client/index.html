@@ -7,7 +7,7 @@
       name="description"
       content="PortiAI builds a professional portfolio from one of six templates: add your projects and experience, preview at any screen size and publish to a public link."
     />
-    <meta name="theme-color" content="#0a1020" />
+    <meta name="theme-color" content="#ffffff" />
     <meta property="og:title" content="PortiAI — a portfolio builder for your work" />
     <meta
       property="og:description"
@@ -18,10 +18,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <title>PortiAI — build a portfolio you can share</title>
+    <script>
+      /* Apply the saved (or system) theme before first paint to avoid a flash. */
+      (function () {
+        try {
+          var stored = localStorage.getItem('portiai.theme');
+          var dark = stored
+            ? stored === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', dark);
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', dark ? '#0b1120' : '#ffffff');
+        } catch (error) {
+          /* ignore: default light theme applies */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

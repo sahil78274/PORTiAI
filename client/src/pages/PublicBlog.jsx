@@ -5,9 +5,10 @@ import Markdown, { estimateReadingTime } from '../utils/markdown.jsx';
 import { publicBlogService } from '../services/blogService.js';
 import { portfolioService } from '../services/portfolioService.js';
 import { formatDate } from '../utils/format.js';
+import { getTemplate } from '../utils/templates.js';
 
 const usePortfolioTheme = (portfolio) => {
-  const accent = portfolio?.theme?.accent || '#2f6bff';
+  const accent = portfolio?.theme?.accent || '#2563eb';
   return useMemo(
     () => ({
       accent,
@@ -19,9 +20,12 @@ const usePortfolioTheme = (portfolio) => {
 
 function Shell({ portfolio, children, slug }) {
   const { style } = usePortfolioTheme(portfolio);
+  // The blog belongs to the portfolio, so its chrome follows the template's
+  // tone rather than the reader's dashboard preference.
+  const tone = getTemplate(portfolio?.templateId)?.tone === 'dark' ? 'dark' : 'theme-light';
   return (
-    <div className="min-h-screen bg-canvas text-ink" style={style}>
-      <header className="border-b border-line bg-canvas/90 backdrop-blur">
+    <div className={`min-h-screen bg-canvas text-ink ${tone}`} style={style}>
+      <header className="border-b border-line bg-canvas">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-5 py-4">
           <Link to={`/p/${slug}`} className="inline-flex items-center gap-1.5 text-xs font-medium text-inkSoft transition-colors hover:text-ink">
             <ArrowLeft size={13} aria-hidden="true" />
@@ -64,7 +68,7 @@ function Notice({ title, body, slug, retry }) {
           </button>
         ) : null}
         {slug ? (
-          <Link to={`/p/${slug}`} className="rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent-hover">
+          <Link to={`/p/${slug}`} className="rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent-strong">
             Back to portfolio
           </Link>
         ) : null}
@@ -154,7 +158,7 @@ export function PublicBlogList() {
       ) : (
         <ul className="mt-8 divide-y divide-line border-t border-line">
           {filtered.map((post) => (
-            <li key={post.id}>
+            <li key={post.slug || post.title}>
               <Link to={`/p/${slug}/blog/${post.slug}`} className="group flex flex-col gap-3 py-6 sm:flex-row sm:items-start sm:gap-5">
                 {post.coverUrl ? (
                   <img

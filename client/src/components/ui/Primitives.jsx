@@ -91,22 +91,22 @@ export const Select = forwardRef(function Select({ className = '', children, ...
 /* -------------------------------------------------- Feedback -------------------------------------------------- */
 const ALERT_STYLES = {
   info: {
-    container: 'border-accent-line/80 bg-accent-soft/80 text-ink',
+    container: 'border-accent-line bg-accent-soft text-ink',
     icon: Info,
     iconColor: 'text-accent-hover',
   },
   success: {
-    container: 'border-success/30 bg-successSoft text-success',
+    container: 'border-successLine bg-successSoft text-success',
     icon: CheckCircle2,
     iconColor: 'text-success',
   },
   warning: {
-    container: 'border-warning/30 bg-warningSoft text-warning',
+    container: 'border-warningLine bg-warningSoft text-warning',
     icon: AlertTriangle,
     iconColor: 'text-warning',
   },
   error: {
-    container: 'border-danger/30 bg-dangerSoft text-danger',
+    container: 'border-dangerLine bg-dangerSoft text-danger',
     icon: AlertCircle,
     iconColor: 'text-danger',
   },
@@ -119,7 +119,7 @@ export const Alert = ({ tone = 'info', title, children, className = '', actions 
   return (
     <div
       role={tone === 'error' ? 'alert' : 'status'}
-      className={`flex items-start gap-3 rounded-xl border p-3.5 text-sm ${style.container} ${className}`}
+      className={`flex items-start gap-3 rounded-lg border p-3.5 text-sm ${style.container} ${className}`}
     >
       <Icon size={16} className={`mt-0.5 shrink-0 ${style.iconColor}`} aria-hidden="true" />
       <div className="min-w-0 flex-1">
@@ -148,10 +148,10 @@ export const Skeleton = ({ className = '' }) => (
 
 export const EmptyState = ({ icon: Icon, title, description, action, className = '' }) => (
   <div
-    className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-lineStrong/80 bg-surface px-6 py-14 text-center ${className}`}
+    className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-lineStrong bg-surface px-6 py-14 text-center ${className}`}
   >
     {Icon ? (
-      <span className="mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-hover ring-1 ring-accent-line/60">
+      <span className="mb-3.5 flex h-11 w-11 items-center justify-center rounded-lg bg-accent-soft text-accent-hover">
         <Icon size={22} aria-hidden="true" />
       </span>
     ) : null}
@@ -182,7 +182,7 @@ export const ProgressBar = ({ value, max = 100, className = '', tone = 'accent',
         </div>
       ) : null}
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-canvasAlt ring-1 ring-line/60"
+        className="h-2 w-full overflow-hidden rounded-full bg-canvasAlt ring-1 ring-line"
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -203,12 +203,13 @@ export const ScoreRing = ({ score, size = 132, label = 'Overall score' }) => {
   const radius = size / 2 - strokeWidth;
   const circumference = 2 * Math.PI * radius;
   const dash = (Math.max(0, Math.min(100, score)) / 100) * circumference;
-  const tone = score >= 85 ? '#34d399' : score >= 70 ? '#60a5fa' : score >= 55 ? '#fbbf24' : '#f87171';
+  const tone =
+    score >= 85 ? 'var(--success)' : score >= 70 ? 'var(--accent)' : score >= 55 ? 'var(--warning)' : 'var(--danger)';
 
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} role="img" aria-label={`${label}: ${score} out of 100`} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#1e2a42" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--line)" strokeWidth={strokeWidth} />
         <circle
           cx={size / 2}
           cy={size / 2}

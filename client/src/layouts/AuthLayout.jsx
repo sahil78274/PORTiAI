@@ -1,6 +1,7 @@
 import { Link, Outlet } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import Logo from '../components/ui/Logo.jsx';
+import ThemeToggle from '../components/ui/ThemeToggle.jsx';
 
 const POINTS = [
   'Six portfolio templates that can be previewed before you choose.',
@@ -21,12 +22,10 @@ export default function AuthLayout() {
       <div className="grid min-h-screen lg:grid-cols-[0.9fr_1fr]">
         {/* Brand panel */}
         <aside className="hidden border-r border-line bg-surface px-10 py-9 lg:flex lg:flex-col lg:justify-between">
-          <Link to="/" aria-label="PortiAI home" >
-            <Logo size="lg" tone="light" />
-          </Link>
+          <Logo size="lg" className="w-fit" />
 
           <div className="max-w-md">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-hover">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-hover">
               Portfolio builder
             </p>
             <h1 className="mt-3 text-[30px] font-semibold leading-[1.15] tracking-[-0.025em] text-ink">
@@ -58,13 +57,16 @@ export default function AuthLayout() {
             <div className="lg:hidden">
               <Logo />
             </div>
-            <Link
-              to="/"
-              className="ml-auto inline-flex items-center gap-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
-            >
-              <ArrowLeft size={13} aria-hidden="true" />
-              Back to home
-            </Link>
+            <div className="ml-auto flex items-center gap-3">
+              <ThemeToggle size="sm" />
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
+              >
+                <ArrowLeft size={13} aria-hidden="true" />
+                Back to home
+              </Link>
+            </div>
           </header>
 
           <div className="flex flex-1 items-center justify-center px-5 pb-14 pt-2 sm:px-8">

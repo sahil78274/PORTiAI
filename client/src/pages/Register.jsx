@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, ArrowRight, Check, Sparkles, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Check, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Button, Field, TextInput } from '../components/ui/Primitives.jsx';
 import PasswordInput from '../components/ui/PasswordInput.jsx';
@@ -73,15 +73,12 @@ export default function Register() {
   return (
     <div className="rounded-lg border border-line bg-surface p-6 sm:p-7">
       <div className="mb-6">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-canvasAlt text-accent-hover">
-          <Sparkles size={18} aria-hidden="true" />
-        </span>
-        <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-ink">Create your account</h2>
+        <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-ink">Create your account</h2>
         <p className="mt-1.5 text-sm text-muted">
           Create an account, build a portfolio and publish it to a public link. No payment details are requested.
         </p>
         {templateMeta ? (
-          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent-line/60 bg-accent-soft px-3 py-1 text-[11px] font-medium text-accent-hover">
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded border border-accent-line bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent-hover">
             <Check size={11} aria-hidden="true" />
             {templateMeta.name} will be applied after sign-up
           </p>
@@ -89,7 +86,7 @@ export default function Register() {
       </div>
 
       {error ? (
-        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-lg border border-danger/30 bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
+        <div role="alert" className="mb-5 flex items-start gap-2.5 rounded-lg border border-dangerLine bg-dangerSoft p-3 text-xs leading-relaxed text-danger">
           <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>

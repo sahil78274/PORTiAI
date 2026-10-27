@@ -266,7 +266,7 @@ export default function BlogEditor() {
           <button
             type="button"
             onClick={() => setDeleteOpen(true)}
-            className="btn-ghost btn-sm h-8 w-8 p-0 text-danger/80 hover:bg-danger/10 hover:text-danger"
+            className="btn-ghost btn-sm h-8 w-8 p-0 text-danger hover:bg-dangerSoft hover:text-danger"
             aria-label="Delete post"
           >
             <Trash2 size={13} aria-hidden="true" />
@@ -443,10 +443,7 @@ export default function BlogEditor() {
             <Alert tone="warning" title="AI writing help unavailable">{aiError}</Alert>
           ) : (
             <div className="rounded-lg border border-line bg-surface p-4 text-[11px] leading-relaxed text-muted">
-              <p className="flex items-center gap-1.5 font-medium text-inkSoft">
-                <Sparkles size={12} className="text-accent-hover" aria-hidden="true" />
-                AI writing help
-              </p>
+              <p className="font-medium text-inkSoft">AI writing help</p>
               <p className="mt-1.5">
                 {aiStatus?.configured
                   ? 'Improving rewrites only the text you have written — it will not add new claims. Review the result before publishing.'
@@ -468,7 +465,7 @@ export default function BlogEditor() {
       />
 
       {post.published && portfolio?.published && publicHref ? (
-        <p className="flex items-center gap-2 rounded-lg border border-success/25 bg-successSoft px-3.5 py-2.5 text-[11px] text-success">
+        <p className="flex items-center gap-2 rounded-lg border border-successLine bg-successSoft px-3.5 py-2.5 text-[11px] text-success">
           <Globe2 size={12} aria-hidden="true" />
           Live at {portfolio.slug && `${window.location.origin}${publicHref}`}
           {dirty ? <span className="ml-auto inline-flex items-center gap-1 text-warning"><AlertCircle size={11} aria-hidden="true" />Unsaved edits are not live yet</span> : null}

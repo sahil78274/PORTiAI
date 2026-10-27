@@ -13,8 +13,8 @@ import {
   Mail,
   Newspaper,
   Pencil,
+  Gauge,
   Share2,
-  Sparkles,
   Undo2,
 } from 'lucide-react';
 import { Button } from '../components/ui/Primitives.jsx';
@@ -152,7 +152,7 @@ export default function PublishSuccess() {
         <div className="relative text-center">
           <span
             className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${
-              notPublished ? 'border border-warning/30 bg-warningSoft text-warning' : 'bg-successSoft text-success'
+              notPublished ? 'border border-warningLine bg-warningSoft text-warning' : 'bg-successSoft text-success'
             }`}
           >
             {notPublished ? <Undo2 size={20} aria-hidden="true" /> : <CheckCircle2 size={22} aria-hidden="true" />}
@@ -204,7 +204,7 @@ export default function PublishSuccess() {
               Email
             </a>
             <Link to={`/dashboard/portfolio/${id}/analyze`} className="btn-secondary btn-sm">
-              <Sparkles size={13} aria-hidden="true" />
+              <Gauge size={13} aria-hidden="true" />
               Run analyzer
             </Link>
           </div>
@@ -270,7 +270,7 @@ export default function PublishSuccess() {
               <li key={item.label} className="flex items-start gap-2.5 py-2.5">
                 <span
                   className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
-                    item.done ? 'bg-success/20 text-success' : 'border border-lineStrong text-faint'
+                    item.done ? 'bg-successSoft text-success' : 'border border-lineStrong text-faint'
                   }`}
                 >
                   {item.done ? <Check size={10} aria-hidden="true" /> : <span className="h-1 w-1 rounded-full bg-faint" aria-hidden="true" />}

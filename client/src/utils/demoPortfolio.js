@@ -199,27 +199,28 @@ export const demoDashboard = [
 ];
 
 /**
- * The portrait owner used in the landing hero preview. Sample content only —
- * the landing page labels it as a preview, and it is never written to the
- * database or presented as a real customer.
+ * The sample owner used in the landing hero preview. Sample content only — the
+ * landing page labels it as a preview, and it is never written to the database
+ * or presented as a real customer.
  */
 export const heroPortfolio = {
   ...demoPortfolio,
-  title: 'Farheen — portfolio preview',
+  title: 'Alex Morgan — portfolio preview',
   templateId: 'developer',
   profile: {
     ...demoPortfolio.profile,
-    fullName: 'Farheen',
+    fullName: 'Alex Morgan',
     title: 'Full Stack Developer',
     summary:
-      'I build full-stack web applications with React, Node.js and MongoDB. Currently working on tools that make everyday developer work a little clearer.',
-    location: 'Hyderabad, India',
-    contactEmail: 'farheen.sample@example.com',
+      'I build full-stack web applications with React, Node.js and PostgreSQL. Currently working on tools that make everyday developer work a little clearer.',
+    location: 'Bengaluru, India',
+    contactEmail: 'alex.morgan@example.com',
+    photoUrl: '/images/alex-morgan.png',
   },
   skills: [
     { name: 'React', category: 'technical' },
     { name: 'Node.js', category: 'technical' },
-    { name: 'MongoDB', category: 'technical' },
+    { name: 'PostgreSQL', category: 'technical' },
     { name: 'TypeScript', category: 'technical' },
   ],
   theme: { accent: '#2f6bff', font: 'sans', density: 'comfortable' },

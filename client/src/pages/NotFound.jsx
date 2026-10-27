@@ -9,9 +9,7 @@ export default function NotFound() {
     <div className="flex min-h-screen flex-col bg-canvas">
       <header className="border-b border-line">
         <div className="container-wide flex h-16 items-center justify-between">
-          <Link to="/" aria-label="PortiAI home">
-            <Logo />
-          </Link>
+          <Logo />
           <nav className="flex items-center gap-4 text-xs">
             <Link to="/templates" className="text-muted transition-colors hover:text-ink">
               Templates
