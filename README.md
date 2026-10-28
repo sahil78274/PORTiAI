@@ -263,6 +263,11 @@ The Vite dev server proxies `/api` to `http://localhost:5000`, so if you leave
 `VITE_API_BASE_URL` **empty** the browser talks to a single origin and the session cookie behaves
 exactly as it does behind a reverse proxy.
 
+In production the frontend and the API are separate origins, so the variable must point at the API
+(`https://portiai-backend.onrender.com/api`). The API only accepts browser origins listed in
+`CLIENT_URL` — plus `https://portiai-frontend.onrender.com`, which is always allowed — and
+`GET /api/health` reports the allow-list it is actually using (`allowedOrigins`).
+
 ### 4.4 First run
 
 1. Open <http://localhost:5173> — the landing page loads at `/`.
@@ -299,7 +304,7 @@ exactly as it does behind a reverse proxy.
 
 | Variable | Purpose |
 | --- | --- |
-| `VITE_API_BASE_URL` | Base URL of the API including `/api`. Leave empty for same-origin `/api` |
+| `VITE_API_BASE_URL` | Base URL of the API, including `/api` (e.g. `https://portiai-backend.onrender.com/api`). Leave empty only for a same-origin `/api` proxy. Compiled into the bundle at build time, so changing it needs a rebuild; the value is normalised (missing/duplicate `/api`, trailing slash, stray quotes, `http://` on an HTTPS page) and `npm run build` prints the URL it compiled in |
 
 Only non-secret values may go in `VITE_*` variables — everything in them is compiled into the bundle
 and visible to any visitor. The Gemini key and the session secret stay on the server.

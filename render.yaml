@@ -1,9 +1,13 @@
-# Render blueprint for the PortiAI API.
-# Create a Blueprint on Render and point it at this repository, or create a
-# Web Service manually with the same settings.
+# Render blueprint for PortiAI.
+# Create a Blueprint on Render and point it at this repository, or create the
+# two services manually with the same settings.
+#
+# Order matters on a first deploy: the API must exist before the frontend builds,
+# because the frontend compiles VITE_API_BASE_URL into its bundle.
 services:
+  # ---------------------------------------------------------------- Backend
   - type: web
-    name: portiai-api
+    name: portiai-backend
     runtime: node
     plan: free
     region: singapore
@@ -23,7 +27,29 @@ services:
         value: gemini-2.5-flash
       - key: SESSION_SECRET
         generateValue: true
+      # Browser origins allowed to call the API with the session cookie.
+      # Comma-separate additional origins (e.g. a Vercel deployment).
+      # https://portiai-frontend.onrender.com is always allowed by the code as
+      # well, so a stale value here can no longer break the deployed site.
       - key: CLIENT_URL
-        sync: false # e.g. https://portiai.vercel.app
+        value: https://portiai-frontend.onrender.com
       - key: AI_DAILY_REQUEST_CAP
         value: "200"
+
+  # --------------------------------------------------------------- Frontend
+  - type: web
+    name: portiai-frontend
+    runtime: static
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      # Compiled into the bundle at build time — changing it requires a rebuild.
+      # `npm run build` fails on Render if this is missing or unusable.
+      - key: VITE_API_BASE_URL
+        value: https://portiai-backend.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
