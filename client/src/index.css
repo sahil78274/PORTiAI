@@ -8,8 +8,17 @@
    existing pages inherit the theme without per-component logic.
    ========================================================================== */
 @layer base {
+  /* -------------------------------------------------------------------------
+     Theme tokens
+     Six themes share one token contract. `light` and `rose` are light themes;
+     `dark`, `midnight`, `purple` and `emerald` are dark. All themes set the
+     `dark` class on <html> only when their palette is dark, so Tailwind's
+     `dark:` helpers keep working. Theme-specific blocks use html[data-theme]
+     which outranks the `.dark` defaults.
+     ---------------------------------------------------------------------- */
   :root,
-  .theme-light {
+  .theme-light,
+  html[data-theme='light'] {
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
@@ -24,6 +33,7 @@
     --surface: #ffffff;
     --surface-raised: #f3f5f9;
     --surface-high: #e9edf3;
+    --surface-glass: rgba(255, 255, 255, 0.72);
     --overlay: rgba(15, 23, 42, 0.32);
     --navy: #0f172a;
     --navy-soft: #1e293b;
@@ -46,6 +56,13 @@
     --accent-line: #c7d8fd;
     --accent-contrast: #ffffff;
 
+    /* Identity details */
+    --nav-bg: rgba(255, 255, 255, 0.82);
+    --hero-glow: radial-gradient(60% 55% at 12% 0%, rgba(37, 99, 235, 0.14), transparent 70%),
+      radial-gradient(50% 50% at 92% 8%, rgba(190, 18, 60, 0.09), transparent 70%);
+    --card-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 18px 40px -32px rgba(16, 24, 40, 0.35);
+    --card-shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.06), 0 26px 50px -30px rgba(16, 24, 40, 0.4);
+
     /* Status */
     --success: #15803d;
     --success-soft: #e9f7ef;
@@ -62,7 +79,8 @@
     --skeleton-sheen: rgba(15, 23, 42, 0.045);
   }
 
-  .dark {
+  .dark,
+  html[data-theme='dark'] {
     color-scheme: dark;
 
     --canvas: #0b1120;
@@ -71,6 +89,7 @@
     --surface: #111a2b;
     --surface-raised: #172137;
     --surface-high: #1d2841;
+    --surface-glass: rgba(17, 26, 43, 0.72);
     --overlay: rgba(3, 7, 17, 0.64);
     --navy: #0d1626;
     --navy-soft: #16233b;
@@ -84,11 +103,17 @@
     --line-strong: #465879;
 
     --accent: #2f68f5;
-    --accent-hover: #7ea6ff;
+    --accent-hover: #8bb0ff;
     --accent-strong: #2456cc;
     --accent-soft: #16233d;
     --accent-line: #2b3f63;
     --accent-contrast: #ffffff;
+
+    --nav-bg: rgba(11, 17, 32, 0.82);
+    --hero-glow: radial-gradient(60% 55% at 12% 0%, rgba(74, 120, 255, 0.22), transparent 70%),
+      radial-gradient(50% 50% at 92% 6%, rgba(147, 51, 234, 0.16), transparent 70%);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 22px 44px -34px rgba(0, 0, 0, 0.9);
+    --card-shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.4), 0 30px 60px -34px rgba(0, 0, 0, 0.95);
 
     --success: #45d399;
     --success-soft: #10241e;
@@ -103,6 +128,210 @@
     --scroll-thumb: #2a3750;
     --scroll-thumb-hover: #3a4a68;
     --skeleton-sheen: rgba(255, 255, 255, 0.05);
+  }
+
+  /* -------------------------------------------------- Midnight */
+  html[data-theme='midnight'] {
+    color-scheme: dark;
+
+    --canvas: #05070d;
+    --canvas-alt: #0a0f19;
+    --canvas-deep: #03050a;
+    --surface: #0b111c;
+    --surface-raised: #121a28;
+    --surface-high: #1a2434;
+    --surface-glass: rgba(11, 17, 28, 0.74);
+    --overlay: rgba(2, 4, 10, 0.72);
+    --navy: #05070d;
+    --navy-soft: #101827;
+
+    --ink: #e8eef8;
+    --ink-soft: #bcc9dc;
+    --muted: #93a4bc;
+    --faint: #7c8ea7;
+
+    --line: #1a2436;
+    --line-strong: #3d4d66;
+
+    --accent: #38bdf8;
+    --accent-hover: #7dd3fc;
+    --accent-strong: #0ea5e9;
+    --accent-soft: #0b2434;
+    --accent-line: #16455f;
+    --accent-contrast: #04121a;
+
+    --nav-bg: rgba(5, 7, 13, 0.84);
+    --hero-glow: radial-gradient(60% 55% at 10% 0%, rgba(56, 189, 248, 0.2), transparent 70%),
+      radial-gradient(50% 50% at 90% 4%, rgba(59, 130, 246, 0.16), transparent 70%);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 24px 48px -34px rgba(0, 0, 0, 0.95);
+    --card-shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.5), 0 32px 64px -34px rgba(0, 0, 0, 1);
+
+    --success: #34d399;
+    --success-soft: #062319;
+    --success-line: #1b5540;
+    --warning: #fbbf24;
+    --warning-soft: #241a08;
+    --warning-line: #5a441c;
+    --danger: #fb7185;
+    --danger-soft: #2a0d14;
+    --danger-line: #5f2130;
+
+    --scroll-thumb: #1e293b;
+    --scroll-thumb-hover: #2f3f56;
+    --skeleton-sheen: rgba(255, 255, 255, 0.06);
+  }
+
+  /* -------------------------------------------------- Purple */
+  html[data-theme='purple'] {
+    color-scheme: dark;
+
+    --canvas: #0c0716;
+    --canvas-alt: #130b24;
+    --canvas-deep: #080312;
+    --surface: #150d27;
+    --surface-raised: #1d1333;
+    --surface-high: #271a42;
+    --surface-glass: rgba(21, 13, 39, 0.74);
+    --overlay: rgba(6, 3, 14, 0.72);
+    --navy: #0c0716;
+    --navy-soft: #1b1130;
+
+    --ink: #f3eeff;
+    --ink-soft: #d3c7ef;
+    --muted: #ab9dcb;
+    --faint: #9183b0;
+
+    --line: #2a1d44;
+    --line-strong: #4a3a70;
+
+    --accent: #a78bfa;
+    --accent-hover: #c9b8ff;
+    --accent-strong: #8b5cf6;
+    --accent-soft: #241543;
+    --accent-line: #3f2a67;
+    --accent-contrast: #150d27;
+
+    --nav-bg: rgba(12, 7, 22, 0.84);
+    --hero-glow: radial-gradient(60% 55% at 8% 0%, rgba(167, 139, 250, 0.28), transparent 70%),
+      radial-gradient(50% 50% at 92% 6%, rgba(236, 72, 153, 0.16), transparent 70%);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 24px 50px -34px rgba(76, 29, 149, 0.6);
+    --card-shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.45), 0 32px 66px -34px rgba(76, 29, 149, 0.7);
+
+    --success: #5eead4;
+    --success-soft: #08231f;
+    --success-line: #1f5249;
+    --warning: #fcd34d;
+    --warning-soft: #241b09;
+    --warning-line: #574521;
+    --danger: #fb7185;
+    --danger-soft: #2a0d16;
+    --danger-line: #5f2132;
+
+    --scroll-thumb: #2c1f48;
+    --scroll-thumb-hover: #3e2d61;
+    --skeleton-sheen: rgba(255, 255, 255, 0.06);
+  }
+
+  /* -------------------------------------------------- Emerald */
+  html[data-theme='emerald'] {
+    color-scheme: dark;
+
+    --canvas: #04120e;
+    --canvas-alt: #071b15;
+    --canvas-deep: #020c09;
+    --surface: #071a14;
+    --surface-raised: #0b241b;
+    --surface-high: #103024;
+    --surface-glass: rgba(7, 26, 20, 0.76);
+    --overlay: rgba(1, 8, 6, 0.74);
+    --navy: #04120e;
+    --navy-soft: #0b241b;
+
+    --ink: #e8f7f0;
+    --ink-soft: #c0e5d4;
+    --muted: #93bba9;
+    --faint: #7ba593;
+
+    --line: #12352a;
+    --line-strong: #2b5a48;
+
+    --accent: #34d399;
+    --accent-hover: #6ee7b7;
+    --accent-strong: #10b981;
+    --accent-soft: #0b2b22;
+    --accent-line: #1d4a3a;
+    --accent-contrast: #04120e;
+
+    --nav-bg: rgba(4, 18, 14, 0.84);
+    --hero-glow: radial-gradient(60% 55% at 10% 0%, rgba(52, 211, 153, 0.2), transparent 70%),
+      radial-gradient(50% 50% at 92% 6%, rgba(20, 184, 166, 0.16), transparent 70%);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 24px 48px -34px rgba(0, 0, 0, 0.9);
+    --card-shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.45), 0 32px 64px -34px rgba(0, 0, 0, 0.95);
+
+    --success: #6ee7b7;
+    --success-soft: #08251c;
+    --success-line: #1f5544;
+    --warning: #fbbf24;
+    --warning-soft: #241a08;
+    --warning-line: #5a441c;
+    --danger: #fb7185;
+    --danger-soft: #2a0d14;
+    --danger-line: #5f2130;
+
+    --scroll-thumb: #164034;
+    --scroll-thumb-hover: #235a49;
+    --skeleton-sheen: rgba(255, 255, 255, 0.06);
+  }
+
+  /* -------------------------------------------------- Rose */
+  html[data-theme='rose'] {
+    color-scheme: light;
+
+    --canvas: #fff7f8;
+    --canvas-alt: #fdeef1;
+    --canvas-deep: #ffffff;
+    --surface: #ffffff;
+    --surface-raised: #fdf2f4;
+    --surface-high: #fbe6ea;
+    --surface-glass: rgba(255, 255, 255, 0.78);
+    --overlay: rgba(60, 12, 24, 0.30);
+    --navy: #2a0d14;
+    --navy-soft: #451520;
+
+    --ink: #27141a;
+    --ink-soft: #4a2a33;
+    --muted: #6f4a55;
+    --faint: #7c5560;
+
+    --line: #f3dbe0;
+    --line-strong: #c99aa6;
+
+    --accent: #be123c;
+    --accent-hover: #9f1239;
+    --accent-strong: #9f1239;
+    --accent-soft: #ffe4ea;
+    --accent-line: #f7c2ce;
+    --accent-contrast: #ffffff;
+
+    --nav-bg: rgba(255, 247, 248, 0.84);
+    --hero-glow: radial-gradient(60% 55% at 12% 0%, rgba(190, 18, 60, 0.12), transparent 70%),
+      radial-gradient(50% 50% at 92% 8%, rgba(234, 88, 12, 0.10), transparent 70%);
+    --card-shadow: 0 1px 2px rgba(80, 20, 35, 0.06), 0 18px 40px -32px rgba(80, 20, 35, 0.28);
+    --card-shadow-hover: 0 2px 4px rgba(80, 20, 35, 0.08), 0 26px 50px -30px rgba(80, 20, 35, 0.32);
+
+    --success: #15803d;
+    --success-soft: #e9f7ef;
+    --success-line: #bae3c9;
+    --warning: #9a6408;
+    --warning-soft: #fdf5e6;
+    --warning-line: #ecd7a7;
+    --danger: #b42318;
+    --danger-soft: #fdeceb;
+    --danger-line: #f3c7c2;
+
+    --scroll-thumb: #f0d5db;
+    --scroll-thumb-hover: #e2bcc5;
+    --skeleton-sheen: rgba(80, 20, 35, 0.05);
   }
 
   html {
@@ -371,5 +600,94 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Gallery + marketing surfaces
+   Small set of shared classes for the redesign, expressed with theme tokens so
+   all six themes stay consistent.
+   ========================================================================== */
+@layer components {
+  .surface-card {
+    @apply rounded-xl border border-line bg-surface;
+    box-shadow: var(--card-shadow);
+  }
+
+  .surface-hover {
+    @apply transition duration-200 ease-smooth;
+  }
+  .surface-hover:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-2px);
+  }
+
+  .glass-bar {
+    background: var(--nav-bg);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+
+  .hero-glow {
+    background-image: var(--hero-glow);
+    background-repeat: no-repeat;
+  }
+
+  .eyebrow-accent {
+    @apply inline-flex items-center gap-2 rounded-full border border-accent-line bg-accent-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-hover;
+  }
+
+  .chip-filter {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-surface px-3.5 py-1.5 text-[12.5px] font-medium text-inkSoft
+      transition duration-150 hover:border-lineStrong hover:text-ink;
+  }
+
+  .chip-filter-active {
+    @apply border-transparent bg-accent text-accent-contrast hover:text-accent-contrast;
+  }
+
+  .badge-premium {
+    @apply inline-flex items-center gap-1 rounded-full border border-accent-line bg-accent-soft px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent-hover;
+  }
+
+  .badge-free {
+    @apply inline-flex items-center gap-1 rounded-full border border-successLine bg-successSoft px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-success;
+  }
+
+  .gallery-card {
+    @apply overflow-hidden rounded-2xl border border-line bg-surface transition duration-200 ease-smooth;
+    box-shadow: var(--card-shadow);
+  }
+  .gallery-card:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  .gallery-preview {
+    @apply relative overflow-hidden border-b border-line;
+    background: var(--canvas-alt);
+  }
+
+  .scroll-rail {
+    @apply flex gap-2 overflow-x-auto pb-1;
+    scrollbar-width: none;
+  }
+  .scroll-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-[12px] font-medium text-inkSoft;
+  }
+
+  .select-sm {
+    @apply h-9 rounded-full border border-line bg-surface pl-3.5 pr-8 text-[12.5px] font-medium text-inkSoft
+      transition-colors hover:border-lineStrong focus:border-accent focus:outline-none;
+  }
+
+  .link-quiet {
+    @apply text-[13px] text-muted transition-colors hover:text-ink;
   }
 }

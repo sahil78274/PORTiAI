@@ -387,6 +387,67 @@ Provider messages, keys and stack traces are never echoed to the client.
 
 ---
 
+## Subscription and premium entitlement
+
+Premium access is decided by the server from the user's plan in MongoDB. The client can read it, but
+cannot change it.
+
+### `GET /api/subscription`
+
+Requires a session. Returns the caller's entitlements and the plan copy used by `/premium`.
+
+```json
+{
+  "success": true,
+  "data": {
+    "subscription": {
+      "plan": "free",
+      "isPremium": false,
+      "label": "Free",
+      "premiumSince": null,
+      "premiumUntil": null,
+      "source": "none",
+      "templates": { "total": 106, "free": 6, "premium": 100, "accessible": 6 },
+      "billing": { "providerConfigured": false, "upgradePath": "billing_webhook" }
+    },
+    "plans": [ { "id": "free", "...": "..." }, { "id": "premium", "...": "..." } ]
+  }
+}
+```
+
+`GET /api/auth/me`, `POST /api/auth/login` and `POST /api/auth/register` also include
+`data.subscription`, so the first render after sign-in already knows the plan.
+
+### Premium template gate
+
+`POST /api/portfolios` and `PUT /api/portfolios/:id` return **403** when the supplied `templateId` is a
+premium design and the account has no active plan:
+
+```json
+{ "success": false, "error": { "code": "PREMIUM_REQUIRED", "message": "That template is part of PortiAI Premium. …" } }
+```
+
+Free template ids are always accepted. A downgrade does not break existing portfolios — they keep
+their saved design — but new selections require the plan.
+
+### `POST /api/subscription/webhook`
+
+Billing provider callback. Requires the `x-billing-secret` header to match `BILLING_WEBHOOK_SECRET`.
+Returns **501 `NOT_IMPLEMENTED`** when no provider is configured, which is the default in this
+repository.
+
+```json
+{ "event": "invoice.paid", "email": "user@example.com", "plan": "premium", "premiumUntil": "2027-10-28T00:00:00.000Z" }
+```
+
+Plans can also be provisioned directly by an operator:
+
+```bash
+cd server
+node scripts/grant-premium.mjs --email user@example.com --plan premium --until 2027-10-28
+node scripts/grant-premium.mjs --list
+```
+
 ## Public
 
 ### `GET /api/public/:slug`

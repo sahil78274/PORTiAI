@@ -51,6 +51,15 @@ export const env = {
   },
   cookieName: 'portiai_session',
   sessionDays: Number(required('SESSION_DAYS', '7')),
+  /**
+   * Billing is optional. When no provider is connected the API reports
+   * `billing.providerConfigured: false` and refuses webhook calls rather than
+   * faking a successful payment; plans are then provisioned with
+   * `scripts/grant-premium.mjs`.
+   */
+  billing: {
+    webhookSecret: required('BILLING_WEBHOOK_SECRET', ''),
+  },
 };
 
 export const isGeminiConfigured = () => Boolean(env.gemini.apiKey);

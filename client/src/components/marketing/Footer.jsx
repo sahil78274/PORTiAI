@@ -1,22 +1,25 @@
 import { Link } from 'react-router-dom';
-import { Mail } from 'lucide-react';
 import Logo from '../ui/Logo.jsx';
+import { TEMPLATE_COUNT, PREMIUM_TEMPLATE_COUNT } from '../../data/templateCatalogue.js';
+import { TEMPLATE_STYLES } from '../../data/templateStyles.js';
 
 const COLUMNS = [
+  {
+    title: 'Browse',
+    links: [
+      { label: 'Template gallery', to: '/templates' },
+      { label: 'Premium catalogue', to: '/premium' },
+      { label: 'Free templates', to: '/templates?access=free' },
+      { label: 'Dark templates', to: '/templates?appearance=dark' },
+    ],
+  },
   {
     title: 'Product',
     links: [
       { label: 'Features', to: '/features' },
-      { label: 'Templates', to: '/templates' },
       { label: 'How it works', to: '/#how-it-works' },
-    ],
-  },
-  {
-    title: 'Workspace',
-    links: [
       { label: 'Dashboard', to: '/dashboard' },
       { label: 'My portfolios', to: '/dashboard/portfolios' },
-      { label: 'Blog', to: '/dashboard/blog' },
     ],
   },
   {
@@ -25,6 +28,7 @@ const COLUMNS = [
       { label: 'Create an account', to: '/signup' },
       { label: 'Login', to: '/login' },
       { label: 'Forgot password', to: '/forgot-password' },
+      { label: 'Settings', to: '/dashboard/settings' },
     ],
   },
   {
@@ -38,52 +42,47 @@ const COLUMNS = [
 
 export default function Footer() {
   return (
-    <footer id="footer" className="border-t border-line bg-canvas">
-      <div className="container-wide py-12">
-        <div className="grid gap-10 md:grid-cols-[1.3fr_2fr]">
+    <footer id="footer" className="border-t border-line bg-surface">
+      <div className="container-wide py-14">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_2fr]">
           <div>
             <Logo size="md" />
-            <p className="mt-3 max-w-xs text-sm leading-6 text-muted">
-              A portfolio builder for developers, designers, students and freelancers. Start from a template, edit your
-              details, publish when you are ready.
+            <p className="mt-3 max-w-sm text-[13.5px] leading-6 text-muted">
+              A portfolio platform for developers, designers, students and freelancers. {TEMPLATE_COUNT} templates, a
+              live editor, an honest review, and a public link you control.
             </p>
-            <Link
-              to="/features"
-              className="mt-4 inline-flex items-center gap-2 text-[13px] text-muted transition-colors hover:text-ink"
-            >
-              <Mail size={14} aria-hidden="true" />
-              What PortiAI does
-            </Link>
+            <div className="mt-5 flex flex-wrap gap-1.5" aria-label="Available colour themes">
+              {['Light', 'Dark', 'Midnight', 'Purple', 'Emerald', 'Rose'].map((theme) => (
+                <span key={theme} className="rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] text-muted">
+                  {theme}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {COLUMNS.map((column) => (
               <div key={column.title}>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ink">{column.title}</p>
+                <p className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-ink">{column.title}</p>
                 <ul className="mt-3 space-y-2">
-                  {column.links.map((link) =>
-                    link.to.startsWith('/#') ? (
-                      <li key={link.label}>
-                        <a href={link.to} className="text-[13px] text-muted transition-colors hover:text-ink">
-                          {link.label}
-                        </a>
-                      </li>
-                    ) : (
-                      <li key={link.label}>
-                        <Link to={link.to} className="text-[13px] text-muted transition-colors hover:text-ink">
-                          {link.label}
-                        </Link>
-                      </li>
-                    )
-                  )}
+                  {column.links.map((link) => (
+                    <li key={link.label}>
+                      <Link to={link.to} className="text-[13px] text-muted transition-colors hover:text-ink">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[12px] text-faint">© {new Date().getFullYear()} PortiAI. All rights reserved.</p>
+        <div className="mt-12 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[12px] text-faint">
+            © {new Date().getFullYear()} PortiAI · {TEMPLATE_COUNT} templates, {PREMIUM_TEMPLATE_COUNT} premium ·{' '}
+            {TEMPLATE_STYLES.length} visual styles
+          </p>
           <div className="flex items-center gap-5 text-[12px] text-faint">
             <Link to="/privacy" className="transition-colors hover:text-ink">
               Privacy

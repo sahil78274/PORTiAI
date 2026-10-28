@@ -680,3 +680,89 @@ The chat transcript is kept in order in component state and each turn is applied
 (the page guards double submits with a ref, because React state updates are asynchronous). The
 transcript is not posted to the API: `POST /api/ai/builder` is a facts-in/content-out endpoint with no
 conversation parameter, so the collected facts — not the raw messages — are what the model receives.
+
+---
+
+## 10. Template catalogue, themes and premium entitlement (2026-10-28)
+
+Environment for this run: Linux sandbox, Node.js 22.22.3, npm 10.9.8. No browser was available, so
+visual checks were replaced by a server-side render of every component tree (section 10.3) plus the
+production build (section 10.4).
+
+### 10.1 Backend HTTP suite — `cd server && npm test`
+
+**66 checks, 66 passed.** Includes the suites from earlier sections plus a new entitlement suite:
+
+```
+Premium templates and entitlements
+  ✓ a new account is on the free plan and reports the catalogue sizes
+  ✓ GET /subscription requires authentication and returns the caller's plan
+  ✓ a free account cannot create or switch to a premium template
+  ✓ the billing webhook is disabled until a provider is configured
+  ✓ a server-side plan change unlocks premium templates for the same session
+```
+
+The last case updates the user document through the same model the API reads, then re-uses the
+**existing session cookie**: `/auth/me` reports Premium, a premium template can be created and
+switched, and after the plan is removed the same request returns `403 PREMIUM_REQUIRED` again. No
+re-login and no client-side flag is involved.
+
+### 10.2 Frontend unit suite — `cd client && npm test`
+
+**48 tests, 48 passed** (`tests/templates.test.js`, `tests/builderConversation.test.js`, the new
+`tests/templateCatalogue.test.js` and `tests/theme.test.js`):
+
+* catalogue holds 106 entries: 100 premium, 6 free, every id and name unique;
+* the 100 premium entries cover 100 distinct layout × style pairs, ten per layout;
+* each entry declares name, description, category, tags, appearance, tier, accent, swatches, date;
+* every requested category (Full-Stack, Frontend, React, Software Engineer, UI/UX, Freelancer,
+  Student and Fresher, Creative, Photographer, Agency, Minimal, Animated, Dark, Modern Premium)
+  contains at least one template;
+* pagination starts at 12, "load more" reveals 12 more until all 106 are shown, and the count text is
+  exact (`Showing 12 of 106 templates`);
+* search, category, style, appearance and access filters work alone and combined; the empty result
+  case returns zero;
+* featured / newest / alphabetical sorting orderings are asserted;
+* premium ids resolve through `normalizeTemplateId`, `getTemplate` and `templateTheme`; unknown ids
+  still fall back to `developer`;
+* all six app themes exist as CSS token blocks, the picker list matches the CSS, the pre-paint script
+  reads `portiai.theme`, and every theme meets the contrast thresholds for body, secondary, accent and
+  accent-button text;
+* all 100 premium palette/accent combinations meet contrast on their own background (this test caught
+  three sky-blue accents that were too light for white label text, which were darkened).
+
+### 10.3 Full render smoke check — every template and route
+
+`client/scripts/smoke-render.jsx` is bundled with `vite build --ssr` and executed with Node. It renders:
+
+* all 106 catalogue templates, including the 10 × 10 premium layouts;
+* every marketing route (`/`, `/templates`, `/templates/:id` for a premium and a free design,
+  `/premium`, `/features`, `/login`, `/signup`);
+* every dashboard page component, features, privacy, terms and not-found;
+* a gallery card with the premium lock state, the preview modal in both locked and unlocked states,
+  the upgrade dialog, the editor's template picker, and the theme menu;
+* the gallery in marketing and workspace modes, including pre-applied category/access filters and a
+  filtered `/templates` route.
+
+Result: **`Rendered 145 component trees. Smoke render passed.`** Two real defects were found this way
+and fixed before finishing: a `tokens.preview[0]` reference in `PremiumTemplate` (which would crash
+every premium preview) and a missing `TEMPLATE_COUNT` import in `MyPortfolios`.
+
+### 10.4 Production build — `cd client && npm run build`
+
+```
+dist/index.html                   2.64 kB │ gzip:   1.15 kB
+dist/assets/index-*.css          79.88 kB │ gzip:  14.71 kB
+dist/assets/index-*.js          794.23 kB │ gzip: 210.68 kB
+✓ built in 5.34s
+```
+
+The build succeeds with no errors. Vite prints its standard >500 kB chunk advisory; the bundle is a
+single chunk (React, router and ~100 inline SVG icons), which is 210 kB gzipped.
+
+### 10.5 Not verified in this environment
+
+* Visual regression / screenshots — no browser binary was available. The layout code was reviewed and
+  render-tested, but pixel output has not been captured.
+* Real payment checkout — no provider is configured by design; entitlement is verified with the
+  operator grant path and the disabled-webhook path.

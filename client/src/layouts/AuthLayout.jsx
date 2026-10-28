@@ -2,9 +2,10 @@ import { Link, Outlet } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import Logo from '../components/ui/Logo.jsx';
 import ThemeToggle from '../components/ui/ThemeToggle.jsx';
+import { TEMPLATE_COUNT } from '../data/templateCatalogue.js';
 
 const POINTS = [
-  'Six portfolio templates that can be previewed before you choose.',
+  `${TEMPLATE_COUNT} portfolio templates that can be previewed before you choose.`,
   'A structured editor with a live preview at three screen sizes.',
   'Publish to a public link, and unpublish whenever you want.',
 ];

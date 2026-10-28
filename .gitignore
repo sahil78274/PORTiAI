@@ -42,3 +42,6 @@ coverage/
 .vercel/
 playwright-report/
 test-results/
+
+# SSR smoke-render build output
+client/.tmp-smoke/

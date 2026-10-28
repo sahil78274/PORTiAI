@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { TEMPLATE_COUNT, PREMIUM_TEMPLATE_COUNT } from '../data/templateCatalogue.js';
 import { ArrowRight, Check, FileText, Gauge, LayoutTemplate, Monitor, Newspaper, Wand2 } from 'lucide-react';
 
 const FEATURES = [
@@ -34,9 +35,9 @@ const FEATURES = [
   },
   {
     icon: LayoutTemplate,
-    title: 'Six templates',
-    body: 'Minimal Developer, Dark Professional, Creative Designer, Student, Modern Freelancer and Executive. Switch design without retyping anything.',
-    points: ['Distinct layouts', 'Preview before choosing', 'Consistent typography'],
+    title: 'A real template catalogue',
+    body: `${TEMPLATE_COUNT} templates: ten layouts across ten visual styles, plus the six original designs. Six colour themes for the app itself. Switch design without retyping anything.`,
+    points: [`${PREMIUM_TEMPLATE_COUNT} premium designs`, 'Preview before choosing', 'Free and premium tiers'],
   },
 ];
 

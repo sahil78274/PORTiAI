@@ -578,6 +578,90 @@ await test('template selection regression: creation, normalization, and safe fal
   await alice.put(`/portfolios/${alicePortfolioId}`, { title: 'Internship portfolio' });
 });
 
+/* ------------------------------------------------------------------ */
+/* Premium entitlement                                                 */
+/* ------------------------------------------------------------------ */
+suite('Premium templates and entitlements');
+
+await test('a new account is on the free plan and reports the catalogue sizes', async () => {
+  const res = await alice.get('/auth/me');
+  assert.equal(res.status, 200);
+  const { subscription } = res.body.data;
+  assert.equal(subscription.plan, 'free');
+  assert.equal(subscription.isPremium, false);
+  assert.ok(subscription.templates.premium >= 100, 'the premium catalogue has at least 100 templates');
+  assert.equal(subscription.templates.free, 6);
+  assert.ok(subscription.templates.total >= 106);
+  assert.equal(subscription.billing.providerConfigured, false);
+  assert.equal(res.body.data.user.plan, 'free');
+});
+
+await test('GET /subscription requires authentication and returns the caller\'s plan', async () => {
+  assert.equal((await createClient().get('/subscription')).status, 401);
+  const res = await alice.get('/subscription');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.subscription.isPremium, false);
+  const premiumPlan = res.body.data.plans.find((plan) => plan.id === 'premium');
+  assert.ok(premiumPlan, 'the premium plan is described');
+  assert.ok(premiumPlan.features.some((feature) => /premium templates/i.test(feature)));
+});
+
+await test('a free account cannot create or switch to a premium template', async () => {
+  const create = await alice.post('/portfolios', { title: 'Premium attempt', templateId: 'bento-bubble-blocks' });
+  assert.equal(create.status, 403);
+  assert.equal(create.body.error.code, 'PREMIUM_REQUIRED');
+
+  const before = await alice.get(`/portfolios/${alicePortfolioId}`);
+  const update = await alice.put(`/portfolios/${alicePortfolioId}`, { templateId: 'showcase-premiere' });
+  assert.equal(update.status, 403);
+  assert.equal(update.body.error.code, 'PREMIUM_REQUIRED');
+  const after = await alice.get(`/portfolios/${alicePortfolioId}`);
+  assert.equal(after.body.data.portfolio.templateId, before.body.data.portfolio.templateId, 'the design was not changed');
+});
+
+await test('the billing webhook is disabled until a provider is configured', async () => {
+  const res = await fetch(`${BASE}/subscription/webhook`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: aliceEmail, plan: 'premium' }),
+  });
+  assert.equal(res.status, 501);
+  const body = await res.json();
+  assert.equal(body.error.code, 'NOT_IMPLEMENTED');
+});
+
+await test('a server-side plan change unlocks premium templates for the same session', async () => {
+  const { User } = await import('../src/models/User.js');
+  await User.updateOne({ email: aliceEmail }, { $set: { plan: 'premium', premiumSince: new Date(), premiumSource: 'grant' } });
+
+  try {
+    // No re-login and no new cookie: the same session sees the new entitlement.
+    const status = await alice.get('/auth/me');
+    assert.equal(status.body.data.subscription.isPremium, true);
+    assert.equal(status.body.data.subscription.plan, 'premium');
+
+    const created = await alice.post('/portfolios', { title: 'Premium design', templateId: 'bento-bubble-blocks' });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.data.portfolio.templateId, 'bento-bubble-blocks');
+    assert.equal(created.body.data.portfolio.theme.accent, '#7c3aed');
+
+    const switched = await alice.put(`/portfolios/${created.body.data.portfolio.id}`, { templateId: 'showcase-premiere' });
+    assert.equal(switched.status, 200);
+    assert.equal(switched.body.data.portfolio.templateId, 'showcase-premiere');
+
+    await alice.delete(`/portfolios/${created.body.data.portfolio.id}`);
+  } finally {
+    await User.updateOne(
+      { email: aliceEmail },
+      { $set: { plan: 'free', premiumUntil: null, premiumSince: null, premiumSource: 'none' } }
+    );
+  }
+
+  const revoked = await alice.post('/portfolios', { title: 'After downgrade', templateId: 'bento-bubble-blocks' });
+  assert.equal(revoked.status, 403);
+  assert.equal(revoked.body.error.code, 'PREMIUM_REQUIRED');
+});
+
 await test('invalid portfolio ids and empty bodies return 400', async () => {
   assert.equal((await alice.get('/portfolios/not-an-id')).status, 400);
   assert.equal((await alice.put(`/portfolios/${alicePortfolioId}`, {})).status, 400);

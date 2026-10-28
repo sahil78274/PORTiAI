@@ -149,9 +149,17 @@ content recomputes and the UI warns that a stored analysis is out of date.
 * AI helpers on summary, biography, project description, achievement description and skills. Only
   user-supplied facts are sent; output is requested as JSON, parsed defensively, validated with Zod
   and sanitised. Every result is shown in an editable box with Apply / Regenerate / Discard.
+* Template catalogue: 106 registered designs — 100 premium (ten layouts × ten visual styles, each pair
+  used once) plus the six originals. The gallery supports search, category/style/appearance/access
+  filters, three sort orders and 12-at-a-time progressive loading, with a live render of every design.
 * Customisation in the editor: template, accent colour (six presets plus a colour picker), font stack,
   spacing density, section visibility and order. Content is independent of template, so switching
   never loses data.
+* Six app colour themes (Light, Dark, Midnight, Purple, Emerald, Rose) driven by CSS custom properties
+  and persisted per browser; contrast is checked by a test rather than by eye.
+* Premium entitlement is a server-side plan verified on every premium action, with the gallery
+  re-reading `/api/subscription` without a reload. No payment provider is connected: plans are
+  provisioned by a documented operator script or a signed webhook.
 * Live preview renders the real template component with the in-memory draft.
 
 ### Module 2 — Portfolio analysis and improvement suggestions
@@ -231,11 +239,12 @@ account settings, password change and account deletion.
 
 ## 13. Suggested viva demonstration order
 
-1. Landing page — hero with the reserved portrait area, How it works, Made for your work, the six live template
-   previews and the feature list.
+1. Landing page — hero with three live template previews, the catalogue statistics, How it works, the
+   featured designs, the visual-style gallery and the plan comparison.
 2. Register a new account; arrive on the dashboard; open the AI builder, complete two steps and show the
    draft is saved after a reload.
-3. Jump to **Design**, switch templates, change accent and font; show the live preview.
+3. Open **Templates**, search and filter, load more, preview a premium design at three widths, then
+   jump to the editor's **Design** tab, switch templates and change the accent; show the live preview.
 4. Publish; the analyzer opens.
 5. Run the analysis; walk through category scores, issues and one recommendation.
 6. Apply an example rewrite, re-run the analysis and show the score change.

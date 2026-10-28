@@ -28,7 +28,7 @@ export default function TemplatesWorkspace() {
     <div className="space-y-6">
       <PageHeader
         title="Templates"
-        description="Six complete design systems with their own typography, spacing and section treatment. Preview each with sample content, then create a draft in one click."
+        description="Every PortiAI design: ten layouts across ten visual styles, plus the six originals. Preview with sample content, then create a draft in one click."
         actions={
           <>
             <Link to="/dashboard/portfolios" className="btn-secondary btn-sm">

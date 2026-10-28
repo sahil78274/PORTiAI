@@ -29,6 +29,21 @@ const userSchema = new mongoose.Schema(
      */
     tokenVersion: { type: Number, default: 0, select: false },
     headline: { type: String, trim: true, maxlength: 120, default: '' },
+    /**
+     * Subscription entitlement.
+     *
+     * The plan is written only by the server — today through
+     * `scripts/grant-premium.mjs` or the signed billing webhook
+     * (POST /api/subscription/webhook). No client request can set it.
+     */
+    plan: { type: String, enum: ['free', 'premium'], default: 'free', index: true },
+    premiumSince: { type: Date, default: null },
+    premiumUntil: { type: Date, default: null },
+    premiumSource: {
+      type: String,
+      enum: ['none', 'grant', 'billing'],
+      default: 'none',
+    },
   },
   { timestamps: true, versionKey: false }
 );
@@ -41,6 +56,9 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     name: this.name,
     email: this.email,
     headline: this.headline || '',
+    plan: this.plan || 'free',
+    premiumSince: this.premiumSince || null,
+    premiumUntil: this.premiumUntil || null,
     createdAt: this.createdAt,
   };
 };

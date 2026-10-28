@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { TEMPLATE_COUNT } from '../data/templateCatalogue.js';
 import {
   Copy,
   Eye,
@@ -298,7 +299,7 @@ export default function MyPortfolios() {
           description={
             emptySearch
               ? 'Try a different search term, or reset the filters to see everything in your workspace.'
-              : 'Create your first portfolio with the AI builder, or start from one of six templates.'
+              : `Create your first portfolio with the AI builder, or start from one of ${TEMPLATE_COUNT} templates.`
           }
           action={
             emptySearch ? (
