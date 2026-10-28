@@ -76,7 +76,18 @@ for (const template of TEMPLATE_CATALOGUE) {
   attempt(`template ${template.id}`, <PremiumTemplateOrLegacy template={template} />);
 }
 
-attempt('theme menu', <ThemeProvider><ThemeMenu /></ThemeProvider>);
+attempt('theme menu', <ThemeProvider><ThemeMenu /></ThemeProvider>, { keep: true });
+attempt('theme menu (compact)', <ThemeProvider><ThemeMenu size="sm" /></ThemeProvider>, { keep: true });
+
+expectMarkup('theme menu', [
+  ['aria-pressed=', 2, 'exactly two theme options'],
+  ['>Light<', 1, 'the Light option'],
+  ['>Dark<', 1, 'the Dark option'],
+  ['Midnight', 0, 'no retired theme'],
+  ['Purple', 0, 'no retired theme'],
+  ['Emerald', 0, 'no retired theme'],
+  ['Rose', 0, 'no retired theme'],
+]);
 
 const premiumTemplate = TEMPLATE_CATALOGUE.find((template) => template.id === 'bento-bubble-blocks');
 const freeTemplate = TEMPLATE_CATALOGUE.find((template) => template.id === 'developer');
@@ -144,6 +155,14 @@ for (const route of [
     { keep: true }
   );
 }
+
+expectMarkup('route /', [
+  ['A portfolio that looks like the work you do', 1, 'the headline is a single restrained line'],
+  ['gallery-card', 12, 'the gallery starts on the landing page with twelve cards'],
+  ['>Load ', 1, 'Load more works on the landing gallery'],
+  ['tab-link', 'some', 'category tabs replace pills'],
+  ['Browse all ', 1, 'the gallery is one click away'],
+]);
 
 expectMarkup('route /templates', [
   ['Showing ', 'some', 'the count line is rendered'],
@@ -219,7 +238,7 @@ for (const [name, Page, route] of dashboardPages) {
   ));
 }
 
-for (const theme of ['light', 'dark', 'midnight', 'purple', 'emerald', 'rose']) {
+for (const theme of ['light', 'dark']) {
   attempt(`theme ${theme}`, (
     <ThemeProvider>
       <MemoryRouter initialEntries={['/']}>
@@ -239,7 +258,9 @@ function PremiumTemplateOrLegacy({ template }) {
 
 // A card is rendered on its own too: its markup is the gallery's building block.
 attempt('template card', (
-  <TemplateCard template={TEMPLATE_CATALOGUE[7]} locked onPreview={() => {}} onUse={() => {}} />
+  <MemoryRouter>
+    <TemplateCard template={TEMPLATE_CATALOGUE[7]} locked onPreview={() => {}} onUse={() => {}} />
+  </MemoryRouter>
 ));
 
 console.log(`Rendered ${rendered} component trees.`);

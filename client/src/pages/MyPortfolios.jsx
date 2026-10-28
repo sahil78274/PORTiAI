@@ -48,7 +48,7 @@ const Thumbnail = ({ portfolio, large = false }) => {
   return (
     <div
       className={`relative overflow-hidden rounded-lg border border-line ${large ? 'aspect-[16/10] w-full' : 'h-16 w-24 shrink-0'}`}
-      style={{ background: light ? '#ffffff' : '#14171c' }}
+      style={{ background: light ? '#ffffff' : '#111111' }}
       aria-hidden="true"
     >
       <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: accent }} />

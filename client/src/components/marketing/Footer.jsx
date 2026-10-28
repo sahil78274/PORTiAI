@@ -52,8 +52,8 @@ export default function Footer() {
               live editor, an honest review, and a public link you control.
             </p>
             <div className="mt-5 flex flex-wrap gap-1.5" aria-label="Available colour themes">
-              {['Light', 'Dark', 'Midnight', 'Purple', 'Emerald', 'Rose'].map((theme) => (
-                <span key={theme} className="rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] text-muted">
+              {['Light', 'Dark'].map((theme) => (
+                <span key={theme} className="rounded border border-line bg-canvas px-2 py-1 text-[11px] text-muted">
                   {theme}
                 </span>
               ))}

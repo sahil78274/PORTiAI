@@ -466,7 +466,7 @@ export default function Analyzer() {
                                 <div className="min-w-0 flex-1">
                                   <p className="text-xs leading-relaxed text-inkSoft">{issue.message}</p>
                                   <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-faint">
-                                    <span className={`rounded-full border px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.label}</span>
+                                    <span className={`rounded border px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.label}</span>
                                     <span>{SECTION_LABELS[issue.section] || issue.section}</span>
                                     {issue.fromAi ? <span className="text-accent-hover">AI observation</span> : null}
                                   </div>
@@ -490,7 +490,7 @@ export default function Analyzer() {
                           {analysis.recommendations.map((recommendation, index) => (
                             <li key={`${recommendation.title}-${index}`} className="rounded-lg border border-line bg-canvasAlt p-3">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="rounded-full border border-accent-line bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-hover">
+                                <span className="rounded border border-accent-line bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-hover">
                                   {recommendation.priority === 'now' ? 'Fix first' : recommendation.priority === 'next' ? 'Next' : 'Later'}
                                 </span>
                                 <span className="text-[10px] uppercase tracking-wider text-faint">
@@ -740,7 +740,7 @@ export default function Analyzer() {
                                     {issue.recommendation}
                                   </p>
                                   <div className="mt-1.5 flex items-center gap-2 text-[10px] text-faint">
-                                    <span className={`rounded-full border px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.label}</span>
+                                    <span className={`rounded border px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.label}</span>
                                     <span className="capitalize">{issue.category}</span>
                                     <button type="button" onClick={() => copyText(`${issue.message}\n${issue.detail}\nFix: ${issue.recommendation}`)} className="ml-auto inline-flex items-center gap-1 text-accent-hover hover:text-ink">
                                       <Copy size={10} aria-hidden="true" />

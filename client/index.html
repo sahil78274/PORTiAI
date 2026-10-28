@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +7,7 @@
       name="description"
       content="PortiAI is a portfolio platform for developers, designers, students and freelancers: 100+ premium portfolio templates, a live editor, an AI writing assistant and a public link you control."
     />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#0a0a0a" />
     <meta property="og:title" content="PortiAI — premium portfolio templates you can build on" />
     <meta
       property="og:description"
@@ -26,19 +26,20 @@
       /* Apply the saved (or system) theme before first paint to avoid a flash. */
       (function () {
         try {
-          var allowed = ['light', 'dark', 'midnight', 'purple', 'emerald', 'rose'];
+          /* Two themes only: light and dark (dark is the primary design). */
+          var allowed = ['light', 'dark'];
           var stored = localStorage.getItem('portiai.theme');
-          var darkThemes = ['dark', 'midnight', 'purple', 'emerald'];
-          var theme = allowed.indexOf(stored) >= 0 ? stored : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          var isDark = darkThemes.indexOf(theme) >= 0;
+          /* Dark is the primary design: it is the default until a choice is stored. */
+          var theme = allowed.indexOf(stored) >= 0 ? stored : 'dark';
+          var isDark = theme === 'dark';
           document.documentElement.dataset.theme = theme;
           document.documentElement.classList.toggle('dark', isDark);
           document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
           var meta = document.querySelector('meta[name="theme-color"]');
-          var colors = { light: '#ffffff', dark: '#0b1120', midnight: '#05070d', purple: '#0c0716', emerald: '#04120e', rose: '#fff7f8' };
-          if (meta) meta.setAttribute('content', colors[theme] || '#ffffff');
+          var colors = { light: '#ffffff', dark: '#0a0a0a' };
+          if (meta) meta.setAttribute('content', colors[theme] || '#0a0a0a');
         } catch (error) {
-          /* ignore: default light theme applies */
+          /* ignore: the default dark palette applies */
         }
       })();
     </script>

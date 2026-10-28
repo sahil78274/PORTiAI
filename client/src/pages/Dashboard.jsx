@@ -57,7 +57,7 @@ const Thumbnail = ({ portfolio }) => {
   return (
     <div
       className="h-[52px] w-[42px] shrink-0 overflow-hidden rounded border border-line"
-      style={{ background: light ? '#ffffff' : '#14171c' }}
+      style={{ background: light ? '#ffffff' : '#111111' }}
       aria-hidden="true"
     >
       <div className="space-y-1 p-1.5">

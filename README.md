@@ -6,8 +6,8 @@ previews, review it against a documented rubric, optionally run a Website analyz
 write Markdown blog posts, and publish at a public link such as `/p/alex-morgan`.
 
 The application is complete: real authentication, real MongoDB persistence, a real template catalogue
-(10 layouts × 10 visual styles = 100 premium designs, plus the six original free templates), six app
-colour themes driven by design tokens, a conversational AI builder backed by a validated server
+(10 layouts × 10 visual styles = 100 premium designs, plus the six original free templates), a light and
+a dark theme driven by design tokens, a conversational AI builder backed by a validated server
 endpoint, server-side AI with graceful quota handling, a deterministic analyzer that works without AI,
 blog publishing, a deterministic website scanner, and public publishing with ownership checks enforced
 in the backend.
@@ -24,8 +24,8 @@ without a reload. **No payment provider is connected in this repository** — pl
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Design system | Done | Six themes verified against WCAG contrast for body, secondary, accent and button text (`client/tests/theme.test.js`). Every colour, shadow and gradient is a CSS variable (`client/src/index.css`). **Six themes** — Light, Dark, Midnight, Purple, Emerald, Rose — set via `data-theme` plus the `dark` class, persisted in `localStorage`, applied before first paint, and switchable from a palette menu in the navbar, auth pages and dashboard. Refined radii, layered shadows, glass navbar, responsive typography, Lucide icons only, accessible focus states |
-| Landing page at `/` | Done | Sticky glass nav (Templates, Features, How it works, Premium, theme menu, auth actions), hero with a live render of a premium template plus three real template previews, catalogue statistics, how it works, featured designs, visual-style gallery, features, plan comparison, final CTA, footer. No testimonials or invented customer statistics |
+| Design system | Done | **Two themes only — Dark (the default) and Light** — verified against WCAG contrast for body, secondary, accent, button and control-border text (`client/tests/theme.test.js`). Dark is a near-black canvas (`#0a0a0a`) with charcoal surfaces (`#111111`), `#262626` hairlines, off-white text (`#f5f5f5`), muted grey secondary text (`#a1a1aa`) and **one** restrained amber accent used for primary buttons, active filters and selected states. Light is the same layout on paper (`#fafafa` canvas, white cards, near-black text) with the same single accent. Every colour, shadow and gradient is a CSS variable (`client/src/index.css`); the theme is set via `data-theme` plus the `dark` class, persisted in `localStorage`, applied before first paint and switchable from a two-option segmented control in the navbar, auth pages and dashboard. No decorative gradients or glow; consistent radii; accessible focus states |
+| Landing page at `/` | Done | Compact opaque nav (Templates, Features, Premium, Light/Dark control, auth action), a short intro with three real template previews beside it, then the working template gallery (search, category tabs, style/appearance/access filters, sort, 12 cards, Load more) as the main section; how it works, features, visual styles, plan comparison, final CTA, footer. No testimonials or invented customer statistics |
 | Public pages | Done | `/features`, `/templates` (full explorer), `/templates/:id` (dedicated preview page), `/premium`, `/privacy`, `/terms`, `*` not-found |
 | Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation. Email/password only — no OAuth buttons are shown |
 | Dashboard `/dashboard` | Done | Collapsible sidebar, real counts from MongoDB, next-step suggestion, recent portfolios, quick links, profile menu |
@@ -109,7 +109,7 @@ portiai/
 │   │   ├── components/
 │   │   │   ├── ui/             # Primitives, Kit, Modal, ConfirmDialog, Logo, ThemeToggle, PasswordInput
 │   │   │   ├── theme/          # ThemeMenu (six-theme picker)
-│   │   │   ├── marketing/      # Navbar, Footer, HeroPortfolioPreview, TemplatePreviewFrame
+│   │   │   ├── marketing/      # Navbar, Footer, TemplatePreviewFrame
 │   │   │   ├── templates/      # TemplateCard, TemplateGallery, TemplateThumb, TemplateLivePreview,
 │   │   │   │                   # TemplatePicker, PremiumDialog
 │   │   │   ├── dashboard/      # ProtectedRoute
@@ -227,9 +227,10 @@ MONGODB_URI=mongodb://127.0.0.1:27017/portiai node scripts/seed-demo.mjs
 # account: alex.morgan@example.com / AlexDemo123
 ```
 
-The landing hero renders the same `PortfolioRenderer` a published portfolio uses, with clearly
-labelled sample content (`client/src/utils/demoPortfolio.js`). The sample owner is a fictional
-`Alex Morgan`; no customer photographs, logos or testimonials are used anywhere.
+Every template preview — on the landing page, in the gallery and in the dashboard picker — is the
+same `PortfolioRenderer` a published portfolio uses, with clearly labelled sample content
+(`client/src/utils/demoPortfolio.js`). The sample owner is a fictional `Alex Morgan`; no customer
+photographs, logos or testimonials are used anywhere.
 
 **Light / dark theme**
 
@@ -238,7 +239,8 @@ landing navigation, the dashboard header and the auth pages all call into it, so
 the whole application — every route, modal, form and toast reads the same CSS variables.
 
 * The choice is stored in `localStorage` under `portiai.theme` and restored on the next visit.
-* With nothing stored, the operating-system preference (`prefers-color-scheme`) is used.
+* With nothing stored, Dark is used; there is no system-preference listener, so the switcher is the
+  single source of truth.
 * An inline script in `client/index.html` applies the class before first paint, so there is no flash
   of the wrong theme.
 * Settings → Appearance exposes the same control and explains that a public portfolio's own design
@@ -381,10 +383,13 @@ node scripts/sync-template-catalogue.mjs --check  # fails if the manifest has dr
 
 ### Themes
 
-Six themes (Light, Dark, Midnight, Purple, Emerald, Rose) are pure CSS token sets in
-`client/src/index.css`. `ThemeContext` sets `data-theme` + the `dark` class on `<html>`, writes
-`portiai.theme` to `localStorage`, and the inline script in `index.html` applies the stored choice before
-first paint. The picker lives in the navbar, the auth layout and the dashboard header.
+There are **two** themes: Dark (the primary design) and Light. Both are pure CSS token sets in
+`client/src/index.css`, so every page — navbar, cards, filters, modals, forms, dashboard — repaints from
+one palette. `ThemeContext` sets `data-theme` + the `dark` class on `<html>`, writes `portiai.theme` to
+`localStorage`, and the inline script in `index.html` applies the stored choice before first paint (a
+first-time visitor gets Dark). The two-option switcher lives in the navbar, the auth layout, the
+dashboard header and Settings. A value saved by an older release (e.g. `purple`) is ignored and falls
+back to Dark instead of breaking the page.
 
 ### Entitlement
 

@@ -68,7 +68,7 @@ function Notice({ title, body, slug, retry }) {
           </button>
         ) : null}
         {slug ? (
-          <Link to={`/p/${slug}`} className="rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent-strong">
+          <Link to={`/p/${slug}`} className="rounded-lg bg-accent px-3 py-2 text-xs font-medium text-accent-contrast hover:bg-accent-strong">
             Back to portfolio
           </Link>
         ) : null}
@@ -279,7 +279,7 @@ export function PublicBlogPost() {
         {post.tags?.length ? (
           <ul className="mt-8 flex flex-wrap gap-1.5">
             {post.tags.map((tag) => (
-              <li key={tag} className="rounded-full border border-line px-2.5 py-0.5 text-[10px] font-medium text-muted">
+              <li key={tag} className="rounded border border-line px-2 py-0.5 text-[10px] font-medium text-muted">
                 {tag}
               </li>
             ))}

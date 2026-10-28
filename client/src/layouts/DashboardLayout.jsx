@@ -189,7 +189,7 @@ export default function DashboardLayout() {
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/create')}
-                className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-contrast"
                 aria-label="New portfolio"
                 title="New portfolio"
               >
@@ -270,7 +270,7 @@ export default function DashboardLayout() {
                   aria-expanded={profileOpen}
                   aria-label="Account menu"
                 >
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-white">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-contrast">
                     {initials(user?.name)}
                   </span>
                   <span className="hidden max-w-[110px] truncate text-[12px] font-medium text-ink sm:block">{user?.name}</span>
