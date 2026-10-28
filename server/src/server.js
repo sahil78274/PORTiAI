@@ -1,5 +1,5 @@
 import { createApp } from './app.js';
-import { env } from './config/env.js';
+import { env, isCheckoutConfigured, isDevUpgradeEnabled } from './config/env.js';
 import { connectDatabase, disconnectDatabase } from './config/db.js';
 import { isAiEnabled } from './services/geminiService.js';
 
@@ -16,6 +16,11 @@ const start = async () => {
     console.log(`[startup] PortiAI API listening on port ${env.port} (${env.nodeEnv})`);
     console.log(`[startup] Allowed client origin(s): ${env.clientUrls.join(', ')}`);
     console.log(`[startup] Gemini: ${isAiEnabled() ? `configured (${env.gemini.model})` : 'not configured — rule-based analysis only'}`);
+    console.log(
+      `[startup] Billing: checkout ${
+        isCheckoutConfigured() ? 'connected' : 'not configured'
+      }; development upgrade ${isDevUpgradeEnabled() ? 'ENABLED (disabled in production)' : 'disabled'}`,
+    );
   });
 
   const shutdown = async (signal) => {

@@ -619,6 +619,116 @@ await test('a free account cannot create or switch to a premium template', async
   assert.equal(after.body.data.portfolio.templateId, before.body.data.portfolio.templateId, 'the design was not changed');
 });
 
+await test('public pricing exposes the configured amounts without a session', async () => {
+  const res = await fetch(`${BASE}/subscription/plans`);
+  assert.equal(res.status, 200, 'pricing is readable while signed out');
+  const body = await res.json();
+  const { pricing, plans, billing } = body.data;
+
+  assert.equal(pricing.plan, 'premium');
+  assert.equal(pricing.currency, 'INR');
+  assert.ok(pricing.monthly.amount > 0, 'a monthly amount is configured');
+  assert.ok(pricing.yearly.amount > 0, 'a yearly amount is configured');
+  assert.match(pricing.monthly.display, /₹/);
+  assert.equal(pricing.monthly.period, 'month');
+  assert.equal(pricing.yearly.period, 'year');
+  assert.equal(pricing.monthly.amount * 12 - pricing.yearly.amount, pricing.yearly.savingAmount);
+  // Without PREMIUM_PRICE_* in the environment the amounts are marked indicative.
+  assert.equal(pricing.source, 'default');
+  assert.equal(pricing.confirmed, false);
+  assert.match(pricing.note, /PREMIUM_PRICE_MONTHLY/);
+
+  const premiumPlan = plans.find((plan) => plan.id === 'premium');
+  assert.equal(premiumPlan.name, 'Premium');
+  assert.equal(premiumPlan.price, pricing.monthly.display);
+  assert.equal(premiumPlan.amount, pricing.monthly.amount);
+  assert.equal(premiumPlan.pricing.yearly.amount, pricing.yearly.amount);
+  assert.ok(premiumPlan.features.some((feature) => /premium templates/i.test(feature)));
+
+  assert.equal(billing.checkoutConfigured, false);
+  assert.equal(billing.devUpgradeEnabled, true, 'development mode is on outside production');
+  assert.equal(billing.upgradePath, 'development');
+});
+
+await test('starting a checkout requires a session', async () => {
+  assert.equal((await createClient().post('/subscription/checkout', { interval: 'monthly' })).status, 401);
+});
+
+await test('with no payment path the upgrade is refused instead of faked', async () => {
+  const previous = process.env.BILLING_DEV_UPGRADE;
+  process.env.BILLING_DEV_UPGRADE = 'false';
+  try {
+    const res = await alice.post('/subscription/checkout', { interval: 'monthly' });
+    assert.equal(res.status, 503);
+    assert.equal(res.body.error.code, 'BILLING_NOT_CONFIGURED');
+    assert.match(res.body.error.message, /BILLING_CHECKOUT_URL/);
+
+    const status = await alice.get('/subscription');
+    assert.equal(status.body.data.subscription.isPremium, false, 'the plan was not changed');
+    assert.equal(status.body.data.billing.upgradePath, 'operator');
+    assert.equal(status.body.data.billing.devUpgradeEnabled, false);
+
+    // The protected endpoint still refuses premium designs.
+    const blocked = await alice.post('/portfolios', { title: 'No plan', templateId: 'bento-bubble-blocks' });
+    assert.equal(blocked.status, 403);
+    assert.equal(blocked.body.error.code, 'PREMIUM_REQUIRED');
+  } finally {
+    if (previous === undefined) delete process.env.BILLING_DEV_UPGRADE;
+    else process.env.BILLING_DEV_UPGRADE = previous;
+  }
+});
+
+await test('the development upgrade activates the plan server-side and unlocks the catalogue immediately', async () => {
+  const { User } = await import('../src/models/User.js');
+  const before = await alice.get('/auth/me');
+  assert.equal(before.body.data.subscription.isPremium, false);
+
+  const res = await alice.post('/subscription/checkout', { interval: 'monthly' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.mode, 'activated');
+  assert.equal(res.body.data.activation, 'development');
+  assert.equal(res.body.data.subscription.isPremium, true);
+
+  // The same session, with no new cookie and no client-side flag:
+  const after = await alice.get('/auth/me');
+  assert.equal(after.body.data.subscription.isPremium, true);
+  assert.equal(after.body.data.subscription.plan, 'premium');
+  assert.equal(after.body.data.subscription.source, 'dev');
+  assert.equal(after.body.data.subscription.templates.accessible, after.body.data.subscription.templates.total);
+
+  const stored = await User.findOne({ email: aliceEmail });
+  assert.equal(stored.plan, 'premium');
+  assert.equal(stored.premiumSource, 'dev');
+  const days = (stored.premiumUntil.getTime() - Date.now()) / 86_400_000;
+  assert.ok(days > 27 && days <= 32, `one month of access was granted (got ${days.toFixed(1)} days)`);
+
+  // A premium design can now be created by the same session.
+  const created = await alice.post('/portfolios', { title: 'Upgraded design', templateId: 'gallery-frame-wall' });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.data.portfolio.templateId, 'gallery-frame-wall');
+  await alice.delete(`/portfolios/${created.body.data.portfolio.id}`);
+
+  // Yearly renews for twelve months.
+  const yearly = await alice.post('/subscription/checkout', { interval: 'yearly' });
+  assert.equal(yearly.status, 200);
+  const storedYearly = await User.findOne({ email: aliceEmail });
+  const months = (storedYearly.premiumUntil.getTime() - Date.now()) / (86_400_000 * 30.4);
+  assert.ok(months > 11.5 && months <= 12.5, `one year of access was granted (got ${months.toFixed(1)} months)`);
+
+  // The gallery/plan state survives a fresh sign-in (persisted, not in-memory).
+  const fresh = createClient();
+  const login = await fresh.post('/auth/login', { email: aliceEmail, password: 'Passw0rd123' });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.data.subscription.isPremium, true);
+  assert.equal((await fresh.get('/auth/me')).body.data.subscription.isPremium, true);
+
+  await User.updateOne(
+    { email: aliceEmail },
+    { $set: { plan: 'free', premiumUntil: null, premiumSince: null, premiumSource: 'none' } }
+  );
+  assert.equal((await alice.get('/auth/me')).body.data.subscription.isPremium, false);
+});
+
 await test('the billing webhook is disabled until a provider is configured', async () => {
   const res = await fetch(`${BASE}/subscription/webhook`, {
     method: 'POST',

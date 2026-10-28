@@ -392,9 +392,41 @@ Provider messages, keys and stack traces are never echoed to the client.
 Premium access is decided by the server from the user's plan in MongoDB. The client can read it, but
 cannot change it.
 
+### `GET /api/subscription/plans`
+
+Public — no session. The single source of the prices and plan copy used by `/premium` (the amounts come
+from `server/src/config/pricing.js`, so the browser never hardcodes one).
+
+```json
+{
+  "success": true,
+  "data": {
+    "plans": [
+      { "id": "free", "name": "Free", "amount": 0, "price": "Free", "cadence": "forever", "features": ["…"] },
+      { "id": "premium", "name": "Premium", "amount": 199, "currency": "INR", "price": "₹199",
+        "cadence": "per month", "interval": "monthly", "features": ["…"],
+        "pricing": { "monthly": { "amount": 199, "display": "₹199" },
+                     "yearly": { "amount": 1999, "display": "₹1,999", "saving": "₹389", "savingPercent": 16 },
+                     "confirmed": false, "note": "Indicative price — set PREMIUM_PRICE_MONTHLY …" } }
+    ],
+    "pricing": {
+      "currency": "INR", "source": "default", "confirmed": false,
+      "monthly": { "amount": 199, "display": "₹199", "period": "month", "cadenceLabel": "per month" },
+      "yearly": { "amount": 1999, "display": "₹1,999", "period": "year", "savingAmount": 389, "savingPercent": 16 }
+    },
+    "billing": { "providerConfigured": false, "checkoutConfigured": false,
+                 "devUpgradeEnabled": true, "upgradePath": "development" }
+  }
+}
+```
+
+`pricing.source` is `env` when `PREMIUM_PRICE_MONTHLY` **and** `PREMIUM_PRICE_YEARLY` are set, otherwise
+`default` and the UI labels the amount as indicative.
+
 ### `GET /api/subscription`
 
-Requires a session. Returns the caller's entitlements and the plan copy used by `/premium`.
+Requires a session. Returns the caller's entitlements plus the same `plans`, `pricing` and `billing`
+blocks as `/plans`.
 
 ```json
 {
@@ -408,7 +440,10 @@ Requires a session. Returns the caller's entitlements and the plan copy used by 
       "premiumUntil": null,
       "source": "none",
       "templates": { "total": 106, "free": 6, "premium": 100, "accessible": 6 },
-      "billing": { "providerConfigured": false, "upgradePath": "billing_webhook" }
+      "billing": {
+        "providerConfigured": false, "checkoutConfigured": false,
+        "devUpgradeEnabled": true, "upgradePath": "development", "paymentRequired": false
+      }
     },
     "plans": [ { "id": "free", "...": "..." }, { "id": "premium", "...": "..." } ]
   }
@@ -430,6 +465,22 @@ premium design and the account has no active plan:
 Free template ids are always accepted. A downgrade does not break existing portfolios — they keep
 their saved design — but new selections require the plan.
 
+### `POST /api/subscription/checkout`
+
+Requires a session. Body: `{ "interval": "monthly" | "yearly" }` (default `monthly`). This is the only
+user-initiated upgrade route, and it never grants access by itself in production:
+
+| Deployment state | Response |
+| --- | --- |
+| `BILLING_CHECKOUT_URL_MONTHLY`/`_YEARLY` set | `200 { "mode": "checkout", "url": "https://provider/…", "activation": "webhook" }` — the plan changes only when the provider calls the webhook |
+| no provider, `NODE_ENV !== production`, `BILLING_DEV_UPGRADE` not `false` | `200 { "mode": "activated", "activation": "development", "subscription": { … }, "message": "…" }` — written server-side with `premiumSource: "dev"` |
+| neither | `503 BILLING_NOT_CONFIGURED` with an explanation of the missing variables. Nothing is changed |
+
+```json
+{ "success": false, "error": { "code": "BILLING_NOT_CONFIGURED",
+  "message": "No payment provider is connected to this deployment yet, so Premium cannot be purchased here. …" } }
+```
+
 ### `POST /api/subscription/webhook`
 
 Billing provider callback. Requires the `x-billing-secret` header to match `BILLING_WEBHOOK_SECRET`.
@@ -439,6 +490,9 @@ repository.
 ```json
 { "event": "invoice.paid", "email": "user@example.com", "plan": "premium", "premiumUntil": "2027-10-28T00:00:00.000Z" }
 ```
+
+`premiumUntil` may be replaced by `"interval": "monthly" | "yearly"`, in which case the server computes
+the end date (one or twelve months from now). A wrong or missing `x-billing-secret` returns `401`.
 
 Plans can also be provisioned directly by an operator:
 

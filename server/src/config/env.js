@@ -52,14 +52,44 @@ export const env = {
   cookieName: 'portiai_session',
   sessionDays: Number(required('SESSION_DAYS', '7')),
   /**
-   * Billing is optional. When no provider is connected the API reports
-   * `billing.providerConfigured: false` and refuses webhook calls rather than
-   * faking a successful payment; plans are then provisioned with
-   * `scripts/grant-premium.mjs`.
+   * Billing is optional.
+   *
+   * - `webhookSecret` enables the signed provider callback that activates a
+   *   plan after a real payment (POST /api/subscription/webhook).
+   * - `checkoutUrlMonthly` / `checkoutUrlYearly` point at the provider's hosted
+   *   checkout. When set, POST /api/subscription/checkout returns that URL; the
+   *   plan is still activated only by the webhook above.
+   * - `devUpgrade` is a development-only convenience that lets the signed-in
+   *   user activate Premium without a payment provider so the unlock flow can be
+   *   tested end to end. It is force-disabled when NODE_ENV=production.
+   *
+   * Nothing here is ever exposed to the browser other than a boolean saying
+   * whether each path is available. No price, secret or plan can be set from
+   * the client.
    */
   billing: {
     webhookSecret: required('BILLING_WEBHOOK_SECRET', ''),
+    checkoutUrlMonthly: required('BILLING_CHECKOUT_URL_MONTHLY', ''),
+    checkoutUrlYearly: required('BILLING_CHECKOUT_URL_YEARLY', ''),
   },
 };
+
+/**
+ * Development-only self-service upgrade switch.
+ *
+ * Read at call time (not at import) so tests and local runs can toggle it, and
+ * hard-disabled in production no matter what the environment says.
+ */
+export const isDevUpgradeEnabled = () => {
+  if (env.isProduction) return false;
+  return !['0', 'false', 'off', 'no'].includes(String(process.env.BILLING_DEV_UPGRADE ?? 'true').toLowerCase());
+};
+
+/** True when a hosted checkout URL exists for either interval. */
+export const isCheckoutConfigured = () =>
+  Boolean(env.billing.checkoutUrlMonthly || env.billing.checkoutUrlYearly);
+
+export const checkoutUrlFor = (interval) =>
+  (interval === 'yearly' ? env.billing.checkoutUrlYearly : env.billing.checkoutUrlMonthly) || '';
 
 export const isGeminiConfigured = () => Boolean(env.gemini.apiKey);

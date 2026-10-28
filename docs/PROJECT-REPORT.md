@@ -158,8 +158,10 @@ content recomputes and the UI warns that a stored analysis is out of date.
 * Two app colour themes — Dark (the default, near-black with one restrained accent) and Light — driven
   by CSS custom properties and persisted per browser; contrast is checked by a test rather than by eye.
 * Premium entitlement is a server-side plan verified on every premium action, with the gallery
-  re-reading `/api/subscription` without a reload. No payment provider is connected: plans are
-  provisioned by a documented operator script or a signed webhook.
+  re-reading `/api/subscription` without a reload. `/premium` publishes the configured monthly and
+  yearly prices and an Upgrade button backed by `POST /api/subscription/checkout`; a hosted-checkout
+  redirect plus a signed webhook handle real payments when the deployment is configured for them, and a
+  development-only switch exercises the same unlock flow locally.
 * Live preview renders the real template component with the in-memory draft.
 
 ### Module 2 — Portfolio analysis and improvement suggestions
