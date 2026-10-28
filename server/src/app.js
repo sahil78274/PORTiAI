@@ -6,6 +6,8 @@ import mongoose from 'mongoose';
 import { env } from './config/env.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
+import { ApiError } from './utils/ApiError.js';
+import { isAllowedOrigin, normaliseOrigin } from './utils/corsOrigin.js';
 import authRoutes from './routes/authRoutes.js';
 import portfolioRoutes from './routes/portfolioRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
@@ -32,20 +34,17 @@ export const createApp = () => {
   app.use(
     cors({
       origin(origin, callback) {
-        // Same-origin/tooling requests have no Origin header.
-        if (!origin) return callback(null, true);
-        const normalised = origin.replace(/\/$/, '');
-        if (env.clientUrls.includes(normalised)) return callback(null, true);
-        // Development only: the Vite dev server can be reached through a tunnel or
-        // hosted-sandbox host (its proxy forwards the browser's Origin header), so
-        // reflect whatever origin the local dev setup uses. Production stays
-        // restricted to the CLIENT_URL allow-list above.
-        if (!env.isProduction) return callback(null, true);
-        // Allow Vercel preview deployments of the configured project.
-        if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(normalised) && env.clientUrls.some((url) => url.includes('.vercel.app'))) {
+        if (isAllowedOrigin(origin, { clientUrls: env.clientUrls, isProduction: env.isProduction })) {
           return callback(null, true);
         }
-        return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+        // A rejection here reaches the browser as an opaque CORS failure, so log
+        // the origin and the allow-list the server is actually using.
+        const normalised = normaliseOrigin(origin);
+        console.warn(
+          `[cors] blocked origin "${normalised}". Allowed origins: ${env.clientUrls.join(', ') || '(none)'}. ` +
+            'Set CLIENT_URL on the API service to include this origin.'
+        );
+        return callback(ApiError.forbidden(`Origin ${normalised} is not allowed to call this API.`));
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -67,6 +66,9 @@ export const createApp = () => {
         database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
         ai: isAiEnabled() ? 'configured' : 'not_configured',
         environment: env.nodeEnv,
+        // Which browser origins this deployment accepts — the first thing to
+        // check when the site reports that it cannot reach the API.
+        allowedOrigins: env.clientUrls,
         time: new Date().toISOString(),
       },
     });

@@ -124,7 +124,28 @@ Notes:
 
 ---
 
-## 4. Frontend on Vercel
+## 4. Frontend on Render (the deployed setup)
+
+The live pair is `https://portiai-frontend.onrender.com` (static site, root dir `client`) and
+`https://portiai-backend.onrender.com` (web service, root dir `server`).
+
+| Frontend service | Value |
+| --- | --- |
+| Build command | `npm install && npm run build` |
+| Publish directory | `dist` |
+| Rewrite | `/*` → `/index.html` (so deep links such as `/dashboard/settings` survive a refresh) |
+| Env var | `VITE_API_BASE_URL=https://portiai-backend.onrender.com/api` |
+
+`VITE_API_BASE_URL` is **compiled into the bundle**. After changing it you must trigger a new build of
+the frontend — restarting the service does nothing. `npm run build` runs `scripts/check-env.mjs` first,
+which prints the URL that will be compiled in and fails the build on Render when the value is missing or
+unusable, so a frontend that cannot reach the API can no longer be deployed silently.
+
+The backend always allows `https://portiai-frontend.onrender.com`; keep `CLIENT_URL` set to it anyway
+(comma-separate extra origins). Both services must be HTTPS — the session cookie is `SameSite=None;
+Secure` and the browser blocks a mixed-content call from the HTTPS frontend to an HTTP API.
+
+## 4b. Frontend on Vercel
 
 1. Vercel → **Add New → Project** → import the repository.
 2. **Root Directory:** `client`
@@ -221,9 +242,14 @@ node scripts/sync-template-catalogue.mjs --check  # CI guard
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `Could not reach the PortiAI server` in the UI | `VITE_API_BASE_URL` wrong, or the API is asleep | Confirm the URL ends in `/api`, open `/api/health` directly, retry after the cold start |
+| `Could not reach the PortiAI server at <url>` in the UI | The browser never received a response. The message now names the exact URL, which separates the three causes below | Read the printed URL first |
+| … message shows a `localhost` or `127.0.0.1` URL | `VITE_API_BASE_URL` was built from a local value | Set it to `https://portiai-backend.onrender.com/api` on the frontend service and **rebuild** |
+| … message shows the frontend's own host + `/api` | `VITE_API_BASE_URL` was empty at build time, so the bundle calls its own `/api` (a static site has no proxy) | Set the variable and rebuild; the build guard fails on Render in this case |
+| … message shows `http://portiai-backend.onrender.com/api` | Mixed content: an HTTPS page cannot call HTTP | Use `https://`; the client upgrades this automatically, but the stored value should be corrected |
+| … correct HTTPS URL but still fails, DevTools Console shows a CORS error | The API rejected the origin | Open `https://portiai-backend.onrender.com/api/health` and check `allowedOrigins`; add the site's exact origin (no trailing slash) to `CLIENT_URL` on the **API** service and redeploy it |
+| First request fails, second succeeds | Render free tier cold start (~50 s) | Reload; keep the service warm for demos |
 | 401 immediately after login | Cookie blocked: `SameSite=Lax` across different domains, or `Secure` over HTTP | Deploy both over HTTPS, set `CLIENT_URL` exactly, or use the same-origin option above |
-| `Origin … is not allowed by CORS` | `CLIENT_URL` missing your site's exact origin | Add it without a trailing slash (comma-separate several); restart the service. In **development** the API reflects any origin so tunnels and hosted previews work — that relaxation is disabled when `NODE_ENV=production` |
+| `Origin … is not allowed to call this API` (403 from curl / server log) | `CLIENT_URL` is missing that exact origin | Add it without a trailing slash (comma-separate several) and redeploy. `https://portiai-frontend.onrender.com` is always allowed. In **development** the API reflects any origin so tunnels and hosted previews work — that relaxation is disabled when `NODE_ENV=production` |
 | `MONGODB_URI is required in production` | Variable not set on Render | Add it, redeploy |
 | `Invalid scheme, expected connection string…` | Placeholder text left in the variable | Paste the real `mongodb+srv://…` string |
 | `bad auth : authentication failed` | Wrong password, unencoded special characters | Reset the Atlas user password and percent-encode characters such as `@ : / ?` |

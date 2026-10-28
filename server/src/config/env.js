@@ -16,6 +16,12 @@ const required = (name, fallback) => {
 const NODE_ENV = required('NODE_ENV', 'development');
 const isProduction = NODE_ENV === 'production';
 
+/** Deployed frontends that must always be able to reach this API. */
+const PRODUCTION_CLIENT_URLS = ['https://portiai-frontend.onrender.com'];
+
+/** Local dev servers (Vite dev + `vite preview`). */
+const DEVELOPMENT_CLIENT_URLS = ['http://localhost:5173', 'http://localhost:4173'];
+
 const SESSION_SECRET = required('SESSION_SECRET', isProduction ? '' : 'dev-only-insecure-secret-change-me');
 
 if (isProduction && (!SESSION_SECRET || SESSION_SECRET.length < 32)) {
@@ -36,10 +42,24 @@ export const env = {
   useLocalMongo: bool(process.env.USE_LOCAL_MONGO, false),
   localMongoPath: required('LOCAL_MONGO_PATH', '.data/mongodb'),
   sessionSecret: SESSION_SECRET,
-  clientUrls: required('CLIENT_URL', 'http://localhost:5173')
-    .split(',')
-    .map((value) => value.trim().replace(/\/$/, ''))
-    .filter(Boolean),
+  /**
+   * Browser origins allowed to call the API with credentials.
+   *
+   * `CLIENT_URL` (comma-separated) is the source of truth for extra origins, but
+   * the deployed frontend origins are always allowed too: a missing or stale
+   * dashboard value used to make every cross-origin request fail in the browser
+   * with no visible reason. Local dev servers are added outside production.
+   */
+  clientUrls: [
+    ...new Set([
+      ...required('CLIENT_URL', '')
+        .split(',')
+        .map((value) => value.trim().replace(/\/$/, ''))
+        .filter(Boolean),
+      ...PRODUCTION_CLIENT_URLS,
+      ...(isProduction ? [] : DEVELOPMENT_CLIENT_URLS),
+    ]),
+  ],
   gemini: {
     apiKey: required('GEMINI_API_KEY', ''),
     model: required('GEMINI_MODEL', 'gemini-2.5-flash'),

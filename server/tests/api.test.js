@@ -376,6 +376,59 @@ await test('unknown API routes return a JSON 404', async () => {
   assert.equal(res.body.error.code, 'NOT_FOUND');
 });
 
+await test('the deployed frontend origin is allowed with credentials', async () => {
+  const origin = 'https://portiai-frontend.onrender.com';
+  const res = await fetch(`${BASE}/health`, { headers: { Origin: origin } });
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('access-control-allow-origin'), origin);
+  assert.equal(res.headers.get('access-control-allow-credentials'), 'true');
+
+  // Preflight for a credentialed GET/JSON POST.
+  const preflight = await fetch(`${BASE}/auth/me`, {
+    method: 'OPTIONS',
+    headers: {
+      Origin: origin,
+      'Access-Control-Request-Method': 'GET',
+      'Access-Control-Request-Headers': 'content-type',
+    },
+  });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('access-control-allow-origin'), origin);
+  assert.match(preflight.headers.get('access-control-allow-methods') || '', /GET/);
+  assert.match(preflight.headers.get('access-control-allow-headers') || '', /Content-Type/i);
+});
+
+await test('health reports the browser origins the API accepts', async () => {
+  const res = await fetch(`${BASE}/health`);
+  assert.equal(res.status, 200);
+  const { data } = await res.json();
+  assert.ok(Array.isArray(data.allowedOrigins), 'allowedOrigins is an array');
+  assert.ok(
+    data.allowedOrigins.includes('https://portiai-frontend.onrender.com'),
+    'the deployed frontend origin is always allow-listed'
+  );
+});
+
+await test('the CORS allow-list denies unknown origins in production only', async () => {
+  const { isAllowedOrigin } = await import('../src/utils/corsOrigin.js');
+  const renderOrigin = 'https://portiai-frontend.onrender.com';
+  const production = { clientUrls: [renderOrigin], isProduction: true };
+
+  assert.equal(isAllowedOrigin(renderOrigin, production), true);
+  assert.equal(isAllowedOrigin(`${renderOrigin}/`, production), true, 'a trailing slash is tolerated');
+  assert.equal(isAllowedOrigin('https://evil.example.com', production), false);
+  assert.equal(isAllowedOrigin(undefined, production), true, 'requests without an Origin header are allowed');
+
+  // A configured extra origin keeps working alongside the built-in one.
+  const withVercel = { clientUrls: ['https://portiai.vercel.app', renderOrigin], isProduction: true };
+  assert.equal(isAllowedOrigin('https://portiai.vercel.app', withVercel), true);
+  assert.equal(isAllowedOrigin('https://portiai-git-main-user.vercel.app', withVercel), true, 'preview deployments');
+  assert.equal(isAllowedOrigin('https://portiai-git-main-user.vercel.app', production), false, 'no Vercel app configured');
+
+  // Development reflects any origin so tunnels and hosted previews work.
+  assert.equal(isAllowedOrigin('https://random-tunnel.example', { clientUrls: [], isProduction: false }), true);
+});
+
 await test('security headers are present', async () => {
   const response = await fetch(`${BASE}/health`);
   assert.match(response.headers.get('x-content-type-options') || '', /nosniff/);

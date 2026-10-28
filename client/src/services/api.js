@@ -5,7 +5,53 @@
  * - Errors are converted into ApiError instances with the server's message,
  *   code and per-field details, so forms can show useful feedback.
  */
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+
+/**
+ * Resolves `VITE_API_BASE_URL` into the base every request is built from.
+ *
+ * Vite inlines the variable at build time, so a typo in the hosting dashboard
+ * (or a missing variable) ships a broken URL into the bundle. This normalises
+ * the common mistakes instead of failing silently:
+ *
+ *   https://api.example.com            → https://api.example.com/api
+ *   https://api.example.com/api/       → https://api.example.com/api
+ *   https://api.example.com/api/api    → https://api.example.com/api
+ *   " https://api.example.com/api "    → https://api.example.com/api
+ *   http://… on an https page          → https://… (mixed content is blocked)
+ *   unset / empty                      → /api (same-origin; needs a proxy)
+ */
+export const normaliseApiBaseUrl = (rawValue, { protocol } = {}) => {
+  let value = typeof rawValue === 'string' ? rawValue.trim().replace(/^["']|["']$/g, '').trim() : '';
+
+  if (!value) return '/api';
+
+  // A bare host ("api.example.com/api") would otherwise be treated as a path
+  // relative to the frontend origin, so every request would 404 there.
+  if (!/^https?:\/\//i.test(value) && !value.startsWith('/')) {
+    value = `https://${value}`;
+  }
+
+  // Drop trailing slashes, then collapse a repeated /api/api… suffix.
+  value = value.replace(/\/+$/, '');
+  value = value.replace(/(?:\/api)+$/i, '/api');
+
+  if (!/\/api$/i.test(value)) {
+    value = `${value}/api`;
+  }
+
+  // An https page cannot call http:// — the browser blocks it outright, which
+  // surfaces as a generic "could not reach the server" error. Loopback hosts are
+  // exempt so a local build can still talk to a local API.
+  const pageProtocol = protocol ?? (typeof window !== 'undefined' ? window.location?.protocol : undefined);
+  const isLoopback = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(value);
+  if (pageProtocol === 'https:' && /^http:\/\//i.test(value) && !isLoopback) {
+    value = value.replace(/^http:\/\//i, 'https://');
+  }
+
+  return value;
+};
+
+const BASE_URL = normaliseApiBaseUrl(import.meta.env?.VITE_API_BASE_URL);
 
 export class ApiError extends Error {
   constructor(message, { status = 0, code = 'NETWORK_ERROR', details, retryAfterSeconds } = {}) {
@@ -40,8 +86,11 @@ async function request(path, { method = 'GET', body, signal, query } = {}) {
     });
   } catch (error) {
     if (error.name === 'AbortError') throw error;
+    // The URL itself is included because a CORS rejection, a mixed-content
+    // block and a wrong host all look identical to `fetch`.
+    console.error(`[api] ${method} ${url} failed before a response was received`, error);
     throw new ApiError(
-      'Could not reach the PortiAI server. Check that the API is running and VITE_API_BASE_URL points to it.',
+      `Could not reach the PortiAI server at ${url}. Check that the API is running, that this origin is allowed by the API's CLIENT_URL setting, and that VITE_API_BASE_URL points at it.`,
       { code: 'NETWORK_ERROR' }
     );
   }
