@@ -372,7 +372,7 @@ export default function Builder() {
         <section className="card flex min-h-[640px] flex-col overflow-hidden" aria-label="AI builder conversation">
           <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-contrast">
                 <Wand2 size={15} aria-hidden="true" />
               </span>
               <div>
@@ -394,7 +394,7 @@ export default function Builder() {
               <div key={message.id} className={`flex gap-2.5 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <span
                   className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${
-                    message.role === 'assistant' ? 'bg-accent text-white' : 'border border-line bg-canvasAlt text-inkSoft'
+                    message.role === 'assistant' ? 'bg-accent text-accent-contrast' : 'border border-line bg-canvasAlt text-inkSoft'
                   }`}
                   aria-hidden="true"
                 >
@@ -404,7 +404,7 @@ export default function Builder() {
                   <div
                     className={`inline-block whitespace-pre-line rounded-lg px-3.5 py-2.5 text-left text-sm leading-relaxed ${
                       message.role === 'user'
-                        ? 'rounded-br-md bg-accent text-white'
+                        ? 'rounded-br-md bg-accent text-accent-contrast'
                         : message.variant === 'error'
                           ? 'rounded-bl-md border border-dangerLine bg-dangerSoft text-danger'
                           : message.variant === 'success'
@@ -429,7 +429,7 @@ export default function Builder() {
 
             {typing ? (
               <div className="flex gap-2.5">
-                <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-white" aria-hidden="true">
+                <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-accent-contrast" aria-hidden="true">
                   <Sparkles size={13} />
                 </span>
                 <div className="flex items-center gap-1 rounded-lg rounded-bl-md border border-line bg-canvasAlt px-3.5 py-3">
@@ -735,7 +735,7 @@ export default function Builder() {
                       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">Skills</p>
                       <div className="flex flex-wrap gap-1">
                         {facts.skills.slice(0, 14).map((skill) => (
-                          <span key={skill} className="rounded-full border border-line bg-canvasAlt px-2 py-0.5 text-[10px] text-inkSoft">
+                          <span key={skill} className="rounded border border-line bg-canvasAlt px-2 py-0.5 text-[10px] text-inkSoft">
                             {skill}
                           </span>
                         ))}

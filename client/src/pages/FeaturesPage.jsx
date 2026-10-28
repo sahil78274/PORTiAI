@@ -36,7 +36,7 @@ const FEATURES = [
   {
     icon: LayoutTemplate,
     title: 'A real template catalogue',
-    body: `${TEMPLATE_COUNT} templates: ten layouts across ten visual styles, plus the six original designs. Six colour themes for the app itself. Switch design without retyping anything.`,
+    body: `${TEMPLATE_COUNT} templates: ten layouts across ten visual styles, plus the six original designs. Light and dark themes for the app itself. Switch design without retyping anything.`,
     points: [`${PREMIUM_TEMPLATE_COUNT} premium designs`, 'Preview before choosing', 'Free and premium tiers'],
   },
 ];
@@ -52,12 +52,12 @@ export default function FeaturesPage() {
   return (
     <div>
       <section className="border-b border-line">
-        <div className="container-wide py-14">
+        <div className="container-wide py-10">
           <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted">Features</p>
-          <h1 className="mt-3 max-w-2xl text-balance text-[32px] font-semibold leading-[1.15] tracking-[-0.03em] sm:text-[40px]">
+          <h1 className="mt-2 max-w-2xl text-balance text-[26px] font-semibold leading-[1.15] tracking-[-0.03em] sm:text-[32px]">
             A portfolio builder, not a form that generates a page.
           </h1>
-          <p className="mt-4 max-w-2xl text-[16px] leading-7 text-muted">
+          <p className="mt-3 max-w-2xl text-[13.5px] leading-6 text-muted">
             PortiAI covers writing, layout, review and publishing. Here is what each part does, and what it deliberately
             does not do.
           </p>
@@ -73,7 +73,7 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <section className="border-b border-line bg-surface">
+      <section className="border-b border-line">
         <div className="container-wide py-14">
           <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body, points }) => (

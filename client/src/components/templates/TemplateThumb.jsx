@@ -2,6 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import PortfolioRenderer from '../../templates/PortfolioRenderer.jsx';
 import TemplatePreviewFrame from '../marketing/TemplatePreviewFrame.jsx';
 import { demoPortfolioForTemplate } from '../../data/premiumDemo.js';
+import { getStyle } from '../../data/templateStyles.js';
+
+/** The template's own page colour, used as the matte behind its scaled clone. */
+const backingFor = (template) => {
+  if (!template) return 'var(--canvas-alt)';
+  if (template.legacy) return template.appearance === 'dark' ? '#0a0a0b' : '#ffffff';
+  try {
+    return getStyle(template.style).preview[0];
+  } catch {
+    return 'var(--canvas-alt)';
+  }
+};
 
 /**
  * A scaled live render of a template.
@@ -42,6 +54,7 @@ export default function TemplateThumb({ template, designWidth = 1000, designHeig
           designWidth={designWidth}
           designHeight={designHeight}
           label={`${template.name} template preview`}
+          background={backingFor(template)}
           crop
         >
           <PortfolioRenderer portfolio={demoPortfolioForTemplate(template)} />

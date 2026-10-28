@@ -85,7 +85,7 @@ export default function TemplatePicker({ value, onSelect }) {
                 {template.swatches.map((color, index) => (
                   <span key={index} className="h-2.5 w-2.5 rounded-full border border-black/10" style={{ background: color }} />
                 ))}
-                <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-medium ${template.tier === 'free' ? 'bg-successSoft text-success' : 'bg-accent-soft text-accent-hover'}`}>
+                <span className={`ml-auto rounded px-1.5 py-0.5 text-[10px] font-medium ${template.tier === 'free' ? 'bg-successSoft text-success' : 'bg-accent-soft text-accent-hover'}`}>
                   {template.tier === 'free' ? 'Free' : 'Premium'}
                 </span>
               </span>

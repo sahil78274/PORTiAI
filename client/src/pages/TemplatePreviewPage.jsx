@@ -105,13 +105,13 @@ export default function TemplatePreviewPage() {
                   {locked ? <Lock size={10} aria-hidden="true" /> : null}
                   {template.tier === 'free' ? 'Free' : 'Premium'}
                 </span>
-                <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-[11px] font-medium text-muted">
+                <span className="rounded border border-line bg-surface px-2 py-0.5 text-[11px] font-medium text-muted">
                   {template.category}
                 </span>
-                <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-[11px] font-medium text-muted">
+                <span className="rounded border border-line bg-surface px-2 py-0.5 text-[11px] font-medium text-muted">
                   {template.layoutLabel} layout
                 </span>
-                <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-[11px] font-medium text-muted">
+                <span className="rounded border border-line bg-surface px-2 py-0.5 text-[11px] font-medium text-muted">
                   {template.styleLabel}
                 </span>
               </div>
@@ -122,10 +122,10 @@ export default function TemplatePreviewPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <button type="button" onClick={() => setModalPreview(template)} className="btn-secondary rounded-full">
+              <button type="button" onClick={() => setModalPreview(template)} className="btn-secondary">
                 Quick preview
               </button>
-              <button type="button" onClick={() => startWith(template)} disabled={creating} className="btn-primary btn-lg rounded-full">
+              <button type="button" onClick={() => startWith(template)} disabled={creating} className="btn-primary btn-lg">
                 {locked ? <Lock size={14} aria-hidden="true" /> : <Check size={14} aria-hidden="true" />}
                 {creating ? 'Preparing…' : locked ? 'Unlock template' : 'Use this template'}
               </button>
@@ -137,7 +137,7 @@ export default function TemplatePreviewPage() {
       <section className="container-wide py-8">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
           <p className="text-[12.5px] text-muted">Live preview · sample content · same component as the published page</p>
-          <div className="flex items-center gap-0.5 rounded-full border border-line bg-surface p-0.5" role="group" aria-label="Preview width">
+          <div className="flex items-center gap-0.5 rounded-md border border-line bg-surface p-0.5" role="group" aria-label="Preview width">
             {DEVICES.map(({ id: deviceId, label, Icon }) => (
               <button
                 key={deviceId}
@@ -145,7 +145,7 @@ export default function TemplatePreviewPage() {
                 onClick={() => setDevice(deviceId)}
                 aria-pressed={device === deviceId}
                 aria-label={`${label} preview`}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
                   device === deviceId ? 'bg-accent text-accent-contrast' : 'text-muted hover:text-ink'
                 }`}
               >
@@ -156,7 +156,7 @@ export default function TemplatePreviewPage() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-line bg-canvas">
+        <div className="overflow-hidden rounded-xl border border-line bg-canvas">
           <div className="flex items-center justify-between gap-3 border-b border-line bg-surface px-4 py-2 text-[11.5px] text-muted">
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
@@ -188,7 +188,7 @@ export default function TemplatePreviewPage() {
 
             <div className="mt-4 flex flex-wrap gap-1.5">
               {template.tags.slice(0, 8).map((tag) => (
-                <span key={tag} className="rounded-full border border-line bg-canvas px-2.5 py-0.5 text-[11px] text-muted">
+                <span key={tag} className="rounded border border-line bg-canvas px-2 py-0.5 text-[11px] text-muted">
                   {tag}
                 </span>
               ))}

@@ -14,7 +14,7 @@ const COMPARISON = [
   { feature: 'Portfolio review (100-point rubric)', free: true, premium: true },
   { feature: 'AI writing assistant', free: true, premium: true },
   { feature: 'Public blog', free: true, premium: true },
-  { feature: 'All six colour themes', free: true, premium: true },
+  { feature: 'Light and dark themes', free: true, premium: true },
 ];
 
 const FAQ = [
@@ -50,20 +50,20 @@ export default function Premium() {
   return (
     <div>
       <section className="hero-glow border-b border-line">
-        <div className="container-wide py-16 text-center">
+        <div className="container-wide py-10 text-center">
           <p className="eyebrow-accent mx-auto">
             <Sparkles size={11} aria-hidden="true" />
             PortiAI Premium
           </p>
-          <h1 className="mx-auto mt-5 max-w-3xl text-balance text-[34px] font-semibold leading-[1.05] tracking-[-0.04em] text-ink sm:text-[48px]">
+          <h1 className="mx-auto mt-4 max-w-2xl text-balance text-[26px] font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[34px]">
             Every layout, every style, one account.
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-7 text-muted">
+          <p className="mx-auto mt-3 max-w-xl text-[13.5px] leading-6 text-muted">
             Premium adds the {PREMIUM_TEMPLATE_COUNT}-template premium catalogue to everything you already get for free.
             Entitlement is verified by the PortiAI API — not by the browser.
           </p>
 
-          <div className="mx-auto mt-7 inline-flex flex-wrap items-center justify-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-[12.5px]">
+          <div className="mx-auto mt-7 inline-flex flex-wrap items-center justify-center gap-2 rounded-md border border-line bg-surface px-4 py-2 text-[12.5px]">
             {user ? (
               isPremium ? (
                 <>
@@ -155,7 +155,7 @@ export default function Premium() {
           </div>
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-2xl border border-line">
+        <div className="mt-10 overflow-hidden rounded-xl border border-line">
           <table className="w-full border-collapse text-left text-[13px]">
             <caption className="sr-only">Free and Premium plan comparison</caption>
             <thead className="bg-canvasAlt text-[11px] uppercase tracking-[0.1em] text-muted">
@@ -204,7 +204,7 @@ export default function Premium() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface p-6">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface p-6">
           <div>
             <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-ink">Not sure yet? Preview everything.</h2>
             <p className="mt-1 text-[13px] text-muted">Every template can be previewed at three widths before you decide.</p>

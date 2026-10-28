@@ -155,8 +155,8 @@ content recomputes and the UI warns that a stored analysis is out of date.
 * Customisation in the editor: template, accent colour (six presets plus a colour picker), font stack,
   spacing density, section visibility and order. Content is independent of template, so switching
   never loses data.
-* Six app colour themes (Light, Dark, Midnight, Purple, Emerald, Rose) driven by CSS custom properties
-  and persisted per browser; contrast is checked by a test rather than by eye.
+* Two app colour themes — Dark (the default, near-black with one restrained accent) and Light — driven
+  by CSS custom properties and persisted per browser; contrast is checked by a test rather than by eye.
 * Premium entitlement is a server-side plan verified on every premium action, with the gallery
   re-reading `/api/subscription` without a reload. No payment provider is connected: plans are
   provisioned by a documented operator script or a signed webhook.
@@ -239,8 +239,9 @@ account settings, password change and account deletion.
 
 ## 13. Suggested viva demonstration order
 
-1. Landing page — hero with three live template previews, the catalogue statistics, How it works, the
-   featured designs, the visual-style gallery and the plan comparison.
+1. Landing page — the compact intro with three live template previews, then the working gallery
+   (search, category tabs, filters, 12 cards, Load more), How it works, the visual-style grid and the
+   plan comparison.
 2. Register a new account; arrive on the dashboard; open the AI builder, complete two steps and show the
    draft is saved after a reload.
 3. Open **Templates**, search and filter, load more, preview a premium design at three widths, then

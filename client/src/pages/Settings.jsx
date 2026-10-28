@@ -315,7 +315,7 @@ export default function Settings() {
           <div>
             <h2 className="text-[14px] font-semibold text-ink">Appearance</h2>
             <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted">
-              Choose how the PortiAI interface looks. Your choice applies to every page and is remembered on this
+              Two themes: Light and Dark (the default). Your choice applies to every page and is remembered on this
               device. The design of a public portfolio — template, accent colour, font and section order — is set
               per portfolio in the editor.
             </p>
@@ -324,8 +324,8 @@ export default function Settings() {
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {[
-            { id: 'light', label: 'Light', description: 'White surfaces, dark text.', Icon: Sun },
-            { id: 'dark', label: 'Dark', description: 'Deep navy surfaces, soft white text.', Icon: Moon },
+            { id: 'light', label: 'Light', description: 'Paper-white surfaces, near-black text.', Icon: Sun },
+            { id: 'dark', label: 'Dark', description: 'Near-black surfaces, off-white text.', Icon: Moon },
           ].map(({ id, label, description, Icon }) => {
             const active = theme === id;
             return (

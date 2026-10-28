@@ -65,7 +65,7 @@ export default function StartProject() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Link to={`/dashboard/builder${template ? `?template=${template.id}` : ''}`} className="group flex flex-col rounded-lg border border-line bg-surface p-5 transition-colors hover:border-lineStrong">
-          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-accent text-white">
+          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-accent text-accent-contrast">
             <Sparkles size={19} aria-hidden="true" />
           </span>
           <p className="mt-3.5 text-[14px] font-semibold text-ink">Create with AI</p>

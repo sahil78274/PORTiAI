@@ -709,7 +709,7 @@ re-login and no client-side flag is involved.
 
 ### 10.2 Frontend unit suite — `cd client && npm test`
 
-**48 tests, 48 passed** (`tests/templates.test.js`, `tests/builderConversation.test.js`, the new
+**52 tests, 52 passed** (`tests/templates.test.js`, `tests/builderConversation.test.js`,
 `tests/templateCatalogue.test.js` and `tests/theme.test.js`):
 
 * catalogue holds 106 entries: 100 premium, 6 free, every id and name unique;
@@ -725,9 +725,11 @@ re-login and no client-side flag is involved.
 * featured / newest / alphabetical sorting orderings are asserted;
 * premium ids resolve through `normalizeTemplateId`, `getTemplate` and `templateTheme`; unknown ids
   still fall back to `developer`;
-* all six app themes exist as CSS token blocks, the picker list matches the CSS, the pre-paint script
-  reads `portiai.theme`, and every theme meets the contrast thresholds for body, secondary, accent and
-  accent-button text;
+* exactly two app themes exist as CSS token blocks, the switcher lists only Light and Dark, the retired
+  palettes are gone from the CSS/context/markup, the pre-paint script reads `portiai.theme` (executed in
+  a `vm` sandbox to prove a saved choice survives a refresh and legacy values fall back to Dark), and
+  both themes meet the contrast thresholds for body, secondary, accent, accent-button and control-border
+  text;
 * all 100 premium palette/accent combinations meet contrast on their own background (this test caught
   three sky-blue accents that were too light for white label text, which were darkened).
 
@@ -744,7 +746,7 @@ re-login and no client-side flag is involved.
 * the gallery in marketing and workspace modes, including pre-applied category/access filters and a
   filtered `/templates` route.
 
-Result: **`Rendered 145 component trees. Smoke render passed.`** Two real defects were found this way
+Result: **`Rendered 142 component trees. Smoke render passed.`** Two real defects were found this way
 and fixed before finishing: a `tokens.preview[0]` reference in `PremiumTemplate` (which would crash
 every premium preview) and a missing `TEMPLATE_COUNT` import in `MyPortfolios`.
 
@@ -766,3 +768,64 @@ single chunk (React, router and ~100 inline SVG icons), which is 210 kB gzipped.
   render-tested, but pixel output has not been captured.
 * Real payment checkout — no provider is configured by design; entitlement is verified with the
   operator grant path and the disabled-webhook path.
+
+
+---
+
+## 11. Two-theme refinement (2026-10-28, later)
+
+The six-theme palette was reduced to **two themes — Dark (default) and Light** — with a near-black,
+single-accent visual direction.
+
+* `client` unit suite: **52/52** (four new theme-contract tests).
+* `client` SSR smoke render: **142 component trees**, including an assertion that the switcher renders
+  exactly two `aria-pressed` options and no retired theme names.
+* `server` HTTP suite: **66/66** (unchanged backend; entitlement still enforced).
+* `cd client && npm run build`: success — 74.35 kB CSS, 793.02 kB JS (210.09 kB gzip).
+* `node scripts/sync-template-catalogue.mjs --check`: in sync.
+* Live stack (dev server on :5173 proxying the API on :5000): register → premium design returns `403`
+  `PREMIUM_REQUIRED` → operator grant → the same cookie reports `premium` with 106 accessible templates →
+  premium create returns `201`. Login, session refresh and public pages still respond `200`.
+
+Checks that specifically cover the brief:
+
+| Requirement | How it is verified |
+| --- | --- |
+| Only Light and Dark exist | `tests/theme.test.js` asserts the CSS blocks, the switcher list and the pre-paint script; the smoke render counts two options and zero retired names |
+| Theme persists across refresh | the inline script from `index.html` is executed in a `vm` sandbox with stub storage: a saved `light` reopens light, no saved value opens dark, retired values fall back to dark |
+| Dark uses near-black + subtle accent | token assertions pin `--canvas #0a0a0a`, `--surface #111111`, `--ink #f5f5f5`, `--muted #a1a1aa`, `--line #262626`, one amber accent, `--hero-glow: none` |
+| Light stays clean and readable | same layout tokens on `#fafafa`/white, plus WCAG contrast assertions for body, secondary, accent, accent-button and control-border text in both themes |
+| Entire UI updates on switch | every surface colour is a CSS variable; a guard test fails if any retired palette token or `data-theme` selector creeps back |
+
+---
+
+## 12. Structural redesign (2026-10-28, final)
+
+The two-theme pass changed colour only; this pass rebuilt the page structure so template discovery — not a
+hero — is the first thing the site shows.
+
+* `client` unit suite: **52/52**.
+* `client` SSR smoke render: **142 component trees**, now including a `route /` assertion set: one headline,
+  **12 gallery cards** on the landing page, one Load-more control, category tabs present, and a working link
+  to the full gallery.
+* `server` HTTP suite: **66/66** (no backend change in this pass).
+* `cd client && npm run build`: success — **72.00 kB CSS** (13.15 kB gzip), **784.36 kB JS** (208.23 kB gzip).
+* `node scripts/sync-template-catalogue.mjs --check`: in sync (106 templates: 6 free, 100 premium).
+* Live stack (`:5173` → API `:5000` → MongoDB `:27017`): `/`, `/templates`, `/templates/glass-editorial-magazine`,
+  `/premium`, `/features`, `/login`, `/signup`, `/p/alex-morgan` all return `200`.
+
+What changed, and how each requirement is verified:
+
+| Requirement | Implementation | Verification |
+| --- | --- | --- |
+| Hero must not dominate | Landing intro is a short text block (headline `32/42 px`, one lead sentence, two CTAs) with a **three-up strip of real template previews** beside it; no browser-chrome mockup (`HeroPortfolioPreview.jsx` deleted) | smoke: the landing route renders the gallery heading, 12 cards and Load more; the old mockup component no longer exists in the tree |
+| Gallery is the main feature | `TemplateGallery` is embedded directly on `/` under "Pick a starting point", and fills `/templates` under a 30 px "All templates" title | smoke asserts 12 `gallery-card` nodes and a `>Load ` control on `/` and `/templates` |
+| Horizontal search + filters | One toolbar row: search input, style, appearance, access and sort selects; category filters are underlined text tabs (`.tab-link`), not pills | smoke asserts `tab-link` markup on `/`; existing filter suites still pass |
+| Cards show real designs | `TemplateCard` renders a live `PortfolioRenderer` thumbnail per template on its own matte colour, with name, category · style, description, swatches, Free/Premium badge and working Preview / Use template | 106 catalogue entries (10 layouts × 10 styles) plus 6 legacy designs; the smoke render mounts the card and the preview dialog |
+| 12 + 12 Load more | `PAGE_SIZE = 12`; each click adds `PAGE_SIZE` up to `results.length`, and the button label reports the exact remaining count | smoke asserts the count line, 12 cards, and the exhausted "You have seen all N templates" state when filters return fewer than 12 |
+| Restrained chrome | Radii reduced to `rounded-md`/`rounded-lg` across cards, inputs, buttons, badges and chips; the sticky header is opaque (`--nav-bg`), not blurred; one accent; no gradients outside template content | token tests pin `--canvas #0a0a0a` / `#fafafa`, `--hero-glow: none`, `--nav-bg` solid, and the accent pair; no `rounded-full` remains on controls |
+| Light and Dark share structure | Only colour variables change between `[data-theme='light']` and `[data-theme='dark']`; spacing, grid and component classes are shared | `tests/theme.test.js` still passes; smoke renders every route under both themes |
+| Existing behaviour preserved | Auth/session refresh, builder, template preview/selection, premium entitlement (`403 PREMIUM_REQUIRED`), saved projects and theme persistence are untouched | `server npm test` 66/66 and the live register → 403 → grant → 201 flow |
+
+Limitation: the sandbox has no browser binary, so verification is SSR markup assertions, token/contrast
+tests and live HTTP checks — not screenshots.

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Check, Layers, Palette, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowRight, Layers, Palette, Wand2 } from 'lucide-react';
 import TemplateGallery from '../components/templates/TemplateGallery.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { TEMPLATE_COUNT, PREMIUM_TEMPLATE_COUNT, FREE_TEMPLATE_COUNT, TEMPLATE_LAYOUTS } from '../data/templateCatalogue.js';
@@ -31,47 +31,29 @@ export default function TemplatesPage() {
   return (
     <div>
       {/* ----------------------------------------------------------- Hero */}
-      <section className="hero-glow border-b border-line">
-        <div className="container-wide py-14 sm:py-20">
-          <div className="max-w-3xl">
-            <p className="eyebrow-accent">
-              <Sparkles size={11} aria-hidden="true" />
-              Template library
-            </p>
-            <h1 className="mt-5 text-balance text-[34px] font-semibold leading-[1.05] tracking-[-0.04em] text-ink sm:text-[52px]">
-              {TEMPLATE_COUNT} portfolio templates,
-              <br className="hidden sm:block" /> every one a real design.
-            </h1>
-            <p className="mt-5 max-w-2xl text-[15.5px] leading-7 text-muted">
-              Ten layouts, ten visual styles and a preview rendered by the same component your published portfolio
-              uses. {FREE_TEMPLATE_COUNT} templates are free forever; the other {PREMIUM_TEMPLATE_COUNT} are part of
-              Premium.
-            </p>
-
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link to={user ? '/dashboard/builder' : '/signup'} className="btn-primary btn-lg rounded-full">
-                {user ? 'Start a portfolio' : 'Start free'}
-                <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-              <Link to="/premium" className="btn-secondary btn-lg rounded-full">
-                Compare plans
-              </Link>
+      <section className="border-b border-line">
+        <div className="container-wide py-9">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-faint">Templates</p>
+              <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[30px]">
+                All templates
+              </h1>
+              <p className="mt-2 text-[13.5px] leading-6 text-muted">
+                {TEMPLATE_COUNT} designs built from ten layouts and ten visual styles. {FREE_TEMPLATE_COUNT} are free
+                forever; {PREMIUM_TEMPLATE_COUNT} are part of Premium.
+              </p>
             </div>
-
-            <ul className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-muted">
-              {['Live previews with sample content', 'Free templates need no card', 'Switch design without losing content'].map((item) => (
-                <li key={item} className="inline-flex items-center gap-1.5">
-                  <Check size={13} className="shrink-0 text-accent" aria-hidden="true" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <Link to={user ? '/dashboard/builder' : '/signup'} className="btn-primary shrink-0">
+              {user ? 'Start a portfolio' : 'Start free'}
+              <ArrowRight size={13} aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------- Gallery */}
-      <section className="container-wide py-8">
+      <section className="container-wide py-6">
         <TemplateGallery
           key={JSON.stringify(initialFilters)}
           mode="marketing"
@@ -80,7 +62,7 @@ export default function TemplatesPage() {
       </section>
 
       {/* --------------------------------------------------- How designs work */}
-      <section className="border-t border-line bg-surface">
+      <section className="border-t border-line">
         <div className="container-wide py-14">
           <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
             <div>
@@ -102,7 +84,7 @@ export default function TemplatesPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               {HIGHLIGHTS.map(({ icon: Icon, label, detail }) => (
                 <div key={label} className="surface-card p-4">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent-hover">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent-soft text-accent-hover">
                     <Icon size={16} aria-hidden="true" />
                   </span>
                   <p className="mt-3 text-[13.5px] font-semibold text-ink">{label}</p>
@@ -117,7 +99,7 @@ export default function TemplatesPage() {
               <p className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-faint">Layouts</p>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                 {TEMPLATE_LAYOUTS.map((layout) => (
-                  <li key={layout.id} className="rounded-lg border border-line bg-canvas px-3 py-2">
+                  <li key={layout.id} className="rounded-md border border-line bg-canvas px-3 py-2">
                     <p className="text-[12.5px] font-medium text-ink">{layout.label}</p>
                     <p className="mt-0.5 text-[11.5px] leading-5 text-muted">{layout.blurb}</p>
                   </li>
@@ -128,7 +110,7 @@ export default function TemplatesPage() {
               <p className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-faint">Styles</p>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                 {TEMPLATE_STYLES.map((style) => (
-                  <li key={style.id} className="flex items-center gap-2.5 rounded-lg border border-line bg-canvas px-3 py-2">
+                  <li key={style.id} className="flex items-center gap-2.5 rounded-md border border-line bg-canvas px-3 py-2">
                     <span className="flex shrink-0 gap-1" aria-hidden="true">
                       {[style.preview[0], style.tokens.surfaceAccent, style.preview[1]].map((color, index) => (
                         <span key={index} className="h-4 w-2.5 rounded-sm border border-black/10" style={{ background: color }} />

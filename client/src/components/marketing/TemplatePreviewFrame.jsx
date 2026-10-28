@@ -12,6 +12,8 @@ export default function TemplatePreviewFrame({
   className = '',
   label,
   crop = false,
+  /** Backing colour behind the scaled clone; defaults to the app's muted canvas. */
+  background = 'var(--canvas-alt)',
 }) {
   const containerRef = useRef(null);
   const [scale, setScale] = useState(0.4);
@@ -29,8 +31,8 @@ export default function TemplatePreviewFrame({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full overflow-hidden bg-white ${className}`}
-      style={{ height: Math.round(designHeight * scale) }}
+      className={`relative w-full overflow-hidden ${className}`}
+      style={{ height: Math.round(designHeight * scale), background }}
       role="img"
       aria-label={label || 'Portfolio template preview'}
     >
