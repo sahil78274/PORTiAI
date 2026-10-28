@@ -14,9 +14,12 @@ in the backend.
 
 Premium is a real server-side entitlement: the plan lives in MongoDB, the API gates premium template
 selection, and the gallery re-checks entitlement so a plan that becomes active unlocks the catalogue
-without a reload. **No payment provider is connected in this repository** — plans are provisioned with
-`server/scripts/grant-premium.mjs` or a signed billing webhook (`POST /api/subscription/webhook`) once
-`BILLING_WEBHOOK_SECRET` is configured. The UI never simulates a successful payment.
+without a reload. `/premium` shows the configured monthly and yearly prices and an **Upgrade to Premium**
+button that calls `POST /api/subscription/checkout`. **No payment provider is connected in this
+repository**: set `BILLING_CHECKOUT_URL_MONTHLY`/`_YEARLY` and `BILLING_WEBHOOK_SECRET` to take real
+payments, use the development-only switch (`BILLING_DEV_UPGRADE`, off in production) to exercise the
+unlock flow locally, or provision a plan with `server/scripts/grant-premium.mjs`. The UI never simulates
+a successful payment.
 
 ---
 
@@ -33,7 +36,7 @@ without a reload. **No payment provider is connected in this repository** — pl
 | Template catalogue | Done | **106 templates**: 100 premium (10 layouts × 10 visual styles, each pair used once) plus the six original free designs. Every entry has a stable id, name, category, tags, style, appearance, description, accent and access tier (`client/src/data/templateCatalogue.js`) |
 | Template gallery | Done | Search across names/keywords, category/style/appearance/access filters, featured/newest/A–Z sorting, 12-at-a-time Load more with accurate counts, live rendered previews (lazy-mounted), empty state, Premium lock indicators, in-use badges |
 | Template preview | Done | Modal preview at desktop/tablet/mobile plus a dedicated `/templates/:id` page with a full-height live render, design metadata, related templates and Use-template action |
-| Premium entitlement | Done | Server-side plan on the user document, `GET /api/subscription`, gating on portfolio create/update, entitlement re-checked on a poll and on tab focus, honest upgrade dialog, operator grant script, optional signed billing webhook. No client-side unlock |
+| Premium plans and entitlement | Done | Server-side plan on the user document, `GET /api/subscription`, public pricing via `GET /api/subscription/plans` (monthly + yearly, from `server/src/config/pricing.js`), working **Upgrade to Premium** flow (`POST /api/subscription/checkout` → hosted checkout or development activation), gating on portfolio create/update, entitlement re-checked on a poll and on tab focus, upgrade prompt on locked templates, operator grant script, signed billing webhook. No client-side unlock |
 | Editor | Done | Seven tabs, debounced autosave with status, desktop/tablet/mobile previews, accent/font/density, section order and visibility, blog settings, publish |
 | My Portfolios | Done | Grid/list views, search + status filters + sort, thumbnails, preview, duplicate, share, delete with confirmation, analysis score |
 | Portfolio analyzer | Done | Portfolio rubric (7 categories, 100 points) and a website scanner (6 categories) for a live URL or uploaded HTML; severity-grouped findings; apply selected rewrites |
@@ -66,9 +69,10 @@ Things that are deliberately **not** implemented, and the UI says so instead of 
   buttons are not shown rather than being mocked.
 * **Automatic AI content on every save** — AI is opt-in per field so the shared free-tier quota is not
   consumed by background requests.
-* **A payment checkout** — Premium entitlement is implemented and enforced by the API, but no checkout
-  or payment provider is connected in this repository. `/premium` and the upgrade dialog explain how a
-  plan is activated instead of faking a successful payment.
+* **A bundled payment provider** — the checkout *flow* is implemented (hosted-checkout redirect plus a
+  signed webhook that verifies the payment server-side), but no provider account or credentials ship in
+  this repository. Until `BILLING_CHECKOUT_URL_*` and `BILLING_WEBHOOK_SECRET` are configured, the API
+  answers `503 BILLING_NOT_CONFIGURED` and `/premium` says so instead of faking a successful payment.
 * **Custom domains and PDF export** — neither is implemented.
 
 ---
@@ -391,19 +395,40 @@ first-time visitor gets Dark). The two-option switcher lives in the navbar, the 
 dashboard header and Settings. A value saved by an older release (e.g. `purple`) is ignored and falls
 back to Dark instead of breaking the page.
 
-### Entitlement
+### Entitlement and pricing
 
 `User.plan` (`free` | `premium`, optional `premiumUntil`) is written only by the server. The API gates
 premium template selection on create and update, and `/api/subscription` is polled by the client (plus
-on tab focus) so a plan that becomes active unlocks the catalogue without a reload. For local testing:
+on tab focus) so a plan that becomes active unlocks the catalogue without a reload.
 
-```bash
-cd server
-node scripts/grant-premium.mjs --email you@example.com --plan premium
-node scripts/grant-premium.mjs --email you@example.com --plan free
-```
+**Price.** Every amount shown anywhere comes from one file, `server/src/config/pricing.js`, and is
+configurable without touching code:
 
-No checkout is implemented; see `docs/API.md` for the signed billing webhook contract.
+| Variable | Meaning | If unset |
+| --- | --- | --- |
+| `PREMIUM_PRICE_MONTHLY` | Total charged per month | Indicative `199` |
+| `PREMIUM_PRICE_YEARLY` | Total charged per year | Indicative `1999` |
+| `PREMIUM_CURRENCY` | ISO currency code (default `INR`) | `INR` |
+
+While the amounts are the indicative ones the API reports `pricing.source: "default"` and the Premium
+page labels the price as indicative. Set both variables to remove the note and show the real price.
+
+**Upgrade path.** `POST /api/subscription/checkout` is the only user-initiated route, and it never
+grants access by itself in production:
+
+1. **Hosted checkout** — set `BILLING_CHECKOUT_URL_MONTHLY` / `BILLING_CHECKOUT_URL_YEARLY`. The API
+   returns that URL, the browser goes to the provider, and the plan is activated only by the signed
+   webhook (`BILLING_WEBHOOK_SECRET`) after a verified payment.
+2. **Development activation** — outside production, `BILLING_DEV_UPGRADE` (default on) lets the signed-in
+   user activate Premium from the UI so the unlock flow can be tested without a provider. It is always
+   disabled when `NODE_ENV=production`.
+3. **Operator grant** — with neither configured the API answers `503 BILLING_NOT_CONFIGURED` and the UI
+   shows that message instead of a fake success:
+   ```bash
+   cd server
+   node scripts/grant-premium.mjs --email you@example.com --plan premium
+   node scripts/grant-premium.mjs --email you@example.com --plan free
+   ```
 
 ## 7. Security model
 

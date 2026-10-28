@@ -829,3 +829,41 @@ What changed, and how each requirement is verified:
 
 Limitation: the sandbox has no browser binary, so verification is SSR markup assertions, token/contrast
 tests and live HTTP checks — not screenshots.
+
+---
+
+## 13. Premium pricing and unlocking (2026-10-28, final)
+
+The Premium page previously showed no price (the API said "Contact us"), offered no upgrade action and
+relied on an operator script, so there was no user-facing way to unlock the catalogue. This pass added a
+single pricing source, a real upgrade route and a documented activation contract — without touching the
+design system, catalogue, builder or auth.
+
+* `client` unit suite: **52/52** (unchanged).
+* `client` SSR smoke render: **142 component trees** (unchanged).
+* `server` HTTP suite: **70/70** — four new checks: public pricing shape, checkout requires a session,
+  `503 BILLING_NOT_CONFIGURED` with no payment path (plan unchanged), and the development activation
+  grant (monthly **and** yearly lengths, premium create `201`, persistence across a fresh login).
+* `cd client && npm run build`: success — 72.08 kB CSS (13.16 kB gzip), 793.12 kB JS (210.75 kB gzip).
+* Live stack: free account → premium create `403` → `POST /api/subscription/checkout` → premium create
+  `201`; new login still premium; premium design create `403` again after a downgrade.
+* A jsdom harness rendered the real app against the running API and drove the UI (not committed — it
+  needs `jsdom` and a live server):
+  * **23/23 UI checks** — price `₹199`/`₹1,999` visible, indicative note present, `Your plan: Free`,
+    Monthly/Yearly toggle repaints the headline price and the saving line, **Upgrade to Premium**
+    activates Premium with the status line changing to `Your plan: Premium` and "106 templates are
+    unlocked" **without a reload**, the button becomes *Browse all templates*, and a second free
+    account sees **Unlock** on premium cards, an upgrade prompt showing the price, and after pressing
+    **Upgrade to Premium** in that prompt the whole gallery switches to usable templates.
+
+| Requirement | How it is verified |
+| --- | --- |
+| Pricing is visible | `GET /api/subscription/plans` (public) returns monthly and yearly amounts; the Premium page renders them with the period, the yearly saving and the currency. Amounts live in `server/src/config/pricing.js` (`PREMIUM_PRICE_MONTHLY` / `PREMIUM_PRICE_YEARLY`), never in the client |
+| Honest when unconfigured | With no env amounts the API reports `pricing.source: "default"` and the page labels the price "Indicative price — set …". With no payment path the checkout endpoint returns `503 BILLING_NOT_CONFIGURED` and the page and dialog show that message; no success is faked |
+| Upgrade action is real | `POST /api/subscription/checkout` is called by the button. It returns a hosted checkout URL when configured, activates server-side in development mode, or refuses with 503 — the three tests above cover each branch |
+| Payment verified server-side | In checkout mode the API only returns the provider URL; `POST /api/subscription/webhook` (secret `x-billing-secret`, `401` on mismatch) is what writes `plan: premium`. Verified live with a configured checkout + webhook: checkout leaves the user free, a correct webhook then unlocks a premium create |
+| Unlocks immediately, no logout | `AuthContext.upgrade()` re-reads `GET /api/subscription` (and `/auth/me`) after activation, so `isPremium` flips in the same render tree — the gallery and the Premium page both update. Asserted in the jsdom run and over HTTP with the same cookie |
+| Persists across sessions | `plan` / `premiumUntil` / `premiumSource` are stored on the user document; a brand-new login returns `isPremium: true` (server test + live cookie test) |
+| Free users cannot bypass | Backend gate on create **and** update returns `403 PREMIUM_REQUIRED`; the test suite proves a locked design is not applied. No localStorage/boolean shortcut exists — the client only reads the API's answer |
+| Existing behaviour intact | Full `server` suite 70/70 (auth, portfolios, publishing, blog, uploads, analyser, AI), client 52/52, build and catalogue sync unchanged |
+

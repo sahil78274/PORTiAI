@@ -168,6 +168,20 @@ node scripts/grant-premium.mjs --list
 The customer's gallery unlocks on its own (the client re-checks `/api/subscription` on a poll and when
 the tab regains focus) — no re-login and no new account.
 
+**Pricing.** Every price on `/premium` is read from the API, which reads
+`server/src/config/pricing.js`. Set `PREMIUM_PRICE_MONTHLY`, `PREMIUM_PRICE_YEARLY` and (optionally)
+`PREMIUM_CURRENCY` to publish real amounts. Until both amounts are set the API reports
+`pricing.source: "default"` and the page shows an "indicative price" note — check it before launch.
+
+**Checkout.** Set `BILLING_CHECKOUT_URL_MONTHLY` and `BILLING_CHECKOUT_URL_YEARLY` to your payment
+provider's hosted checkout pages. `POST /api/subscription/checkout` then returns the URL for the chosen
+period; the plan is still activated **only** by the webhook below, never by the browser or the return
+URL. With no checkout URL configured the endpoint answers `503 BILLING_NOT_CONFIGURED` and the UI says
+so instead of pretending the upgrade worked.
+
+`BILLING_DEV_UPGRADE` lets a signed-in user activate Premium without a provider so the unlock flow can
+be tested; it defaults to on outside production and is always disabled when `NODE_ENV=production`.
+
 **Billing webhook (production integration).** Set `BILLING_WEBHOOK_SECRET` on the API, then have your
 billing provider call `POST /api/subscription/webhook` with the `x-billing-secret` header:
 
@@ -175,8 +189,8 @@ billing provider call `POST /api/subscription/webhook` with the `x-billing-secre
 { "event": "invoice.paid", "email": "customer@example.com", "plan": "premium", "premiumUntil": "2027-10-28T00:00:00.000Z" }
 ```
 
-Without the secret the endpoint returns `501 NOT_IMPLEMENTED` and `/premium` reports that billing is
-not configured. Never put a provider secret in the frontend — the browser only reads entitlement.
+`interval` (`monthly` | `yearly`) may be sent instead of `premiumUntil`. Without the secret the endpoint
+returns `501 NOT_IMPLEMENTED` and `/premium` reports that checkout is not connected. Never put a provider secret in the frontend — the browser only reads entitlement.
 
 If you edit `client/src/data/templateCatalogue.js`, regenerate the server manifest and commit it:
 

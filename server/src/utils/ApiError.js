@@ -21,6 +21,10 @@ export class ApiError extends Error {
   static notImplemented(message = 'This integration is not configured on this server.') {
     return new ApiError(501, 'NOT_IMPLEMENTED', message);
   }
+  /** 503: the feature exists but this deployment is not configured for it. */
+  static serviceUnavailable(message = 'This feature is not configured on this server.', code = 'SERVICE_UNAVAILABLE') {
+    return new ApiError(503, code, message);
+  }
   static notFound(message = 'Resource not found.') {
     return new ApiError(404, 'NOT_FOUND', message);
   }

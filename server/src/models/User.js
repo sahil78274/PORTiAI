@@ -32,16 +32,17 @@ const userSchema = new mongoose.Schema(
     /**
      * Subscription entitlement.
      *
-     * The plan is written only by the server — today through
-     * `scripts/grant-premium.mjs` or the signed billing webhook
-     * (POST /api/subscription/webhook). No client request can set it.
+     * The plan is written only by the server: the signed billing webhook
+     * (POST /api/subscription/webhook), the development-only upgrade
+     * (POST /api/subscription/checkout, never in production) or the operator
+     * script `scripts/grant-premium.mjs`. No client request can set it.
      */
     plan: { type: String, enum: ['free', 'premium'], default: 'free', index: true },
     premiumSince: { type: Date, default: null },
     premiumUntil: { type: Date, default: null },
     premiumSource: {
       type: String,
-      enum: ['none', 'grant', 'billing'],
+      enum: ['none', 'grant', 'billing', 'dev'],
       default: 'none',
     },
   },

@@ -14,7 +14,13 @@ const UNKNOWN_SUBSCRIPTION = {
   premiumUntil: null,
   source: 'none',
   templates: null,
-  billing: { providerConfigured: false, upgradePath: 'billing_webhook' },
+  billing: {
+    providerConfigured: false,
+    checkoutConfigured: false,
+    devUpgradeEnabled: false,
+    upgradePath: 'operator',
+    paymentRequired: false,
+  },
 };
 
 const POLL_INTERVAL_MS = 45_000;
@@ -78,6 +84,37 @@ export function AuthProvider({ children }) {
       setSubscriptionLoading(false);
     }
   }, []);
+
+  /**
+   * Starts an upgrade for the signed-in user.
+   *
+   * The server answers with either a hosted checkout URL (activation happens
+   * later through the signed billing webhook) or, in development only, an
+   * already-activated plan. Either way the entitlement is re-read from the API
+   * before this resolves, so the gallery unlocks without a reload or a logout.
+   * A 503 `BILLING_NOT_CONFIGURED` rejection is surfaced to the caller as-is —
+   * nothing is optimistically granted here.
+   */
+  const upgrade = useCallback(
+    async (interval = 'monthly') => {
+      const result = await subscriptionService.checkout(interval);
+
+      if (result?.mode === 'checkout') {
+        return { mode: 'checkout', url: result.url, interval };
+      }
+
+      if (result?.subscription) {
+        setSubscription((current) => ({ ...current, ...result.subscription }));
+      }
+      if (result?.user) {
+        setUser((current) => (current ? { ...current, ...result.user } : result.user));
+      }
+      // Re-read from the server so the state is the stored one, not the echoed one.
+      const confirmed = await refreshSubscription();
+      return { mode: 'activated', subscription: confirmed || result.subscription || null, interval };
+    },
+    [refreshSubscription]
+  );
 
   useEffect(() => {
     if (!user) {
@@ -143,8 +180,9 @@ export function AuthProvider({ children }) {
       subscriptionLoading,
       isPremium: Boolean(subscription?.isPremium),
       refreshSubscription,
+      upgrade,
     }),
-    [user, stats, loading, login, register, logout, refresh, subscription, subscriptionLoading, refreshSubscription]
+    [user, stats, loading, login, register, logout, refresh, subscription, subscriptionLoading, refreshSubscription, upgrade]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

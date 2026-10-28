@@ -346,9 +346,9 @@ export default function TemplateGallery({
           <div>
             <p className="text-[15px] font-semibold tracking-[-0.01em] text-ink">Premium unlocks all {TEMPLATE_COUNT} templates.</p>
             <p className="mt-1 text-[13px] text-muted">
-              {subscription?.billing?.providerConfigured
-                ? 'Subscribe, then use any template in the catalogue.'
-                : 'Create an account, then enable Premium through PortiAI support.'}
+              {subscription?.billing?.upgradePath === 'checkout'
+                ? 'Upgrade on the Premium page, then use any template in the catalogue.'
+                : 'Create an account, then upgrade on the Premium page.'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
