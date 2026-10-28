@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
   Check,
   CheckCircle2,
   Eye,
   Loader2,
+  Lock,
   Monitor,
   Pencil,
   Plus,
@@ -25,6 +26,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { aiService, portfolioService } from '../services/portfolioService.js';
 import { TEMPLATES, getTemplate, normalizeTemplateId } from '../utils/templates.js';
+import { getCatalogueTemplate } from '../data/templateCatalogue.js';
 import { emptyDraft, draftToPayload } from '../utils/portfolioDraft.js';
 import { demoPortfolio } from '../utils/demoPortfolio.js';
 import {
@@ -48,7 +50,7 @@ const TONE_OPTIONS = [
 ];
 
 export default function Builder() {
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -311,7 +313,13 @@ export default function Builder() {
       toast.success('Draft portfolio created.', { description: 'Opening the editor so you can refine it.' });
       navigate(`/dashboard/portfolio/${saved.portfolio.id}/edit`);
     } catch (error) {
-      toast.error(error.message || 'Could not create the portfolio draft.');
+      if (error?.code === 'PREMIUM_REQUIRED') {
+        toast.error('That design is part of Premium.', {
+          description: 'Your draft was not created. Pick one of the free templates, or activate Premium and try again.',
+        });
+      } else {
+        toast.error(error.message || 'Could not create the portfolio draft.');
+      }
     } finally {
       setCreating(false);
     }
@@ -335,6 +343,16 @@ export default function Builder() {
   }, [generated, facts]);
 
   const templateMeta = getTemplate(facts.templateId);
+  // A premium design can arrive from the gallery deep link; show it in the
+  // picker alongside the original six so the conversation reflects the choice.
+  const selectedCatalogueEntry = getCatalogueTemplate(facts.templateId);
+  const templateChoices =
+    !selectedCatalogueEntry || TEMPLATES.some((template) => template.id === selectedCatalogueEntry.id)
+      ? TEMPLATES
+      : [...TEMPLATES, selectedCatalogueEntry];
+  // Premium designs can only be saved by an account with an active plan; the
+  // API enforces it, and the conversation says so before generating anything.
+  const designLocked = selectedCatalogueEntry?.tier === 'premium' && !isPremium;
 
   return (
     <div className="space-y-5">
@@ -470,17 +488,28 @@ export default function Builder() {
               <div className="rounded-lg border border-line bg-canvas p-3">
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">Template</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {TEMPLATES.map((template) => (
+                  {templateChoices.map((template) => (
                     <button
                       key={template.id}
                       type="button"
                       onClick={() => setFacts((current) => ({ ...current, templateId: template.id }))}
                       className={`chip !py-1 !text-[11px] ${facts.templateId === template.id ? 'chip-active' : ''}`}
                     >
+                      {template.tier === 'premium' ? <Lock size={10} aria-hidden="true" /> : null}
                       {template.name}
                     </button>
                   ))}
                 </div>
+                {designLocked ? (
+                  <p className="mt-2.5 rounded-md border border-warningLine bg-warningSoft px-2.5 py-2 text-[11.5px] leading-5 text-warning">
+                    <span className="font-semibold">{selectedCatalogueEntry.name}</span> is a Premium design. You can
+                    finish the conversation and preview it, but saving needs an active plan.{' '}
+                    <Link to="/premium" className="font-semibold underline underline-offset-2">
+                      See what Premium includes
+                    </Link>
+                    .
+                  </p>
+                ) : null}
                 <p className="mb-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted">Writing tone</p>
                 <div className="flex flex-wrap gap-1.5">
                   {TONE_OPTIONS.map((tone) => (

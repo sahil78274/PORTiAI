@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, FilePlus2, LayoutTemplate, Sparkles } from 'lucide-react';
+import { ArrowRight, FilePlus2, LayoutTemplate, Lock, Sparkles } from 'lucide-react';
 import { PageHeader } from '../components/ui/Kit.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { portfolioService } from '../services/portfolioService.js';
 import { getTemplate } from '../utils/templates.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export default function StartProject() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const toast = useToast();
   const [creating, setCreating] = useState(false);
+  const { isPremium } = useAuth();
   const templateId = params.get('template');
   const template = templateId ? getTemplate(templateId) : null;
+  const templateLocked = template?.tier === 'premium' && !isPremium;
 
   const createBlank = async () => {
     setCreating(true);
@@ -21,7 +24,13 @@ export default function StartProject() {
       toast.success('Empty draft created.');
       navigate(`/dashboard/portfolio/${data.portfolio.id}/edit`);
     } catch (error) {
-      toast.error(error.message || 'Could not create the portfolio.');
+      if (error?.code === 'PREMIUM_REQUIRED') {
+        toast.error('That design is part of Premium.', {
+          description: 'Nothing was created. Pick a free template, or activate Premium on your account.',
+        });
+      } else {
+        toast.error(error.message || 'Could not create the portfolio.');
+      }
     } finally {
       setCreating(false);
     }
@@ -33,6 +42,26 @@ export default function StartProject() {
         title={template ? `New ${template.name} portfolio` : 'New portfolio'}
         description="The AI builder collects your background and drafts the copy. Templates give you a design-first start. Both open the same editor."
       />
+
+      {templateLocked ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warningLine bg-warningSoft px-4 py-3 text-[12.5px] text-warning">
+          <span className="inline-flex items-center gap-2">
+            <Lock size={13} aria-hidden="true" />
+            <span>
+              <span className="font-semibold">{template.name}</span> is a Premium design. Saving a portfolio with it
+              needs an active plan on your account.
+            </span>
+          </span>
+          <span className="flex flex-wrap items-center gap-2">
+            <Link to="/premium" className="font-semibold underline underline-offset-2">
+              About Premium
+            </Link>
+            <Link to="/templates?access=free" className="font-semibold underline underline-offset-2">
+              Free templates
+            </Link>
+          </span>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Link to={`/dashboard/builder${template ? `?template=${template.id}` : ''}`} className="group flex flex-col rounded-lg border border-line bg-surface p-5 transition-colors hover:border-lineStrong">

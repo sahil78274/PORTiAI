@@ -8,6 +8,8 @@ import ProtectedRoute from './components/dashboard/ProtectedRoute.jsx';
 import Landing from './pages/Landing.jsx';
 import FeaturesPage from './pages/FeaturesPage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
+import TemplatePreviewPage from './pages/TemplatePreviewPage.jsx';
+import Premium from './pages/Premium.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Terms from './pages/Terms.jsx';
 import Login from './pages/Login.jsx';
@@ -37,6 +39,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/templates/:id" element={<TemplatePreviewPage />} />
+          <Route path="/premium" element={<Premium />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>

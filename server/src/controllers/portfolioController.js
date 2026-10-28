@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { generateUniqueSlug } from '../utils/slug.js';
 import { normalizePortfolioBody } from '../validators/portfolioInput.js';
 import { defaultPortfolioContent, TEMPLATE_DEFAULTS, normalizeTemplateId } from '../utils/portfolioDefaults.js';
+import { assertTemplateAccess } from '../services/subscriptionService.js';
 
 const ID_PATTERN = /^[a-f0-9]{24}$/i;
 
@@ -89,6 +90,8 @@ export const createPortfolio = asyncHandler(async (req, res) => {
   if (body.title) content.title = body.title;
 
   const canonicalTemplate = normalizeTemplateId(body.templateId || body.template);
+  // Premium designs are gated server-side, not in the browser.
+  assertTemplateAccess(req.user, canonicalTemplate);
   if (canonicalTemplate) {
     content.templateId = canonicalTemplate;
     const defaults = TEMPLATE_DEFAULTS[canonicalTemplate];
@@ -131,6 +134,7 @@ export const updatePortfolio = asyncHandler(async (req, res) => {
   // Only content fields are accepted; userId, slug, published and analysis are
   // controlled by dedicated endpoints.
   const updates = normalizePortfolioBody(req.body || {});
+  assertTemplateAccess(req.user, updates.templateId);
   if (Object.keys(updates).length === 0) {
     throw ApiError.badRequest('No portfolio fields were supplied.');
   }

@@ -13,6 +13,7 @@ import publicRoutes from './routes/publicRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import analyzeRoutes from './routes/analyzeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import { isAiEnabled } from './services/geminiService.js';
 
 export const createApp = () => {
@@ -73,6 +74,7 @@ export const createApp = () => {
 
   app.use('/api', apiLimiter);
   app.use('/api/auth', authRoutes);
+  app.use('/api/subscription', subscriptionRoutes);
   app.use('/api/portfolios', portfolioRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/public', publicRoutes);

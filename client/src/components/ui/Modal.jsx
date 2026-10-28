@@ -70,7 +70,7 @@ export default function Modal({
 
   if (!open) return null;
 
-  return createPortal(
+  const content = (
     <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-overlay p-0 sm:items-center sm:p-6 animate-fadeIn">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
       <div
@@ -110,7 +110,10 @@ export default function Modal({
           </div>
         ) : null}
       </div>
-    </div>,
-    document.body
+    </div>
   );
+
+  // `typeof document` guard keeps the component renderable in non-DOM
+  // environments (the SSR smoke check); the app itself is a browser SPA.
+  return typeof document === 'undefined' ? content : createPortal(content, document.body);
 }

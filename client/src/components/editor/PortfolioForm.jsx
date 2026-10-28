@@ -4,7 +4,6 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  Check,
   X,
   ImagePlus,
   Loader2,
@@ -22,7 +21,9 @@ import {
   updateListItem,
   SECTION_DEFINITIONS,
 } from '../../utils/portfolioDraft.js';
-import { ACCENT_SWATCHES, FONTS, TEMPLATES } from '../../utils/templates.js';
+import { ACCENT_SWATCHES, FONTS, isLegacyTemplateId, templateTheme } from '../../utils/templates.js';
+import { TEMPLATE_CATALOGUE, getCatalogueTemplate } from '../../data/templateCatalogue.js';
+import TemplatePicker from '../templates/TemplatePicker.jsx';
 import PortfolioRenderer from '../../templates/PortfolioRenderer.jsx';
 import TemplatePreviewFrame from '../marketing/TemplatePreviewFrame.jsx';
 import { wordCount } from '../../utils/format.js';
@@ -909,44 +910,39 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
 
   const handleSelectTemplate = (template) => {
     const currentAccent = draft.theme?.accent;
-    const defaultAccents = TEMPLATES.map((t) => t.accent);
+    // Accents come from the catalogue, so we can tell a template default from a
+    // colour the user chose themselves and preserve the latter.
+    const defaultAccents = TEMPLATE_CATALOGUE.map((item) => item.accent);
     const shouldUpdateAccent = !currentAccent || defaultAccents.includes(currentAccent);
+    const defaults = templateTheme(template.id);
     setDraft({
       ...draft,
       templateId: template.id,
       theme: {
         ...draft.theme,
         accent: shouldUpdateAccent ? template.accent : currentAccent,
+        font: template.tier === 'premium' ? draft.theme?.font : defaults.font,
       },
     });
   };
+
+  const selectedTemplate = getCatalogueTemplate(draft.templateId);
+  const selectedIsOriginal = isLegacyTemplateId(draft.templateId);
 
   return (
     <div className="space-y-4">
       <fieldset>
         <legend className="label">Template</legend>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {TEMPLATES.map((template) => {
-            const active = draft.templateId === template.id;
-            return (
-              <button
-                key={template.id}
-                type="button"
-                onClick={() => handleSelectTemplate(template)}
-                aria-pressed={active}
-                className={`rounded-lg border p-3.5 text-left transition-colors ${
-                  active ? 'border-accent bg-accent-soft ring-1 ring-accent shadow-xs' : 'border-line bg-surface hover:border-lineStrong hover:bg-canvasAlt'
-                }`}
-              >
-                <span className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-ink">{template.name}</span>
-                  {active ? <Check size={14} className="text-accent-hover" aria-hidden="true" /> : null}
-                </span>
-                <span className="mt-1 block text-2xs leading-relaxed text-muted">{template.tagline}</span>
-              </button>
-            );
-          })}
-        </div>
+        <p className="mb-2 text-[11.5px] leading-5 text-muted">
+          {TEMPLATE_CATALOGUE.length} designs in the catalogue. Switching keeps every word of your content.
+        </p>
+        <TemplatePicker value={draft.templateId} onSelect={handleSelectTemplate} />
+        {selectedTemplate ? (
+          <p className="mt-2 text-[11.5px] text-muted">
+            Active: <span className="font-medium text-ink">{selectedTemplate.name}</span> — {selectedTemplate.layoutLabel} layout,{' '}
+            {selectedTemplate.styleLabel} style.
+          </p>
+        ) : null}
       </fieldset>
 
       <fieldset>
@@ -980,15 +976,25 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
       </fieldset>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Font" htmlFor="theme-font">
-          <Select id="theme-font" value={draft.theme.font} onChange={(event) => setTheme('font', event.target.value)}>
-            {FONTS.map((font) => (
-              <option key={font.id} value={font.id}>
-                {font.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        {selectedIsOriginal ? (
+          <Field label="Font" htmlFor="theme-font">
+            <Select id="theme-font" value={draft.theme.font} onChange={(event) => setTheme('font', event.target.value)}>
+              {FONTS.map((font) => (
+                <option key={font.id} value={font.id}>
+                  {font.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        ) : (
+          <div className="rounded-lg border border-line bg-canvasAlt p-3">
+            <p className="text-[12px] font-medium text-ink">Typography</p>
+            <p className="mt-1 text-[11.5px] leading-5 text-muted">
+              Premium templates define their own type pairing so the design stays intact. Accent colour, density and
+              section order are still yours to change.
+            </p>
+          </div>
+        )}
         <Field label="Spacing density" htmlFor="theme-density">
           <Select
             id="theme-density"

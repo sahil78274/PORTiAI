@@ -4,6 +4,7 @@ import { Portfolio } from '../models/Portfolio.js';
 import { Upload } from '../models/Upload.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { resolveEntitlements } from '../services/subscriptionService.js';
 import {
   signSessionToken,
   setSessionCookie,
@@ -26,7 +27,10 @@ export const register = asyncHandler(async (req, res) => {
   const token = signSessionToken(user);
   setSessionCookie(res, token);
 
-  res.status(201).json({ success: true, data: { user: user.toPublicJSON() } });
+  res.status(201).json({
+    success: true,
+    data: { user: user.toPublicJSON(), subscription: resolveEntitlements(user) },
+  });
 });
 
 export const login = asyncHandler(async (req, res) => {
@@ -47,7 +51,10 @@ export const login = asyncHandler(async (req, res) => {
   const token = signSessionToken(user);
   setSessionCookie(res, token);
 
-  res.json({ success: true, data: { user: user.toPublicJSON() } });
+  res.json({
+    success: true,
+    data: { user: user.toPublicJSON(), subscription: resolveEntitlements(user) },
+  });
 });
 
 export const logout = asyncHandler(async (req, res) => {
@@ -68,6 +75,7 @@ export const me = asyncHandler(async (req, res) => {
     success: true,
     data: {
       user: req.user.toPublicJSON(),
+      subscription: resolveEntitlements(req.user),
       stats: { portfolios: total, published },
     },
   });
@@ -92,12 +100,19 @@ export const updateAccount = asyncHandler(async (req, res) => {
     setSessionCookie(res, signSessionToken(user));
     return res.json({
       success: true,
-      data: { user: user.toPublicJSON(), message: 'Password updated. Other devices have been signed out.' },
+      data: {
+        user: user.toPublicJSON(),
+        subscription: resolveEntitlements(user),
+        message: 'Password updated. Other devices have been signed out.',
+      },
     });
   }
 
   await user.save();
-  res.json({ success: true, data: { user: user.toPublicJSON(), message: 'Account updated.' } });
+  res.json({
+    success: true,
+    data: { user: user.toPublicJSON(), subscription: resolveEntitlements(user), message: 'Account updated.' },
+  });
 });
 
 export const deleteAccount = asyncHandler(async (req, res) => {

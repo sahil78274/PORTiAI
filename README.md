@@ -1,15 +1,22 @@
 # PortiAI — AI-Powered Portfolio Builder and Analyzer
 
-A full-stack MERN application. Users sign up, draft a portfolio through an AI conversation (or pick one
-of six templates), refine it in a live editor with device previews, review it against a documented
-rubric, optionally run a Website analyzer on any live page, write Markdown blog posts, and publish at a
-public link such as `/p/alex-morgan`.
+A full-stack MERN application. Users sign up, browse a catalogue of 106 portfolio templates, draft a
+portfolio through an AI conversation or a chosen design, refine it in a live editor with device
+previews, review it against a documented rubric, optionally run a Website analyzer on any live page,
+write Markdown blog posts, and publish at a public link such as `/p/alex-morgan`.
 
-The application is complete: real authentication, real MongoDB persistence, six genuinely different
-templates on a flat light/dark design system with a one-click theme switch, a conversational AI builder backed by a validated server
+The application is complete: real authentication, real MongoDB persistence, a real template catalogue
+(10 layouts × 10 visual styles = 100 premium designs, plus the six original free templates), six app
+colour themes driven by design tokens, a conversational AI builder backed by a validated server
 endpoint, server-side AI with graceful quota handling, a deterministic analyzer that works without AI,
 blog publishing, a deterministic website scanner, and public publishing with ownership checks enforced
-in the backend. There is no subscription, plan or payment interface anywhere in the product.
+in the backend.
+
+Premium is a real server-side entitlement: the plan lives in MongoDB, the API gates premium template
+selection, and the gallery re-checks entitlement so a plan that becomes active unlocks the catalogue
+without a reload. **No payment provider is connected in this repository** — plans are provisioned with
+`server/scripts/grant-premium.mjs` or a signed billing webhook (`POST /api/subscription/webhook`) once
+`BILLING_WEBHOOK_SECRET` is configured. The UI never simulates a successful payment.
 
 ---
 
@@ -17,14 +24,16 @@ in the backend. There is no subscription, plan or payment interface anywhere in 
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Design system | Done | Flat surfaces, 1px borders and no decorative shadows. Every colour is a CSS variable (`client/src/index.css`) with a light palette on `:root` and a dark palette on `.dark`: white/very-light-gray canvas with white cards in light, deep navy canvas (`#0b1120`) with lighter navy cards (`#111a2b`) in dark, one restrained blue accent (`#2563eb` light / `#336bff` dark) reserved for primary actions and selected states, Inter throughout, typographic PortiAI wordmark, Lucide icons only, small radii, no gradients or glow, responsive and accessible |
-| Landing page at `/` | Done | Sticky nav (wordmark, Features, Templates, How It Works, Login, Get Started and a visible light/dark toggle), hero with a live render of the Minimal Developer template, How it works, features, six template previews, Made for your work, final CTA, footer. No pricing, testimonials or invented statistics |
-| Public pages | Done | `/features`, `/templates`, `/privacy`, `/terms`, `*` not-found |
+| Design system | Done | Six themes verified against WCAG contrast for body, secondary, accent and button text (`client/tests/theme.test.js`). Every colour, shadow and gradient is a CSS variable (`client/src/index.css`). **Six themes** — Light, Dark, Midnight, Purple, Emerald, Rose — set via `data-theme` plus the `dark` class, persisted in `localStorage`, applied before first paint, and switchable from a palette menu in the navbar, auth pages and dashboard. Refined radii, layered shadows, glass navbar, responsive typography, Lucide icons only, accessible focus states |
+| Landing page at `/` | Done | Sticky glass nav (Templates, Features, How it works, Premium, theme menu, auth actions), hero with a live render of a premium template plus three real template previews, catalogue statistics, how it works, featured designs, visual-style gallery, features, plan comparison, final CTA, footer. No testimonials or invented customer statistics |
+| Public pages | Done | `/features`, `/templates` (full explorer), `/templates/:id` (dedicated preview page), `/premium`, `/privacy`, `/terms`, `*` not-found |
 | Authentication | Done | Register, login, logout, bcrypt hashing, HTTP-only JWT cookie, server-side session invalidation. Email/password only — no OAuth buttons are shown |
 | Dashboard `/dashboard` | Done | Collapsible sidebar, real counts from MongoDB, next-step suggestion, recent portfolios, quick links, profile menu |
 | AI builder `/dashboard/builder` | Done | Fact-driven chat (`client/src/utils/builderConversation.js`): each message is parsed for the field that was asked, known answers are never asked again, and the next question is the first missing detail; suggested role prompts, validation, generation progress, preview panel and create-draft hand-off via `POST /api/ai/builder` |
-| Templates | Done | Six design systems — Minimal Developer, Dark Professional, Creative Designer, Student, Modern Freelancer, Executive — each with its own layout, typography and section treatment |
-| Template gallery | Done | Search, category filters, in-use indicator, live rendered previews at desktop/tablet/mobile widths, Use-template action |
+| Template catalogue | Done | **106 templates**: 100 premium (10 layouts × 10 visual styles, each pair used once) plus the six original free designs. Every entry has a stable id, name, category, tags, style, appearance, description, accent and access tier (`client/src/data/templateCatalogue.js`) |
+| Template gallery | Done | Search across names/keywords, category/style/appearance/access filters, featured/newest/A–Z sorting, 12-at-a-time Load more with accurate counts, live rendered previews (lazy-mounted), empty state, Premium lock indicators, in-use badges |
+| Template preview | Done | Modal preview at desktop/tablet/mobile plus a dedicated `/templates/:id` page with a full-height live render, design metadata, related templates and Use-template action |
+| Premium entitlement | Done | Server-side plan on the user document, `GET /api/subscription`, gating on portfolio create/update, entitlement re-checked on a poll and on tab focus, honest upgrade dialog, operator grant script, optional signed billing webhook. No client-side unlock |
 | Editor | Done | Seven tabs, debounced autosave with status, desktop/tablet/mobile previews, accent/font/density, section order and visibility, blog settings, publish |
 | My Portfolios | Done | Grid/list views, search + status filters + sort, thumbnails, preview, duplicate, share, delete with confirmation, analysis score |
 | Portfolio analyzer | Done | Portfolio rubric (7 categories, 100 points) and a website scanner (6 categories) for a live URL or uploaded HTML; severity-grouped findings; apply selected rewrites |
@@ -39,7 +48,7 @@ in the backend. There is no subscription, plan or payment interface anywhere in 
 
 | Route | Access |
 | --- | --- |
-| `/`, `/features`, `/templates`, `/privacy`, `/terms` | public |
+| `/`, `/features`, `/templates`, `/templates/:id`, `/premium`, `/privacy`, `/terms` | public |
 | `/login`, `/register`, `/forgot-password` | public (redirect to the dashboard when already signed in) |
 | `/p/:slug`, `/p/:slug/blog`, `/p/:slug/blog/:postSlug` | public portfolio and blog |
 | `/dashboard` | signed in |
@@ -57,8 +66,9 @@ Things that are deliberately **not** implemented, and the UI says so instead of 
   buttons are not shown rather than being mocked.
 * **Automatic AI content on every save** — AI is opt-in per field so the shared free-tier quota is not
   consumed by background requests.
-* **Paid plans and billing** — there is no pricing page, plan, upgrade prompt or payment provider. The
-  product has no commercial tier; the frontend contains no billing interface at all.
+* **A payment checkout** — Premium entitlement is implemented and enforced by the API, but no checkout
+  or payment provider is connected in this repository. `/premium` and the upgrade dialog explain how a
+  plan is activated instead of faking a successful payment.
 * **Custom domains and PDF export** — neither is implemented.
 
 ---
@@ -98,20 +108,27 @@ portiai/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ui/             # Primitives, Kit, Modal, ConfirmDialog, Logo, ThemeToggle, PasswordInput
+│   │   │   ├── theme/          # ThemeMenu (six-theme picker)
 │   │   │   ├── marketing/      # Navbar, Footer, HeroPortfolioPreview, TemplatePreviewFrame
-│   │   │   ├── templates/      # TemplateCard, TemplateGallery, TemplateThumb
+│   │   │   ├── templates/      # TemplateCard, TemplateGallery, TemplateThumb, TemplateLivePreview,
+│   │   │   │                   # TemplatePicker, PremiumDialog
 │   │   │   ├── dashboard/      # ProtectedRoute
 │   │   │   └── editor/         # PortfolioForm sections, AiAssist, useUnsavedWarning
-│   │   ├── context/            # AuthContext, ToastContext, ThemeContext
+│   │   ├── context/            # AuthContext (+ subscription polling), ToastContext, ThemeContext
+│   │   ├── data/               # templateCatalogue, templateStyles, legacyTemplates, premiumDemo
 │   │   ├── hooks/              # useAiStatus, useDebouncedValue
 │   │   ├── layouts/            # MarketingLayout, AuthLayout, DashboardLayout
-│   │   ├── pages/              # Landing, FeaturesPage, TemplatesPage, Login, Register, Dashboard,
-│   │   │                       # Builder, TemplatesWorkspace, MyPortfolios, Editor, Analyzer,
-│   │   │                       # BlogStudio, BlogEditor, PublishSuccess, Settings, PublicPortfolio,
-│   │   │                       # PublicBlog, StartProject, Privacy, Terms, NotFound
-│   │   ├── services/           # api.js (fetch wrapper), authService, portfolioService, blogService, scanService
-│   │   ├── templates/          # six templates + shared.jsx + PortfolioRenderer
-│   │   ├── utils/              # format, templates metadata, draft helpers, markdown, demo content
+│   │   ├── pages/              # Landing, FeaturesPage, TemplatesPage, TemplatePreviewPage, Premium,
+│   │   │                       # Login, Register, Dashboard, Builder, TemplatesWorkspace,
+│   │   │                       # MyPortfolios, Editor, Analyzer, BlogStudio, BlogEditor,
+│   │   │                       # PublishSuccess, Settings, PublicPortfolio, PublicBlog,
+│   │   │                       # StartProject, Privacy, Terms, NotFound
+│   │   ├── services/           # api.js (fetch wrapper), authService, portfolioService, blogService,
+│   │   │                       # scanService, subscriptionService
+│   │   ├── templates/          # six original templates, shared.jsx, PortfolioRenderer and
+│   │   │                       # premium/ (10 layouts + PremiumTemplate)
+│   │   ├── utils/              # format, template metadata, templateQuery, draft helpers, markdown,
+│   │   │                       # demo content
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css           # Tailwind layers + design tokens
@@ -121,16 +138,20 @@ portiai/
 ├── server/                     # Express API
 │   ├── src/
 │   │   ├── config/             # env.js, db.js
-│   │   ├── controllers/        # auth, portfolio, public, blog, ai, scan
+│   │   ├── controllers/        # auth, portfolio, public, blog, ai, scan, subscription
+│   │   ├── data/               # templateCatalogue.json (generated from the client catalogue)
 │   │   ├── middleware/         # auth, validate, error, rateLimit
-│   │   ├── models/             # User.js, Portfolio.js, BlogPost.js
-│   │   ├── routes/             # authRoutes, portfolioRoutes, aiRoutes, publicRoutes, blogRoutes, analyzeRoutes
-│   │   ├── services/           # geminiService, aiService, analyzerService, aiUsageService, builderService, webAnalyzerService
+│   │   ├── models/             # User.js (incl. plan), Portfolio.js, BlogPost.js
+│   │   ├── routes/             # authRoutes, portfolioRoutes, aiRoutes, publicRoutes, blogRoutes,
+│   │   │                       # analyzeRoutes, uploadRoutes, subscriptionRoutes
+│   │   ├── services/           # geminiService, aiService, analyzerService, aiUsageService,
+│   │   │                       # builderService, webAnalyzerService, subscriptionService
 │   │   ├── utils/              # ApiError, asyncHandler, sanitize, slug, portfolioDefaults
 │   │   ├── validators/         # authInput.js, portfolioInput.js (Zod + sanitisers)
 │   │   ├── app.js
 │   │   └── server.js
-│   ├── tests/api.test.js       # 58-check HTTP suite (real app + real DB + stub Gemini)
+│   ├── scripts/                # grant-premium.mjs (operator provisioning)
+│   ├── tests/api.test.js       # HTTP suite (real app + real DB + stub Gemini)
 │   └── .env.example
 ├── docs/
 │   ├── API.md                  # Endpoint reference
@@ -138,6 +159,8 @@ portiai/
 │   ├── DEPLOYMENT.md           # Atlas, Gemini, Render, Vercel, CORS, troubleshooting
 │   ├── TESTING.md              # What was executed and what it produced
 │   └── PROJECT-REPORT.md       # BCA submission notes (abstract, modules, testing table)
+├── scripts/
+│   └── sync-template-catalogue.mjs  # client catalogue → server manifest (`--check` in CI)
 ├── render.yaml                 # Render blueprint for the API
 ├── .gitignore
 └── README.md
@@ -281,13 +304,17 @@ and visible to any visitor. The Gemini key and the session secret stay on the se
 
 Full request/response documentation: [`docs/API.md`](docs/API.md).
 
+Tests: `cd client && npm test` (48 catalogue/theme/draft checks), `cd client && npm run smoke` (renders
+all 106 templates and every route to static HTML), `cd server && npm test` (66 HTTP checks against a
+real database), `node scripts/sync-template-catalogue.mjs --check`.
+
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
 | GET | `/api/health` | – | Status, database state, AI configuration |
 | POST | `/api/auth/register` | – | Create account, start session |
 | POST | `/api/auth/login` | – | Start session |
 | POST | `/api/auth/logout` | ✔ | Invalidate the session server-side |
-| GET | `/api/auth/me` | ✔ | Current user + portfolio counts |
+| GET | `/api/auth/me` | ✔ | Current user, portfolio counts and subscription entitlements |
 | PATCH | `/api/auth/account` | ✔ | Update name/headline or change password |
 | DELETE | `/api/auth/account` | ✔ | Delete account and all portfolios |
 | GET | `/api/portfolios` | ✔ | List with `search`, `status`, `sort` + real stats |
@@ -314,11 +341,64 @@ Full request/response documentation: [`docs/API.md`](docs/API.md).
 | GET | `/api/public/:slug` | – | Published portfolio only |
 | GET | `/api/public/:slug/blog` | – | Published posts of a published, blog-enabled portfolio |
 | GET | `/api/public/:slug/blog/:postSlug` | – | A single published post |
+| GET | `/api/subscription` | ✔ | Current entitlements, catalogue sizes, plan copy |
+| POST | `/api/subscription/webhook` | shared secret | Billing provider callback (501 until `BILLING_WEBHOOK_SECRET` is set) |
 
 All private endpoints require the session cookie and re-check ownership in the database. Another
 user's portfolio id returns `404` (not `403`) so ids cannot be probed.
 
+Selecting a premium template without an active plan returns `403` with `error.code = "PREMIUM_REQUIRED"`,
+on both `POST /api/portfolios` and `PUT /api/portfolios/:id`. The plan itself can only change server-side
+(operator script or signed webhook).
+
 ---
+
+## 6b. Templates, themes and Premium
+
+### The catalogue
+
+`client/src/data/templateCatalogue.js` is the single source of truth for the gallery:
+
+* **10 layouts** (`stack`, `split`, `bento`, `gallery`, `poster`, `terminal`, `magazine`, `timeline`,
+  `showcase`, `mosaic`) implemented in `client/src/templates/premium/layouts/`;
+* **10 visual styles** (`paper`, `noir`, `glass`, `obsidian`, `neumorph`, `brutal`, `cinematic`,
+  `editorial`, `neon`, `monochrome`) in `client/src/data/templateStyles.js`, each a token set (palette,
+  typography, radii, borders, shadows, blur);
+* **100 premium templates** = every layout × style pair used exactly once, plus the **6 original free**
+  designs, for **106 entries**. Each has a stable id, name, category, tags, description, appearance,
+  accent, added date and access tier.
+
+`<PremiumTemplate />` emits the style tokens as CSS custom properties and renders the layout component,
+so the gallery thumbnail, editor preview and published page all use the same React tree. Preview cards
+render real markup (lazy-mounted with `IntersectionObserver`, fixed aspect ratios, no layout shift).
+
+Regenerate the server-side id manifest after editing the catalogue:
+
+```bash
+node scripts/sync-template-catalogue.mjs          # write server/src/data/templateCatalogue.json
+node scripts/sync-template-catalogue.mjs --check  # fails if the manifest has drifted
+```
+
+### Themes
+
+Six themes (Light, Dark, Midnight, Purple, Emerald, Rose) are pure CSS token sets in
+`client/src/index.css`. `ThemeContext` sets `data-theme` + the `dark` class on `<html>`, writes
+`portiai.theme` to `localStorage`, and the inline script in `index.html` applies the stored choice before
+first paint. The picker lives in the navbar, the auth layout and the dashboard header.
+
+### Entitlement
+
+`User.plan` (`free` | `premium`, optional `premiumUntil`) is written only by the server. The API gates
+premium template selection on create and update, and `/api/subscription` is polled by the client (plus
+on tab focus) so a plan that becomes active unlocks the catalogue without a reload. For local testing:
+
+```bash
+cd server
+node scripts/grant-premium.mjs --email you@example.com --plan premium
+node scripts/grant-premium.mjs --email you@example.com --plan free
+```
+
+No checkout is implemented; see `docs/API.md` for the signed billing webhook contract.
 
 ## 7. Security model
 
@@ -435,6 +515,16 @@ troubleshooting) are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Short versio
   object storage, and an account can keep 30 stored images.
 * Demo content on the marketing pages (the "Alex Morgan" sample) is clearly labelled sample data.
   There are no fabricated testimonials, customer logos or usage statistics anywhere in the app.
+* **Premium checkout is not implemented.** Entitlement is real and enforced by the API, but there is
+  no payment provider or cart in the repository: plans are set by an operator script or by a signed
+  billing webhook. The UI says this plainly instead of showing a fake "pay" button.
+* Gallery pagination is client-side (`client/src/utils/templateQuery.js`). The catalogue ships with the
+  bundle (it is data, ~50 kB), so filtering and "load more" are instant and need no endpoint. If the
+  catalogue grows past a few hundred designs, move `filterTemplates` behind a paginated
+  `GET /api/templates` — the UI already funnels every query through that one function.
+* Template previews are live React renders, not photographs. Each card mounts only when it scrolls
+  near the viewport, but a very large number of cards on one screen will cost more paint time than
+  static images would.
 
 ---
 

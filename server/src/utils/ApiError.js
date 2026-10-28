@@ -15,6 +15,12 @@ export class ApiError extends Error {
   static forbidden(message = 'You do not have access to this resource.') {
     return new ApiError(403, 'FORBIDDEN', message);
   }
+  static premiumRequired(message = 'This template is part of PortiAI Premium.') {
+    return new ApiError(403, 'PREMIUM_REQUIRED', message);
+  }
+  static notImplemented(message = 'This integration is not configured on this server.') {
+    return new ApiError(501, 'NOT_IMPLEMENTED', message);
+  }
   static notFound(message = 'Resource not found.') {
     return new ApiError(404, 'NOT_FOUND', message);
   }

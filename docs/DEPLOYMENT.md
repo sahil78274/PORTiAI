@@ -149,6 +149,42 @@ If you would rather avoid `SameSite=None`, serve the built frontend from the sam
 
 ---
 
+## 4b. Premium plans
+
+Premium is a database flag (`User.plan`), checked by the API on every premium template action. No
+payment provider ships with this repository, so choose one of these two paths:
+
+**Operator provisioning (default).** Run the script against the deployed database (or locally with
+`MONGODB_URI` pointing at Atlas):
+
+```bash
+cd server
+node scripts/grant-premium.mjs --email customer@example.com --plan premium
+node scripts/grant-premium.mjs --email customer@example.com --plan premium --until 2027-10-28
+node scripts/grant-premium.mjs --email customer@example.com --plan free
+node scripts/grant-premium.mjs --list
+```
+
+The customer's gallery unlocks on its own (the client re-checks `/api/subscription` on a poll and when
+the tab regains focus) — no re-login and no new account.
+
+**Billing webhook (production integration).** Set `BILLING_WEBHOOK_SECRET` on the API, then have your
+billing provider call `POST /api/subscription/webhook` with the `x-billing-secret` header:
+
+```json
+{ "event": "invoice.paid", "email": "customer@example.com", "plan": "premium", "premiumUntil": "2027-10-28T00:00:00.000Z" }
+```
+
+Without the secret the endpoint returns `501 NOT_IMPLEMENTED` and `/premium` reports that billing is
+not configured. Never put a provider secret in the frontend — the browser only reads entitlement.
+
+If you edit `client/src/data/templateCatalogue.js`, regenerate the server manifest and commit it:
+
+```bash
+node scripts/sync-template-catalogue.mjs          # from the repository root
+node scripts/sync-template-catalogue.mjs --check  # CI guard
+```
+
 ## 5. Post-deployment checklist
 
 | Check | How | Expected |
