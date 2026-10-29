@@ -63,7 +63,7 @@ export default function AiAssist({
   };
 
   return (
-    <div className={className}>
+    <div className={`min-w-0 ${className}`}>
       <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="secondary"
@@ -71,19 +71,19 @@ export default function AiAssist({
           onClick={run}
           loading={state === 'loading'}
           disabled={state === 'loading'}
-          className="border-lineStrong text-accent-hover hover:bg-canvasAlt"
+          className="min-w-0 max-w-full border-lineStrong text-accent-hover hover:bg-canvasAlt"
         >
-          {state === 'loading' ? null : <Sparkles size={13} className="text-accent-hover" aria-hidden="true" />}
-          <span>{state === 'loading' ? 'Generating…' : label}</span>
+          {state === 'loading' ? null : <Sparkles size={13} className="shrink-0 text-accent-hover" aria-hidden="true" />}
+          <span className="truncate">{state === 'loading' ? 'Generating…' : label}</span>
         </Button>
 
-        <label className="inline-flex items-center gap-1.5 text-2xs text-muted">
+        <label className="inline-flex min-w-0 items-center gap-1.5 text-2xs text-muted">
           <span className="sr-only sm:not-sr-only">Tone:</span>
           <select
             value={tone}
             onChange={(event) => setTone(event.target.value)}
             aria-label="Tone for generated text"
-            className="rounded border border-line bg-surface px-2 py-1 text-[11px] text-inkSoft shadow-2xs focus:border-accent focus:outline-none"
+            className="select !h-8 !w-auto min-w-[108px] !py-0 pl-2.5 pr-7 text-xs text-inkSoft"
           >
             <option value="professional">Professional</option>
             <option value="concise">Concise</option>
@@ -105,8 +105,8 @@ export default function AiAssist({
                   : 'Generation failed'}
             </span>
           </p>
-          <p className="mt-1 text-danger">{error.message}</p>
-          <p className="mt-1 text-danger text-2xs">
+          <p className="mt-1 break-words text-danger">{error.message}</p>
+          <p className="mt-1 text-2xs text-danger">
             You can type or edit your content directly — portfolio saving and publishing remain fully functional.
           </p>
           <Button variant="secondary" size="sm" className="mt-2.5 text-2xs" onClick={run}>
@@ -117,8 +117,8 @@ export default function AiAssist({
       ) : null}
 
       {state === 'ready' && result ? (
-        <div className="mt-3 rounded-md border border-line bg-surface p-3.5">
-          <div className="flex items-center justify-between gap-2 border-b border-line pb-2 mb-2">
+        <div className="mt-3 min-w-0 rounded-lg border border-line bg-surfaceRaised p-3.5">
+          <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
             <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-accent-hover">
               <Wand2 size={12} aria-hidden="true" />
               <span>AI Suggestion (Editable)</span>
@@ -131,14 +131,14 @@ export default function AiAssist({
           </div>
 
           {applyShape === 'skills' ? (
-            <div className="my-2 grid gap-2 text-xs sm:grid-cols-2">
-              <div className="rounded border border-line bg-canvas p-2.5">
+            <div className="editor-grid-2 my-2 text-xs">
+              <div className="min-w-0 rounded-md border border-line bg-surface p-2.5">
                 <p className="font-semibold text-ink">Technical</p>
-                <p className="text-inkSoft">{result.technical?.join(', ') || '—'}</p>
+                <p className="mt-0.5 break-words text-inkSoft">{result.technical?.join(', ') || '—'}</p>
               </div>
-              <div className="rounded border border-line bg-canvas p-2.5">
+              <div className="min-w-0 rounded-md border border-line bg-surface p-2.5">
                 <p className="font-semibold text-ink">Soft Skills</p>
-                <p className="text-inkSoft">{result.soft?.join(', ') || '—'}</p>
+                <p className="mt-0.5 break-words text-inkSoft">{result.soft?.join(', ') || '—'}</p>
               </div>
             </div>
           ) : (
@@ -151,7 +151,7 @@ export default function AiAssist({
             />
           )}
 
-          {result.notes ? <p className="mt-2 text-2xs text-faint">Note: {result.notes}</p> : null}
+          {result.notes ? <p className="mt-2 break-words text-2xs text-faint">Note: {result.notes}</p> : null}
 
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" variant="primary" onClick={apply}>

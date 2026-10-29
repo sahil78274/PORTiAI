@@ -23,7 +23,7 @@ import {
   UserRound,
   Wrench,
 } from 'lucide-react';
-import { Alert, Button, Spinner, Switch, TextArea, TextInput } from '../components/ui/Primitives.jsx';
+import { Alert, Button, Field, Spinner, Switch, TextArea, TextInput } from '../components/ui/Primitives.jsx';
 import Modal from '../components/ui/Modal.jsx';
 import PortfolioRenderer from '../templates/PortfolioRenderer.jsx';
 import {
@@ -61,8 +61,8 @@ const DEVICES = [
 function BlogSettings({ draft, setDraft }) {
   const enabled = Boolean(draft.blog?.enabled);
   return (
-    <div className="space-y-5">
-      <div className="rounded-lg border border-line bg-canvasAlt p-4">
+    <div className="editor-section">
+      <div className="editor-subcard">
         <Switch
           checked={enabled}
           onChange={(value) => setDraft({ ...draft, blog: { ...draft.blog, enabled: value } })}
@@ -71,11 +71,8 @@ function BlogSettings({ draft, setDraft }) {
         />
       </div>
 
-      <div className={enabled ? 'space-y-4' : 'space-y-4 opacity-50'}>
-        <div>
-          <label htmlFor="blog-title" className="label">
-            Blog title
-          </label>
+      <div className={`flex min-w-0 flex-col gap-4 ${enabled ? '' : 'opacity-50'}`}>
+        <Field label="Blog title" htmlFor="blog-title">
           <TextInput
             id="blog-title"
             value={draft.blog?.title || ''}
@@ -84,11 +81,12 @@ function BlogSettings({ draft, setDraft }) {
             placeholder={`${draft.profile?.fullName || 'Your name'} — Blog`}
             onChange={(event) => setDraft({ ...draft, blog: { ...draft.blog, title: event.target.value } })}
           />
-        </div>
-        <div>
-          <label htmlFor="blog-intro" className="label">
-            Short introduction
-          </label>
+        </Field>
+        <Field
+          label="Short introduction"
+          htmlFor="blog-intro"
+          hint={`${(draft.blog?.intro || '').length}/600 characters`}
+        >
           <TextArea
             id="blog-intro"
             value={draft.blog?.intro || ''}
@@ -98,11 +96,10 @@ function BlogSettings({ draft, setDraft }) {
             placeholder="What do you write about? One or two sentences for the top of your blog page."
             onChange={(event) => setDraft({ ...draft, blog: { ...draft.blog, intro: event.target.value } })}
           />
-          <p className="hint">{(draft.blog?.intro || '').length}/600 characters</p>
-        </div>
+        </Field>
       </div>
 
-      <div className="rounded-lg border border-line bg-surface p-4">
+      <div className="editor-subcard">
         <p className="text-sm font-medium text-ink">Writing posts</p>
         <p className="mt-1 text-xs leading-relaxed text-muted">
           Posts live in the Blog studio: draft in Markdown, use AI writing help, and publish when ready. Publishing a
@@ -387,7 +384,7 @@ export default function Editor() {
           <div className="sm:flex">
             {/* Vertical rail on wider screens, matching a two-panel editor. */}
             <nav
-              className="hidden w-[168px] shrink-0 flex-col gap-0.5 border-r border-line p-2 sm:flex"
+              className="hidden w-[156px] shrink-0 flex-col gap-0.5 border-r border-line p-1.5 sm:flex"
               aria-label="Editor sections"
             >
               {TABS.map(({ id: tabId, label, icon: Icon }) => (
@@ -425,18 +422,24 @@ export default function Editor() {
                 ))}
               </div>
 
-              <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-4 scroll-slim">
-            {tab === 'profile' ? <ProfileSection draft={draft} setDraft={setDraft} /> : null}
-            {tab === 'skills' ? <SkillsSection draft={draft} setDraft={setDraft} /> : null}
-            {tab === 'projects' ? <ProjectsSection draft={draft} setDraft={setDraft} /> : null}
-            {tab === 'experience' ? (
-              <div className="space-y-8">
-                <ExperienceSection draft={draft} setDraft={setDraft} />
-                <EducationSection draft={draft} setDraft={setDraft} />
-              </div>
-            ) : null}
-            {tab === 'design' ? <DesignSection draft={draft} setDraft={setDraft} showPreview={false} /> : null}
-            {tab === 'sections' ? <SectionsSection draft={draft} setDraft={setDraft} /> : null}
+              <div className="editor-form-pane max-h-[calc(100vh-220px)] overflow-y-auto p-4 scroll-slim">
+                {tab === 'profile' ? <ProfileSection draft={draft} setDraft={setDraft} /> : null}
+                {tab === 'skills' ? <SkillsSection draft={draft} setDraft={setDraft} /> : null}
+                {tab === 'projects' ? <ProjectsSection draft={draft} setDraft={setDraft} /> : null}
+                {tab === 'experience' ? (
+                  <div className="editor-section">
+                    <ExperienceSection draft={draft} setDraft={setDraft} />
+                    <div className="flex min-w-0 flex-col gap-3.5 border-t border-line pt-5">
+                      <div>
+                        <h3 className="text-sm font-semibold text-ink">Education</h3>
+                        <p className="mt-0.5 text-xs leading-relaxed text-muted">Degrees, diplomas and coursework.</p>
+                      </div>
+                      <EducationSection draft={draft} setDraft={setDraft} />
+                    </div>
+                  </div>
+                ) : null}
+                {tab === 'design' ? <DesignSection draft={draft} setDraft={setDraft} showPreview={false} /> : null}
+                {tab === 'sections' ? <SectionsSection draft={draft} setDraft={setDraft} /> : null}
                 {tab === 'blog' ? <BlogSettings draft={draft} setDraft={setDraft} /> : null}
               </div>
             </div>

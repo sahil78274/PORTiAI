@@ -30,8 +30,8 @@ export default function TemplatePicker({ value, onSelect }) {
   const visible = results.slice(0, limit);
 
   return (
-    <div>
-      <div className="relative">
+    <div className="editor-picker">
+      <div className="relative min-w-0">
         <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
         <input
           type="search"
@@ -42,11 +42,11 @@ export default function TemplatePicker({ value, onSelect }) {
           }}
           placeholder={`Search ${TEMPLATE_CATALOGUE.length} templates`}
           aria-label="Search templates"
-          className="input h-9 pl-9 text-[13px]"
+          className="input h-10 pl-9 text-sm"
         />
       </div>
 
-      <div className="mt-3 grid max-h-[420px] gap-2 overflow-y-auto pr-1 scroll-slim sm:grid-cols-2">
+      <div className="editor-picker-grid mt-3 max-h-[420px] overflow-y-auto pr-1 scroll-slim">
         {visible.map((template) => {
           const active = value === template.id;
           const locked = template.tier === 'premium' && !isPremium;
@@ -62,14 +62,14 @@ export default function TemplatePicker({ value, onSelect }) {
                 onSelect(template);
               }}
               aria-pressed={active}
-              className={`rounded-lg border p-3 text-left transition-colors ${
+              className={`min-w-0 w-full rounded-lg border p-3 text-left transition-colors ${
                 active
                   ? 'border-accent bg-accent-soft ring-1 ring-accent'
                   : 'border-line bg-surface hover:border-lineStrong hover:bg-canvasAlt'
               }`}
             >
               <span className="flex items-start justify-between gap-2">
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12.5px] font-semibold text-ink">{template.name}</span>
                   <span className="mt-0.5 block truncate text-[11px] text-muted">
                     {template.layoutLabel} · {template.styleLabel}
@@ -83,16 +83,16 @@ export default function TemplatePicker({ value, onSelect }) {
               </span>
               <span className="mt-2 flex items-center gap-1.5">
                 {template.swatches.map((color, index) => (
-                  <span key={index} className="h-2.5 w-2.5 rounded-full border border-black/10" style={{ background: color }} />
+                  <span key={index} className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/10" style={{ background: color }} />
                 ))}
-                <span className={`ml-auto rounded px-1.5 py-0.5 text-[10px] font-medium ${template.tier === 'free' ? 'bg-successSoft text-success' : 'bg-accent-soft text-accent-hover'}`}>
+                <span className={`ml-auto shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${template.tier === 'free' ? 'bg-successSoft text-success' : 'bg-accent-soft text-accent-hover'}`}>
                   {template.tier === 'free' ? 'Free' : 'Premium'}
                 </span>
               </span>
             </button>
           );
         })}
-        {!visible.length ? <p className="px-1 py-6 text-center text-[12.5px] text-muted sm:col-span-2">No templates match “{search}”.</p> : null}
+        {!visible.length ? <p className="col-span-full px-1 py-6 text-center text-[12.5px] text-muted">No templates match “{search}”.</p> : null}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">

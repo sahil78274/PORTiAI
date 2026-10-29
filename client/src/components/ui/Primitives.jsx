@@ -50,24 +50,27 @@ export const Button = forwardRef(function Button(
 
 /* -------------------------------------------------- Fields -------------------------------------------------- */
 export const Field = ({ label, htmlFor, hint, error, required, children, className = '' }) => (
-  <div className={`space-y-1 ${className}`}>
+  <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
     {label ? (
-      <label htmlFor={htmlFor} className="label flex items-center justify-between">
-        <span className="flex items-center gap-1">
+      <label
+        htmlFor={htmlFor}
+        className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-[12px] font-medium leading-snug text-inkSoft"
+      >
+        <span className="min-w-0 break-words">
           {label}
-          {required ? <span className="text-danger" aria-hidden="true">*</span> : null}
+          {required ? <span className="ml-0.5 text-danger" aria-hidden="true">*</span> : null}
         </span>
-        {!required ? <span className="text-2xs font-normal lowercase tracking-normal text-faint">optional</span> : null}
+        {!required ? <span className="shrink-0 text-2xs font-normal lowercase tracking-normal text-faint">optional</span> : null}
       </label>
     ) : null}
     {children}
     {error ? (
-      <p className="mt-1 flex items-start gap-1.5 text-xs font-medium text-danger">
+      <p className="flex items-start gap-1.5 text-xs font-medium leading-relaxed text-danger">
         <AlertCircle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-        <span>{error}</span>
+        <span className="min-w-0 break-words">{error}</span>
       </p>
     ) : hint ? (
-      <p className="hint">{hint}</p>
+      <p className="text-xs leading-relaxed text-muted break-words">{hint}</p>
     ) : null}
   </div>
 );
@@ -231,35 +234,50 @@ export const ScoreRing = ({ score, size = 132, label = 'Overall score' }) => {
 };
 
 /* -------------------------------------------------- Misc -------------------------------------------------- */
-export const Switch = ({ checked, onChange, label, description, id }) => {
+export const Switch = ({ checked, onChange, label, description, id, hideLabel = false }) => {
   const generatedId = useId();
   const inputId = id || generatedId;
 
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <label htmlFor={inputId} className="cursor-pointer text-sm font-medium text-ink">
+  const toggleButton = (
+    <button
+      id={inputId}
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
+        checked ? 'bg-accent' : 'bg-lineStrong'
+      } ${hideLabel ? '' : 'mt-0.5'}`}
+    >
+      <span
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-xs transition-transform duration-200 ease-out ${
+          checked ? 'left-[18px]' : 'left-0.5'
+        }`}
+      />
+    </button>
+  );
+
+  if (hideLabel) {
+    return (
+      <div className="inline-flex shrink-0 items-center">
+        <label htmlFor={inputId} className="sr-only">
           {label}
         </label>
-        {description ? <p className="mt-0.5 text-xs leading-5 text-muted">{description}</p> : null}
+        {toggleButton}
       </div>
-      <button
-        id={inputId}
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={`relative mt-0.5 h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-          checked ? 'bg-accent' : 'bg-lineStrong'
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-xs transition-transform duration-200 ease-out ${
-            checked ? 'left-[18px]' : 'left-0.5'
-          }`}
-        />
-      </button>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 items-start justify-between gap-4">
+      <div className="min-w-0">
+        <label htmlFor={inputId} className="cursor-pointer text-sm font-medium leading-snug text-ink break-words">
+          {label}
+        </label>
+        {description ? <p className="mt-1 text-xs leading-relaxed text-muted break-words">{description}</p> : null}
+      </div>
+      {toggleButton}
     </div>
   );
 };
