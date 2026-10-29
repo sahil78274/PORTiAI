@@ -60,9 +60,14 @@ const PhotoField = ({ value, onChange }) => {
   };
 
   return (
-    <div className="rounded-lg border border-line bg-surfaceRaised p-3">
-      <div className="flex items-center gap-3">
-        <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-lineStrong bg-canvasAlt">
+    <div className="editor-subcard flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="text-[12px] font-medium leading-snug text-inkSoft">Profile photo</span>
+        <span className="shrink-0 text-2xs font-normal lowercase tracking-normal text-faint">optional</span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-lineStrong bg-canvasAlt">
           {preview ? (
             <img
               src={preview}
@@ -71,38 +76,32 @@ const PhotoField = ({ value, onChange }) => {
               onError={() => setFailed(true)}
             />
           ) : (
-            <UserRound size={22} className="text-faint" aria-hidden="true" />
+            <UserRound size={20} className="text-faint" aria-hidden="true" />
           )}
         </span>
 
-        <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-medium text-ink">Profile photo</p>
-          <p className="mt-0.5 text-[11px] leading-5 text-muted">
-            Square images work best. PNG, JPEG or WebP, resized to 512 px before upload.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="btn-secondary btn-sm"
+          >
+            {uploading ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <ImagePlus size={12} aria-hidden="true" />}
+            {uploading ? 'Uploading…' : 'Upload image'}
+          </button>
+          {value ? (
             <button
               type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={uploading}
-              className="btn-secondary btn-sm"
+              onClick={() => {
+                onChange('');
+                setFailed(false);
+              }}
+              className="btn-ghost btn-sm text-danger hover:bg-dangerSoft hover:text-danger"
             >
-              {uploading ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <ImagePlus size={12} aria-hidden="true" />}
-              {uploading ? 'Uploading…' : 'Upload image'}
+              Remove
             </button>
-            {value ? (
-              <button
-                type="button"
-                onClick={() => {
-                  onChange('');
-                  setFailed(false);
-                }}
-                className="btn-ghost btn-sm"
-              >
-                Remove
-              </button>
-            ) : null}
-          </div>
+          ) : null}
           <input
             ref={inputRef}
             type="file"
@@ -114,35 +113,40 @@ const PhotoField = ({ value, onChange }) => {
         </div>
       </div>
 
-      <label htmlFor="photoUrl" className="mt-3 block text-[11px] font-medium text-muted">
-        Or paste an image URL
-      </label>
-      <TextInput
-        id="photoUrl"
-        value={value}
-        onChange={(event) => {
-          setFailed(false);
-          onChange(event.target.value);
-        }}
-        placeholder="https://example.com/photo.jpg"
-        className="mt-1"
-      />
+      <p className="text-xs leading-relaxed text-muted">
+        Square images work best. PNG, JPEG or WebP, resized to 512 px before upload.
+      </p>
+
+      <div className="flex min-w-0 flex-col gap-1.5 border-t border-line pt-3">
+        <label htmlFor="photoUrl" className="text-[12px] font-medium leading-snug text-inkSoft">
+          Or paste an image URL
+        </label>
+        <TextInput
+          id="photoUrl"
+          value={value}
+          onChange={(event) => {
+            setFailed(false);
+            onChange(event.target.value);
+          }}
+          placeholder="https://example.com/photo.jpg"
+        />
+      </div>
     </div>
   );
 };
 
 const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel = 'Remove' }) => (
-  <div className="rounded-lg border border-line bg-surface p-4 shadow-xs">
-    <div className="mb-3 flex items-center justify-between gap-2 border-b border-line pb-2.5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">
+  <div className="editor-subcard">
+    <div className="mb-3.5 flex items-center justify-between gap-2 border-b border-line pb-2.5">
+      <p className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
         {title} {index + 1}
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
         <button
           type="button"
           onClick={() => onMove(index, -1)}
           disabled={index === 0}
-          className="rounded-md p-1 text-faint hover:bg-canvasAlt hover:text-ink disabled:opacity-30 transition-colors"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
           aria-label={`Move ${title} ${index + 1} up`}
         >
           <ArrowUp size={13} aria-hidden="true" />
@@ -151,7 +155,7 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
           type="button"
           onClick={() => onMove(index, 1)}
           disabled={index === total - 1}
-          className="rounded-md p-1 text-faint hover:bg-canvasAlt hover:text-ink disabled:opacity-30 transition-colors"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
           aria-label={`Move ${title} ${index + 1} down`}
         >
           <ArrowDown size={13} aria-hidden="true" />
@@ -159,19 +163,19 @@ const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel
         <button
           type="button"
           onClick={() => onRemove(index)}
-          className="rounded-md p-1 text-danger hover:bg-dangerSoft hover:text-danger transition-colors"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-danger transition-colors hover:bg-dangerSoft hover:text-danger"
           aria-label={`${removeLabel} ${title} ${index + 1}`}
         >
           <Trash2 size={13} aria-hidden="true" />
         </button>
       </div>
     </div>
-    <div className="space-y-3.5">{children}</div>
+    <div className="flex min-w-0 flex-col gap-4">{children}</div>
   </div>
 );
 
 const AddButton = ({ onClick, children }) => (
-  <Button variant="secondary" size="sm" onClick={onClick} className="mt-2 text-xs font-semibold">
+  <Button variant="secondary" size="sm" onClick={onClick} className="self-start text-xs font-semibold">
     <Plus size={13} aria-hidden="true" />
     <span>{children}</span>
   </Button>
@@ -209,8 +213,8 @@ export function ProfileSection({ draft, setDraft }) {
     setDraft({ ...draft, profile: { ...draft.profile, links: updateListItem(links, index, patch) } });
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className="editor-section">
+      <div className="editor-grid-2">
         <Field label="Full name" htmlFor="fullName" required>
           <TextInput
             id="fullName"
@@ -254,124 +258,141 @@ export function ProfileSection({ draft, setDraft }) {
 
       <PhotoField value={draft.profile.photoUrl} onChange={(next) => setProfile('photoUrl', next)} />
 
-      <Field
-        label="Professional summary"
-        htmlFor="summary"
-        hint={`${wordCount(draft.profile.summary)} words · two or three sentences shown near the top of the portfolio.`}
-      >
-        <TextArea
-          id="summary"
-          value={draft.profile.summary}
-          onChange={(event) => setProfile('summary', event.target.value)}
-          maxLength={1200}
-          rows={3}
-          placeholder="Final-year BCA student focused on frontend development with React and Node.js. Looking for an internship where I can ship real features."
+      <div className="editor-field-group">
+        <Field
+          label="Professional summary"
+          htmlFor="summary"
+          hint={`${wordCount(draft.profile.summary)} words · two or three sentences shown near the top of the portfolio.`}
+        >
+          <TextArea
+            id="summary"
+            value={draft.profile.summary}
+            onChange={(event) => setProfile('summary', event.target.value)}
+            maxLength={1200}
+            rows={3}
+            placeholder="Final-year BCA student focused on frontend development with React and Node.js. Looking for an internship where I can ship real features."
+          />
+        </Field>
+        <AiAssist
+          kind="summary"
+          label="Draft a summary with AI"
+          buildInput={() => aiFacts(draft)}
+          onApply={(text) => setProfile('summary', text)}
         />
-      </Field>
-      <AiAssist
-        kind="summary"
-        label="Draft a summary with AI"
-        buildInput={() => aiFacts(draft)}
-        onApply={(text) => setProfile('summary', text)}
-      />
+      </div>
 
-      <Field
-        label="Professional biography"
-        htmlFor="bio"
-        hint={`${wordCount(draft.profile.bio)} words · a longer introduction with your background and goals.`}
-      >
-        <TextArea
-          id="bio"
-          value={draft.profile.bio}
-          onChange={(event) => setProfile('bio', event.target.value)}
-          maxLength={3000}
-          rows={6}
-          placeholder="Write about what you study, what you have built and what you want to do next."
+      <div className="editor-field-group">
+        <Field
+          label="Professional biography"
+          htmlFor="bio"
+          hint={`${wordCount(draft.profile.bio)} words · a longer introduction with your background and goals.`}
+        >
+          <TextArea
+            id="bio"
+            value={draft.profile.bio}
+            onChange={(event) => setProfile('bio', event.target.value)}
+            maxLength={3000}
+            rows={6}
+            placeholder="Write about what you study, what you have built and what you want to do next."
+          />
+        </Field>
+        <AiAssist
+          kind="bio"
+          label="Write biography with AI"
+          buildInput={() => aiFacts(draft)}
+          onApply={(text) => setProfile('bio', text)}
         />
-      </Field>
-      <AiAssist
-        kind="bio"
-        label="Write biography with AI"
-        buildInput={() => aiFacts(draft)}
-        onApply={(text) => setProfile('bio', text)}
-      />
+      </div>
 
-      <fieldset className="rounded border border-line p-3">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-muted">Professional links</legend>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="GitHub" htmlFor="github">
-            <TextInput
-              id="github"
-              value={draft.socialLinks.github}
-              onChange={(event) => setSocial('github', event.target.value)}
-              placeholder="https://github.com/username"
-            />
-          </Field>
-          <Field label="LinkedIn" htmlFor="linkedin">
-            <TextInput
-              id="linkedin"
-              value={draft.socialLinks.linkedin}
-              onChange={(event) => setSocial('linkedin', event.target.value)}
-              placeholder="https://linkedin.com/in/username"
-            />
-          </Field>
-          <Field label="Website" htmlFor="website">
-            <TextInput
-              id="website"
-              value={draft.socialLinks.website}
-              onChange={(event) => setSocial('website', event.target.value)}
-              placeholder="https://your-site.com"
-            />
-          </Field>
-          <Field label="Twitter / X" htmlFor="twitter">
-            <TextInput
-              id="twitter"
-              value={draft.socialLinks.twitter}
-              onChange={(event) => setSocial('twitter', event.target.value)}
-              placeholder="https://x.com/username"
-            />
-          </Field>
-        </div>
-
-        <div className="mt-3 border-t border-line pt-3">
-          <p className="text-xs font-medium text-ink">Additional links</p>
-          <div className="mt-2 space-y-2">
-            {links.map((link, index) => (
-              <div key={index} className="flex flex-col gap-2 sm:flex-row">
-                <TextInput
-                  value={link.label}
-                  onChange={(event) => setLink(index, { label: event.target.value })}
-                  placeholder="Label (e.g. Project notes)"
-                  aria-label={`Link ${index + 1} label`}
-                  maxLength={60}
-                />
-                <TextInput
-                  value={link.url}
-                  onChange={(event) => setLink(index, { url: event.target.value })}
-                  placeholder="https://…"
-                  aria-label={`Link ${index + 1} URL`}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-danger"
-                  onClick={() =>
-                    setDraft({ ...draft, profile: { ...draft.profile, links: links.filter((_, i) => i !== index) } })
-                  }
-                  aria-label={`Remove link ${index + 1}`}
-                >
-                  <Trash2 size={13} aria-hidden="true" />
-                </Button>
-              </div>
-            ))}
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="sr-only">Professional links</legend>
+        <div className="editor-subcard flex flex-col gap-4">
+          <div className="border-b border-line pb-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted" aria-hidden="true">
+              Professional links
+            </p>
           </div>
-          <AddButton
-            onClick={() =>
-              setDraft({ ...draft, profile: { ...draft.profile, links: [...links, { label: '', url: '' }].slice(0, 8) } })
-            }
-          >
-            Add link
-          </AddButton>
+
+          <div className="editor-grid-2">
+            <Field label="GitHub" htmlFor="github">
+              <TextInput
+                id="github"
+                value={draft.socialLinks.github}
+                onChange={(event) => setSocial('github', event.target.value)}
+                placeholder="https://github.com/username"
+              />
+            </Field>
+            <Field label="LinkedIn" htmlFor="linkedin">
+              <TextInput
+                id="linkedin"
+                value={draft.socialLinks.linkedin}
+                onChange={(event) => setSocial('linkedin', event.target.value)}
+                placeholder="https://linkedin.com/in/username"
+              />
+            </Field>
+            <Field label="Website" htmlFor="website">
+              <TextInput
+                id="website"
+                value={draft.socialLinks.website}
+                onChange={(event) => setSocial('website', event.target.value)}
+                placeholder="https://your-site.com"
+              />
+            </Field>
+            <Field label="Twitter / X" htmlFor="twitter">
+              <TextInput
+                id="twitter"
+                value={draft.socialLinks.twitter}
+                onChange={(event) => setSocial('twitter', event.target.value)}
+                placeholder="https://x.com/username"
+              />
+            </Field>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-3 border-t border-line pt-3.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-[12px] font-medium text-inkSoft">Additional links</p>
+              <span className="shrink-0 text-2xs text-faint">optional</span>
+            </div>
+            {links.length ? (
+              <div className="flex min-w-0 flex-col gap-2.5">
+                {links.map((link, index) => (
+                  <div key={index} className="editor-link-row">
+                    <TextInput
+                      value={link.label}
+                      onChange={(event) => setLink(index, { label: event.target.value })}
+                      placeholder="Label (e.g. Project notes)"
+                      aria-label={`Link ${index + 1} label`}
+                      maxLength={60}
+                    />
+                    <TextInput
+                      value={link.url}
+                      onChange={(event) => setLink(index, { url: event.target.value })}
+                      placeholder="https://…"
+                      aria-label={`Link ${index + 1} URL`}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="!h-10 !w-10 shrink-0 !p-0 text-danger hover:bg-dangerSoft hover:text-danger"
+                      onClick={() =>
+                        setDraft({ ...draft, profile: { ...draft.profile, links: links.filter((_, i) => i !== index) } })
+                      }
+                      aria-label={`Remove link ${index + 1}`}
+                    >
+                      <Trash2 size={14} aria-hidden="true" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <AddButton
+              onClick={() =>
+                setDraft({ ...draft, profile: { ...draft.profile, links: [...links, { label: '', url: '' }].slice(0, 8) } })
+              }
+            >
+              Add link
+            </AddButton>
+          </div>
         </div>
       </fieldset>
     </div>
@@ -416,9 +437,9 @@ export function SkillsSection({ draft, setDraft }) {
   const softCount = draft.skills.length - technicalCount;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <Field label="Add a skill" htmlFor="skillName" className="flex-1">
+    <div className="editor-section">
+      <div className="editor-skill-bar">
+        <Field label="Add a skill" htmlFor="skillName">
           <TextInput
             id="skillName"
             value={name}
@@ -433,15 +454,17 @@ export function SkillsSection({ draft, setDraft }) {
             maxLength={80}
           />
         </Field>
-        <Field label="Category" htmlFor="skillCategory" className="sm:w-44">
-          <Select id="skillCategory" value={category} onChange={(event) => setCategory(event.target.value)}>
-            <option value="technical">Technical</option>
-            <option value="soft">Soft skill</option>
-          </Select>
-        </Field>
-        <Button onClick={add} className="sm:mb-0">
-          <Plus size={14} aria-hidden="true" /> Add
-        </Button>
+        <div className="editor-skill-bar-actions">
+          <Field label="Category" htmlFor="skillCategory">
+            <Select id="skillCategory" value={category} onChange={(event) => setCategory(event.target.value)}>
+              <option value="technical">Technical</option>
+              <option value="soft">Soft skill</option>
+            </Select>
+          </Field>
+          <Button onClick={add} className="shrink-0">
+            <Plus size={14} aria-hidden="true" /> Add
+          </Button>
+        </div>
       </div>
 
       <p className="text-xs text-muted">
@@ -449,9 +472,9 @@ export function SkillsSection({ draft, setDraft }) {
       </p>
 
       {draft.skills.length ? (
-        <ul className="space-y-1.5">
+        <ul className="flex min-w-0 flex-col gap-2">
           {draft.skills.map((skill, index) => (
-            <li key={`${skill.name}-${index}`} className="flex items-center gap-2 rounded border border-line bg-surface px-2.5 py-1.5">
+            <li key={`${skill.name}-${index}`} className="editor-skill-item">
               <input
                 value={skill.name}
                 onChange={(event) =>
@@ -459,58 +482,60 @@ export function SkillsSection({ draft, setDraft }) {
                 }
                 aria-label={`Skill ${index + 1} name`}
                 maxLength={80}
-                className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-ink focus:outline-none"
+                className="min-w-0 w-full flex-1 rounded border border-transparent bg-transparent px-2 py-1 text-sm font-medium text-ink transition-colors hover:border-lineStrong hover:bg-surface focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent-soft"
               />
-              <div className="flex items-center gap-1">
-                {['technical', 'soft'].map((option) => (
+              <div className="editor-skill-item-controls">
+                <div className="flex items-center gap-1">
+                  {['technical', 'soft'].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setDraft({ ...draft, skills: updateListItem(draft.skills, index, { category: option }) })}
+                      aria-pressed={skill.category === option}
+                      className={`rounded border px-2 py-0.5 text-2xs font-medium transition-colors ${
+                        skill.category === option
+                          ? 'border-accent bg-accent-soft text-accent-hover'
+                          : 'border-lineStrong bg-surface text-muted hover:bg-canvasAlt hover:text-ink'
+                      }`}
+                    >
+                      {option === 'technical' ? 'Technical' : 'Soft'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-0.5">
                   <button
-                    key={option}
                     type="button"
-                    onClick={() => setDraft({ ...draft, skills: updateListItem(draft.skills, index, { category: option }) })}
-                    aria-pressed={skill.category === option}
-                    className={`rounded-sm border px-1.5 py-0.5 text-2xs ${
-                      skill.category === option
-                        ? 'border-accent bg-accent-soft text-accent-hover'
-                        : 'border-lineStrong bg-surface text-muted hover:bg-canvasAlt'
-                    }`}
+                    onClick={() => setDraft({ ...draft, skills: moveListItem(draft.skills, index, -1) })}
+                    disabled={index === 0}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
+                    aria-label={`Move ${skill.name} up`}
                   >
-                    {option === 'technical' ? 'Technical' : 'Soft'}
+                    <ArrowUp size={12} aria-hidden="true" />
                   </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => setDraft({ ...draft, skills: moveListItem(draft.skills, index, -1) })}
-                  disabled={index === 0}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
-                  aria-label={`Move ${skill.name} up`}
-                >
-                  <ArrowUp size={12} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDraft({ ...draft, skills: moveListItem(draft.skills, index, 1) })}
-                  disabled={index === draft.skills.length - 1}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
-                  aria-label={`Move ${skill.name} down`}
-                >
-                  <ArrowDown size={12} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDraft({ ...draft, skills: draft.skills.filter((_, i) => i !== index) })}
-                  className="rounded p-1 text-danger hover:bg-dangerSoft"
-                  aria-label={`Remove ${skill.name}`}
-                >
-                  <X size={12} aria-hidden="true" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setDraft({ ...draft, skills: moveListItem(draft.skills, index, 1) })}
+                    disabled={index === draft.skills.length - 1}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
+                    aria-label={`Move ${skill.name} down`}
+                  >
+                    <ArrowDown size={12} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDraft({ ...draft, skills: draft.skills.filter((_, i) => i !== index) })}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-danger transition-colors hover:bg-dangerSoft"
+                    aria-label={`Remove ${skill.name}`}
+                  >
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="rounded border border-dashed border-lineStrong px-3 py-4 text-center text-sm text-muted">
+        <p className="rounded-lg border border-dashed border-lineStrong px-4 py-5 text-center text-sm leading-relaxed text-muted">
           No skills added yet. Five or six technical skills and one or two transferable skills is a good start.
         </p>
       )}
@@ -533,9 +558,9 @@ export function EducationSection({ draft, setDraft }) {
   const update = (index, patch) => setDraft({ ...draft, education: updateListItem(items, index, patch) });
 
   return (
-    <div className="space-y-3">
+    <div className="flex min-w-0 flex-col gap-3.5">
       {items.length === 0 ? (
-        <p className="rounded border border-dashed border-lineStrong px-3 py-4 text-center text-sm text-muted">
+        <p className="rounded-lg border border-dashed border-lineStrong px-4 py-5 text-center text-sm leading-relaxed text-muted">
           Add your current course. Dates can be approximate, e.g. “2023” and “2026 (expected)”.
         </p>
       ) : null}
@@ -549,7 +574,7 @@ export function EducationSection({ draft, setDraft }) {
           onMove={(i, direction) => setDraft({ ...draft, education: moveListItem(items, i, direction) })}
           onRemove={(i) => setDraft({ ...draft, education: items.filter((_, itemIndex) => itemIndex !== i) })}
         >
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="editor-grid-2">
             <Field label="Institution" htmlFor={`edu-institution-${index}`}>
               <TextInput
                 id={`edu-institution-${index}`}
@@ -629,9 +654,9 @@ export function ProjectsSection({ draft, setDraft }) {
   const update = (index, patch) => setDraft({ ...draft, projects: updateListItem(items, index, patch) });
 
   return (
-    <div className="space-y-3">
+    <div className="editor-section">
       {items.length === 0 ? (
-        <p className="rounded border border-dashed border-lineStrong px-3 py-4 text-center text-sm text-muted">
+        <p className="rounded-lg border border-dashed border-lineStrong px-4 py-5 text-center text-sm leading-relaxed text-muted">
           Projects are the strongest part of a student portfolio. Two or three with clear descriptions beat six vague ones.
         </p>
       ) : null}
@@ -645,7 +670,7 @@ export function ProjectsSection({ draft, setDraft }) {
           onMove={(i, direction) => setDraft({ ...draft, projects: moveListItem(items, i, direction) })}
           onRemove={(i) => setDraft({ ...draft, projects: items.filter((_, itemIndex) => itemIndex !== i) })}
         >
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="editor-grid-2-wide">
             <Field label="Project name" htmlFor={`project-name-${index}`}>
               <TextInput
                 id={`project-name-${index}`}
@@ -665,30 +690,32 @@ export function ProjectsSection({ draft, setDraft }) {
             </Field>
           </div>
 
-          <Field label="Description" htmlFor={`project-description-${index}`} hint="What it does, how you built it, what works today.">
-            <TextArea
-              id={`project-description-${index}`}
-              value={item.description}
-              onChange={(event) => update(index, { description: event.target.value })}
-              rows={4}
-              maxLength={2500}
-              placeholder="A registration platform for college events. Coordinators publish a form, students register with their roll number, and the dashboard exports attendance-ready CSV files."
+          <div className="editor-field-group">
+            <Field label="Description" htmlFor={`project-description-${index}`} hint="What it does, how you built it, what works today.">
+              <TextArea
+                id={`project-description-${index}`}
+                value={item.description}
+                onChange={(event) => update(index, { description: event.target.value })}
+                rows={4}
+                maxLength={2500}
+                placeholder="A registration platform for college events. Coordinators publish a form, students register with their roll number, and the dashboard exports attendance-ready CSV files."
+              />
+            </Field>
+            <AiAssist
+              kind="project"
+              label="Improve description with AI"
+              applyLabel="Use this description"
+              buildInput={() => ({
+                text: item.description,
+                title: item.name,
+                projects: [{ name: item.name, technologies: item.technologies, description: item.description }],
+                skills: draft.skills.map((skill) => skill.name),
+              })}
+              onApply={(text) => update(index, { description: text })}
             />
-          </Field>
-          <AiAssist
-            kind="project"
-            label="Improve description with AI"
-            applyLabel="Use this description"
-            buildInput={() => ({
-              text: item.description,
-              title: item.name,
-              projects: [{ name: item.name, technologies: item.technologies, description: item.description }],
-              skills: draft.skills.map((skill) => skill.name),
-            })}
-            onApply={(text) => update(index, { description: text })}
-          />
+          </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="editor-grid-2">
             <Field label="Live project URL" htmlFor={`project-url-${index}`}>
               <TextInput
                 id={`project-url-${index}`}
@@ -737,58 +764,60 @@ export function ExperienceSection({ draft, setDraft }) {
     setDraft({ ...draft, achievements: updateListItem(achievements, index, patch) });
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h3 className="text-sm font-semibold text-ink">Experience & internships</h3>
-        <p className="mt-0.5 text-xs text-muted">Part-time work, freelance and college roles all count.</p>
-        <div className="mt-3 space-y-3">
-          {items.map((item, index) => (
-            <ItemCard
-              key={index}
-              title="Experience"
-              index={index}
-              total={items.length}
-              onMove={(i, direction) => setDraft({ ...draft, experience: moveListItem(items, i, direction) })}
-              onRemove={(i) => setDraft({ ...draft, experience: items.filter((_, itemIndex) => itemIndex !== i) })}
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Role / internship title" htmlFor={`exp-role-${index}`}>
-                  <TextInput
-                    id={`exp-role-${index}`}
-                    value={item.role}
-                    onChange={(event) => update(index, { role: event.target.value })}
-                    placeholder="Web Development Intern"
-                    maxLength={160}
-                  />
-                </Field>
-                <Field label="Organisation" htmlFor={`exp-org-${index}`}>
-                  <TextInput
-                    id={`exp-org-${index}`}
-                    value={item.organization}
-                    onChange={(event) => update(index, { organization: event.target.value })}
-                    placeholder="Company or department"
-                    maxLength={160}
-                  />
-                </Field>
-                <Field label="Start date" htmlFor={`exp-start-${index}`}>
-                  <TextInput
-                    id={`exp-start-${index}`}
-                    value={item.startDate}
-                    onChange={(event) => update(index, { startDate: event.target.value })}
-                    placeholder="Jun 2025"
-                    maxLength={40}
-                  />
-                </Field>
-                <Field label="End date" htmlFor={`exp-end-${index}`}>
-                  <TextInput
-                    id={`exp-end-${index}`}
-                    value={item.endDate}
-                    onChange={(event) => update(index, { endDate: event.target.value })}
-                    placeholder="Aug 2025 or Present"
-                    maxLength={40}
-                  />
-                </Field>
-              </div>
+    <div className="editor-section">
+      <div className="flex min-w-0 flex-col gap-3.5">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Experience &amp; internships</h3>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted">Part-time work, freelance and college roles all count.</p>
+        </div>
+        {items.map((item, index) => (
+          <ItemCard
+            key={index}
+            title="Experience"
+            index={index}
+            total={items.length}
+            onMove={(i, direction) => setDraft({ ...draft, experience: moveListItem(items, i, direction) })}
+            onRemove={(i) => setDraft({ ...draft, experience: items.filter((_, itemIndex) => itemIndex !== i) })}
+          >
+            <div className="editor-grid-2">
+              <Field label="Role / internship title" htmlFor={`exp-role-${index}`}>
+                <TextInput
+                  id={`exp-role-${index}`}
+                  value={item.role}
+                  onChange={(event) => update(index, { role: event.target.value })}
+                  placeholder="Web Development Intern"
+                  maxLength={160}
+                />
+              </Field>
+              <Field label="Organisation" htmlFor={`exp-org-${index}`}>
+                <TextInput
+                  id={`exp-org-${index}`}
+                  value={item.organization}
+                  onChange={(event) => update(index, { organization: event.target.value })}
+                  placeholder="Company or department"
+                  maxLength={160}
+                />
+              </Field>
+              <Field label="Start date" htmlFor={`exp-start-${index}`}>
+                <TextInput
+                  id={`exp-start-${index}`}
+                  value={item.startDate}
+                  onChange={(event) => update(index, { startDate: event.target.value })}
+                  placeholder="Jun 2025"
+                  maxLength={40}
+                />
+              </Field>
+              <Field label="End date" htmlFor={`exp-end-${index}`}>
+                <TextInput
+                  id={`exp-end-${index}`}
+                  value={item.endDate}
+                  onChange={(event) => update(index, { endDate: event.target.value })}
+                  placeholder="Aug 2025 or Present"
+                  maxLength={40}
+                />
+              </Field>
+            </div>
+            <div className="editor-field-group">
               <Field label="Responsibilities" htmlFor={`exp-responsibilities-${index}`}>
                 <TextArea
                   id={`exp-responsibilities-${index}`}
@@ -810,68 +839,70 @@ export function ExperienceSection({ draft, setDraft }) {
                 })}
                 onApply={(text) => update(index, { responsibilities: text })}
               />
-              <Field label="Achievements in this role" htmlFor={`exp-achievements-${index}`}>
-                <TextArea
-                  id={`exp-achievements-${index}`}
-                  value={item.achievements}
-                  onChange={(event) => update(index, { achievements: event.target.value })}
-                  rows={2}
-                  maxLength={1500}
-                  placeholder="Reduced mobile layout shift on the event signup page by removing fixed heights."
-                />
-              </Field>
-            </ItemCard>
-          ))}
-          <AddButton onClick={() => setDraft({ ...draft, experience: [...items, emptyExperience()].slice(0, 15) })}>
-            Add experience
-          </AddButton>
-        </div>
+            </div>
+            <Field label="Achievements in this role" htmlFor={`exp-achievements-${index}`}>
+              <TextArea
+                id={`exp-achievements-${index}`}
+                value={item.achievements}
+                onChange={(event) => update(index, { achievements: event.target.value })}
+                rows={2}
+                maxLength={1500}
+                placeholder="Reduced mobile layout shift on the event signup page by removing fixed heights."
+              />
+            </Field>
+          </ItemCard>
+        ))}
+        <AddButton onClick={() => setDraft({ ...draft, experience: [...items, emptyExperience()].slice(0, 15) })}>
+          Add experience
+        </AddButton>
       </div>
 
-      <div className="border-t border-line pt-4">
-        <h3 className="text-sm font-semibold text-ink">Achievements & certifications</h3>
-        <p className="mt-0.5 text-xs text-muted">Awards, contests, online courses and certifications.</p>
-        <div className="mt-3 space-y-3">
-          {achievements.map((item, index) => (
-            <ItemCard
-              key={index}
-              title="Achievement"
-              index={index}
-              total={achievements.length}
-              onMove={(i, direction) => setDraft({ ...draft, achievements: moveListItem(achievements, i, direction) })}
-              onRemove={(i) =>
-                setDraft({ ...draft, achievements: achievements.filter((_, itemIndex) => itemIndex !== i) })
-              }
-            >
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Field label="Title" htmlFor={`ach-title-${index}`} className="sm:col-span-1">
-                  <TextInput
-                    id={`ach-title-${index}`}
-                    value={item.title}
-                    onChange={(event) => updateAchievement(index, { title: event.target.value })}
-                    placeholder="Second place, College Web Sprint"
-                    maxLength={200}
-                  />
-                </Field>
-                <Field label="Issuer" htmlFor={`ach-issuer-${index}`}>
-                  <TextInput
-                    id={`ach-issuer-${index}`}
-                    value={item.issuer}
-                    onChange={(event) => updateAchievement(index, { issuer: event.target.value })}
-                    placeholder="Department of Computer Science"
-                    maxLength={160}
-                  />
-                </Field>
-                <Field label="Date" htmlFor={`ach-date-${index}`}>
-                  <TextInput
-                    id={`ach-date-${index}`}
-                    value={item.date}
-                    onChange={(event) => updateAchievement(index, { date: event.target.value })}
-                    placeholder="Mar 2025"
-                    maxLength={40}
-                  />
-                </Field>
-              </div>
+      <div className="flex min-w-0 flex-col gap-3.5 border-t border-line pt-5">
+        <div>
+          <h3 className="text-sm font-semibold text-ink">Achievements &amp; certifications</h3>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted">Awards, contests, online courses and certifications.</p>
+        </div>
+        {achievements.map((item, index) => (
+          <ItemCard
+            key={index}
+            title="Achievement"
+            index={index}
+            total={achievements.length}
+            onMove={(i, direction) => setDraft({ ...draft, achievements: moveListItem(achievements, i, direction) })}
+            onRemove={(i) =>
+              setDraft({ ...draft, achievements: achievements.filter((_, itemIndex) => itemIndex !== i) })
+            }
+          >
+            <Field label="Title" htmlFor={`ach-title-${index}`}>
+              <TextInput
+                id={`ach-title-${index}`}
+                value={item.title}
+                onChange={(event) => updateAchievement(index, { title: event.target.value })}
+                placeholder="Second place, College Web Sprint"
+                maxLength={200}
+              />
+            </Field>
+            <div className="editor-grid-2">
+              <Field label="Issuer" htmlFor={`ach-issuer-${index}`}>
+                <TextInput
+                  id={`ach-issuer-${index}`}
+                  value={item.issuer}
+                  onChange={(event) => updateAchievement(index, { issuer: event.target.value })}
+                  placeholder="Department of Computer Science"
+                  maxLength={160}
+                />
+              </Field>
+              <Field label="Date" htmlFor={`ach-date-${index}`}>
+                <TextInput
+                  id={`ach-date-${index}`}
+                  value={item.date}
+                  onChange={(event) => updateAchievement(index, { date: event.target.value })}
+                  placeholder="Mar 2025"
+                  maxLength={40}
+                />
+              </Field>
+            </div>
+            <div className="editor-field-group">
               <Field label="Description" htmlFor={`ach-description-${index}`}>
                 <TextArea
                   id={`ach-description-${index}`}
@@ -889,16 +920,16 @@ export function ExperienceSection({ draft, setDraft }) {
                 buildInput={() => ({ text: item.description || item.title, achievements: [item.title] })}
                 onApply={(text) => updateAchievement(index, { description: text })}
               />
-            </ItemCard>
-          ))}
-          <AddButton
-            onClick={() =>
-              setDraft({ ...draft, achievements: [...achievements, emptyAchievement()].slice(0, 20) })
-            }
-          >
-            Add achievement
-          </AddButton>
-        </div>
+            </div>
+          </ItemCard>
+        ))}
+        <AddButton
+          onClick={() =>
+            setDraft({ ...draft, achievements: [...achievements, emptyAchievement()].slice(0, 20) })
+          }
+        >
+          Add achievement
+        </AddButton>
       </div>
     </div>
   );
@@ -930,53 +961,60 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
   const selectedIsOriginal = isLegacyTemplateId(draft.templateId);
 
   return (
-    <div className="space-y-4">
-      <fieldset>
-        <legend className="label">Template</legend>
-        <p className="mb-2 text-[11.5px] leading-5 text-muted">
+    <div className="editor-section">
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="text-[12px] font-medium leading-snug text-inkSoft">Template</legend>
+        <p className="mt-1 mb-2.5 text-xs leading-relaxed text-muted">
           {TEMPLATE_CATALOGUE.length} designs in the catalogue. Switching keeps every word of your content.
         </p>
         <TemplatePicker value={draft.templateId} onSelect={handleSelectTemplate} />
         {selectedTemplate ? (
-          <p className="mt-2 text-[11.5px] text-muted">
+          <p className="mt-2.5 break-words text-xs leading-relaxed text-muted">
             Active: <span className="font-medium text-ink">{selectedTemplate.name}</span> — {selectedTemplate.layoutLabel} layout,{' '}
             {selectedTemplate.styleLabel} style.
           </p>
         ) : null}
       </fieldset>
 
-      <fieldset>
-        <legend className="label">Accent colour</legend>
-        <div className="flex flex-wrap items-center gap-2.5">
-          {ACCENT_SWATCHES.map((swatch) => (
-            <button
-              key={swatch.value}
-              type="button"
-              onClick={() => setTheme('accent', swatch.value)}
-              aria-pressed={draft.theme.accent === swatch.value}
-              aria-label={swatch.label}
-              title={swatch.label}
-              className={`h-7 w-7 rounded-full transition-transform hover:scale-110 shadow-2xs ${
-                draft.theme.accent === swatch.value ? 'ring-2 ring-accent ring-offset-2 scale-105' : 'ring-1 ring-lineStrong'
-              }`}
-              style={{ backgroundColor: swatch.value }}
-            />
-          ))}
-          <label className="ml-1 inline-flex items-center gap-2 text-xs text-muted font-medium">
-            Custom
-            <input
-              type="color"
-              value={draft.theme.accent}
-              onChange={(event) => setTheme('accent', event.target.value)}
-              className="h-7 w-9 cursor-pointer rounded-lg border border-line bg-surface p-0.5 shadow-2xs"
-              aria-label="Custom accent colour"
-            />
-          </label>
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="sr-only">Accent colour</legend>
+        <div className="editor-subcard flex flex-col gap-3">
+          <span className="text-[12px] font-medium leading-snug text-inkSoft" aria-hidden="true">
+            Accent colour
+          </span>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {ACCENT_SWATCHES.map((swatch) => (
+              <button
+                key={swatch.value}
+                type="button"
+                onClick={() => setTheme('accent', swatch.value)}
+                aria-pressed={draft.theme.accent === swatch.value}
+                aria-label={swatch.label}
+                title={swatch.label}
+                className={`h-7 w-7 shrink-0 rounded-full transition-transform hover:scale-110 ${
+                  draft.theme.accent === swatch.value
+                    ? 'scale-105 ring-2 ring-accent ring-offset-2 ring-offset-surfaceRaised'
+                    : 'ring-1 ring-lineStrong'
+                }`}
+                style={{ backgroundColor: swatch.value }}
+              />
+            ))}
+            <label className="ml-0.5 inline-flex items-center gap-2 text-xs font-medium text-muted">
+              Custom
+              <input
+                type="color"
+                value={draft.theme.accent}
+                onChange={(event) => setTheme('accent', event.target.value)}
+                className="h-8 w-10 cursor-pointer rounded-md border border-lineStrong bg-surface p-0.5"
+                aria-label="Custom accent colour"
+              />
+            </label>
+          </div>
         </div>
       </fieldset>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {selectedIsOriginal ? (
+      {selectedIsOriginal ? (
+        <div className="editor-grid-2">
           <Field label="Font" htmlFor="theme-font">
             <Select id="theme-font" value={draft.theme.font} onChange={(event) => setTheme('font', event.target.value)}>
               {FONTS.map((font) => (
@@ -986,29 +1024,41 @@ export function DesignSection({ draft, setDraft, showPreview = true }) {
               ))}
             </Select>
           </Field>
-        ) : (
-          <div className="rounded-lg border border-line bg-canvasAlt p-3">
+          <Field label="Spacing density" htmlFor="theme-density">
+            <Select
+              id="theme-density"
+              value={draft.theme.density}
+              onChange={(event) => setTheme('density', event.target.value)}
+            >
+              <option value="comfortable">Comfortable</option>
+              <option value="compact">Compact</option>
+            </Select>
+          </Field>
+        </div>
+      ) : (
+        <div className="flex min-w-0 flex-col gap-4">
+          <Field label="Spacing density" htmlFor="theme-density">
+            <Select
+              id="theme-density"
+              value={draft.theme.density}
+              onChange={(event) => setTheme('density', event.target.value)}
+            >
+              <option value="comfortable">Comfortable</option>
+              <option value="compact">Compact</option>
+            </Select>
+          </Field>
+          <div className="editor-subcard">
             <p className="text-[12px] font-medium text-ink">Typography</p>
-            <p className="mt-1 text-[11.5px] leading-5 text-muted">
+            <p className="mt-1 text-xs leading-relaxed text-muted">
               Premium templates define their own type pairing so the design stays intact. Accent colour, density and
               section order are still yours to change.
             </p>
           </div>
-        )}
-        <Field label="Spacing density" htmlFor="theme-density">
-          <Select
-            id="theme-density"
-            value={draft.theme.density}
-            onChange={(event) => setTheme('density', event.target.value)}
-          >
-            <option value="comfortable">Comfortable</option>
-            <option value="compact">Compact</option>
-          </Select>
-        </Field>
-      </div>
+        </div>
+      )}
 
       {showPreview ? (
-        <div className="rounded border border-line">
+        <div className="min-w-0 overflow-hidden rounded-lg border border-line">
           <p className="border-b border-line bg-canvasAlt px-3 py-1.5 text-2xs uppercase tracking-widest text-muted">
             Template preview
           </p>
@@ -1042,27 +1092,27 @@ export function SectionsSection({ draft, setDraft }) {
   };
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs text-muted">
+    <div className="flex min-w-0 flex-col gap-3">
+      <p className="text-xs leading-relaxed text-muted">
         Sections without content are skipped automatically, even when they are switched on.
       </p>
-      <ul className="divide-y divide-line overflow-hidden rounded border border-line bg-surface">
+      <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surfaceRaised">
         {sections.map((section, index) => {
           const definition = SECTION_DEFINITIONS.find((item) => item.id === section.id);
           return (
-            <li key={section.id} className="flex items-center justify-between gap-3 px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-sm text-ink">{definition?.label || section.label || section.id}</p>
+            <li key={section.id} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ink">{definition?.label || section.label || section.id}</p>
                 <p className="text-2xs text-muted">
                   {section.visible ? 'Visible on the portfolio' : 'Hidden from visitors'}
                 </p>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
                   aria-label={`Move ${definition?.label || section.id} up`}
                 >
                   <ArrowUp size={13} aria-hidden="true" />
@@ -1071,7 +1121,7 @@ export function SectionsSection({ draft, setDraft }) {
                   type="button"
                   onClick={() => move(index, 1)}
                   disabled={index === sections.length - 1}
-                  className="rounded p-1 text-muted hover:bg-canvasAlt disabled:opacity-30"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-canvasAlt hover:text-ink disabled:opacity-30"
                   aria-label={`Move ${definition?.label || section.id} down`}
                 >
                   <ArrowDown size={13} aria-hidden="true" />
@@ -1080,6 +1130,7 @@ export function SectionsSection({ draft, setDraft }) {
                   checked={section.visible}
                   onChange={(value) => toggle(section.id, value)}
                   label={`Show ${definition?.label || section.id}`}
+                  hideLabel
                 />
               </div>
             </li>

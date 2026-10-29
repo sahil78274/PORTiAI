@@ -29,6 +29,16 @@ import StartProject from '../src/pages/StartProject.jsx';
 import Settings from '../src/pages/Settings.jsx';
 import Builder from '../src/pages/Builder.jsx';
 import Editor from '../src/pages/Editor.jsx';
+import {
+  ProfileSection,
+  SkillsSection,
+  EducationSection,
+  ProjectsSection,
+  ExperienceSection,
+  DesignSection,
+  SectionsSection,
+} from '../src/components/editor/PortfolioForm.jsx';
+import { draftFromPortfolio } from '../src/utils/portfolioDraft.js';
 import Analyzer from '../src/pages/Analyzer.jsx';
 import BlogStudio from '../src/pages/BlogStudio.jsx';
 import FeaturesPage from '../src/pages/FeaturesPage.jsx';
@@ -125,6 +135,61 @@ attempt('template picker', (
   </ThemeProvider>
 ));
 attempt('live preview', <TemplateLivePreview portfolio={demoPortfolioForTemplate(freeTemplate)} />);
+
+const editorDraft = draftFromPortfolio({
+  ...demoPortfolioForTemplate(freeTemplate),
+  profile: {
+    ...demoPortfolioForTemplate(freeTemplate).profile,
+    contactEmail: 'vis1792903544378.long.address@example.com',
+    title: 'BCA Student · Full-Stack Web Application Developer',
+    links: [{ label: 'Project notes', url: 'https://example.com/notes/very-long-path' }],
+  },
+  achievements: [
+    {
+      title: 'Second place, Inter-University Full-Stack Web Sprint',
+      issuer: 'Department of Computer Science',
+      date: 'Mar 2025',
+      description: 'Built a collaborative timetable planner in eight hours.',
+    },
+  ],
+});
+
+for (const [sectionLabel, element] of [
+  ['editor profile section', <ProfileSection draft={editorDraft} setDraft={() => {}} />],
+  ['editor skills section', <SkillsSection draft={editorDraft} setDraft={() => {}} />],
+  ['editor education section', <EducationSection draft={editorDraft} setDraft={() => {}} />],
+  ['editor projects section', <ProjectsSection draft={editorDraft} setDraft={() => {}} />],
+  ['editor experience section', <ExperienceSection draft={editorDraft} setDraft={() => {}} />],
+  ['editor design section (legacy)', <DesignSection draft={editorDraft} setDraft={() => {}} showPreview={false} />],
+  [
+    'editor design section (premium)',
+    <DesignSection draft={{ ...editorDraft, templateId: premiumTemplate.id }} setDraft={() => {}} showPreview={false} />,
+  ],
+  ['editor sections order', <SectionsSection draft={editorDraft} setDraft={() => {}} />],
+]) {
+  attempt(
+    sectionLabel,
+    <ThemeProvider>
+      <MemoryRouter>
+        <ToastProvider>
+          <AuthProvider>{element}</AuthProvider>
+        </ToastProvider>
+      </MemoryRouter>
+    </ThemeProvider>,
+    { keep: true }
+  );
+}
+
+expectMarkup('editor profile section', [
+  ['id="fullName"', 1, 'full name input'],
+  ['id="proTitle"', 1, 'professional title input'],
+  ['id="location"', 1, 'location input'],
+  ['id="contactEmail"', 1, 'contact email input'],
+  ['id="photoUrl"', 1, 'photo URL input'],
+  ['id="summary"', 1, 'summary textarea'],
+  ['id="bio"', 1, 'biography textarea'],
+  ['editor-grid-2', 'some', 'container-aware two-column grid'],
+]);
 
 for (const route of [
   '/',
