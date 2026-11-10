@@ -37,4 +37,12 @@ export class ApiError extends Error {
   static internal(message = 'Something went wrong on our side.') {
     return new ApiError(500, 'INTERNAL_ERROR', message);
   }
+  /** 502: an upstream provider (payments/AI) misbehaved. */
+  static badGateway(message = 'An upstream service failed. Please try again.', code = 'UPSTREAM_ERROR') {
+    return new ApiError(502, code, message);
+  }
+  /** Any status with an explicit machine-readable code. */
+  static withCode(status, code, message, details) {
+    return new ApiError(status, code, message, details);
+  }
 }

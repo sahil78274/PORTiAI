@@ -1,124 +1,79 @@
 import crypto from 'node:crypto';
 import { z } from 'zod';
 import { User } from '../models/User.js';
+import { Subscription } from '../models/Subscription.js';
 import { env, isCheckoutConfigured, isDevUpgradeEnabled, checkoutUrlFor } from '../config/env.js';
+import { isRazorpayConfigured } from '../config/env.js';
 import { getPricing, priceForInterval } from '../config/pricing.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { activatePremium, resolveEntitlements } from '../services/subscriptionService.js';
-import { PREMIUM_TEMPLATE_IDS, FREE_TEMPLATE_IDS, TEMPLATE_IDS } from '../utils/portfolioDefaults.js';
 
 /**
- * Plan copy shown on the Premium page and the upgrade dialog.
+ * Legacy upgrade paths, kept so existing deployments and clients keep working.
  *
- * Prices come from `config/pricing.js`, never from this file, so there is one
- * place to change them. Amounts stay server-side; the client only renders what
- * the API returns.
+ * New purchases go through Razorpay (`billingController.js`). These two routes
+ * remain for:
+ *   - a development-only instant upgrade (`BILLING_DEV_UPGRADE`, never in
+ *     production), used by the existing test suite and local demos;
+ *   - a generic hosted checkout URL + shared-secret webhook
+ *     (`BILLING_CHECKOUT_URL_*`, `BILLING_WEBHOOK_SECRET`) for deployments that
+ *     already wired a provider before Razorpay support existed.
+ *
+ * When Razorpay is configured, the development switch is refused so a real
+ * deployment can never hand out Premium for free.
  */
-const buildPlans = () => {
-  const pricing = getPricing();
-  const premiumTemplateCount = PREMIUM_TEMPLATE_IDS.length;
-  const freeTemplateCount = FREE_TEMPLATE_IDS.length;
-
-  return [
-    {
-      id: 'free',
-      name: 'Free',
-      amount: 0,
-      currency: pricing.currency,
-      price: 'Free',
-      cadence: 'forever',
-      interval: null,
-      description: 'Everything you need to publish a first portfolio.',
-      features: [
-        `All ${freeTemplateCount} original templates`,
-        'Full editor, live previews and publishing',
-        'Portfolio review and AI writing assistant',
-        'One public portfolio link and the blog',
-      ],
-      limits: ['Premium catalogue is locked'],
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      amount: pricing.monthly.amount,
-      currency: pricing.currency,
-      price: pricing.monthly.display,
-      cadence: pricing.monthly.cadenceLabel,
-      interval: 'monthly',
-      description: `The complete PortiAI template catalogue (${TEMPLATE_IDS.length} designs) and every layout style.`,
-      features: [
-        `All ${premiumTemplateCount} premium templates`,
-        'Ten layouts × ten visual styles',
-        'New templates as they are released',
-        'Everything included in Free',
-      ],
-      limits: [],
-      pricing: {
-        monthly: { amount: pricing.monthly.amount, display: pricing.monthly.display, cadence: pricing.monthly.cadenceLabel },
-        yearly: {
-          amount: pricing.yearly.amount,
-          display: pricing.yearly.display,
-          cadence: pricing.yearly.cadenceLabel,
-          saving: pricing.yearly.saving,
-          savingPercent: pricing.yearly.savingPercent,
-        },
-        confirmed: pricing.confirmed,
-        note: pricing.note,
-      },
-    },
-  ];
-};
-
-/** Pricing + availability only. Safe to expose to signed-out visitors. */
-const buildCatalogueConfig = () => {
-  const pricing = getPricing();
-  return {
-    plans: buildPlans(),
-    pricing,
-    billing: {
-      providerConfigured: Boolean(env.billing.webhookSecret),
-      checkoutConfigured: isCheckoutConfigured(),
-      devUpgradeEnabled: isDevUpgradeEnabled(),
-      upgradePath: isCheckoutConfigured() ? 'checkout' : isDevUpgradeEnabled() ? 'development' : 'operator',
-    },
-  };
-};
-
-/** GET /api/subscription/plans — public pricing, no session required. */
-export const getPlans = asyncHandler(async (req, res) => {
-  res.json({ success: true, data: buildCatalogueConfig() });
-});
-
-export const getSubscription = asyncHandler(async (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      subscription: resolveEntitlements(req.user),
-      ...buildCatalogueConfig(),
-    },
-  });
-});
 
 const checkoutSchema = z.object({
   interval: z.enum(['monthly', 'yearly']).default('monthly'),
 });
 
+/** Records the development/legacy activation in the billing history too. */
+const recordLocalSubscription = async (user, interval, months, provider = 'none') => {
+  const now = new Date();
+  const end = new Date();
+  end.setMonth(end.getMonth() + months);
+
+  await Subscription.findOneAndUpdate(
+    { userId: user._id },
+    {
+      $set: {
+        provider,
+        status: 'active',
+        interval,
+        amount: Math.round((interval === 'yearly' ? getPricing().yearly.amount : getPricing().monthly.amount) * 100),
+        currency: getPricing().currency,
+        currentPeriodStart: now,
+        currentPeriodEnd: end,
+        cancelAtPeriodEnd: false,
+        startedAt: now,
+        note:
+          provider === 'none'
+            ? 'Activated on a development deployment without a payment provider.'
+            : 'Activated by the billing provider webhook.',
+      },
+    },
+    { upsert: true, new: true }
+  ).catch(() => {});
+};
+
 /**
- * POST /api/subscription/checkout — the only user-initiated upgrade path.
+ * POST /api/subscription/checkout (legacy)
  *
- * Three outcomes, all decided by the server:
- *
- *  1. `mode: "checkout"`  — a hosted checkout URL is configured. The browser is
- *     sent there; the plan is activated later by the signed webhook, never by
- *     this request and never by the return URL.
- *  2. `mode: "activated"` — development-only switch (`BILLING_DEV_UPGRADE`).
- *     The plan is written here and immediately re-read from the database.
- *  3. `503 BILLING_NOT_CONFIGURED` — neither exists, so nothing is pretended.
+ * With Razorpay configured this refuses, and the pricing page uses
+ * `/subscription/razorpay/checkout` instead.
  */
 export const startCheckout = asyncHandler(async (req, res) => {
   const { interval } = checkoutSchema.parse(req.body || {});
   const pricing = getPricing();
+
+  if (isRazorpayConfigured()) {
+    throw ApiError.withCode(
+      409,
+      'USE_RAZORPAY_CHECKOUT',
+      'This deployment uses Razorpay. Start the upgrade from the pricing page, which creates a verified Razorpay order or subscription.'
+    );
+  }
 
   if (isCheckoutConfigured()) {
     const url = checkoutUrlFor(interval);
@@ -136,7 +91,6 @@ export const startCheckout = asyncHandler(async (req, res) => {
         amount: priceForInterval(interval).amount,
         currency: pricing.currency,
         url,
-        /** Activation happens on the provider callback, not on the return URL. */
         activation: 'webhook',
       },
     });
@@ -145,6 +99,7 @@ export const startCheckout = asyncHandler(async (req, res) => {
   if (isDevUpgradeEnabled()) {
     const { months } = priceForInterval(interval);
     const subscription = await activatePremium(req.user, { months, source: 'dev' });
+    await recordLocalSubscription(req.user, interval, months, 'none');
     return res.json({
       success: true,
       data: {
@@ -174,15 +129,9 @@ const webhookSchema = z.object({
 });
 
 /**
- * Billing webhook — a plan changes here only after a signed provider callback.
- *
- * It requires a shared secret in `BILLING_WEBHOOK_SECRET` and returns 501 when
- * no provider is wired up: the API never pretends a payment succeeded.
- *
- * Expected payload (sent by the billing provider's server, never the browser):
- *   { "event": "invoice.paid", "email": "user@example.com", "plan": "premium",
- *     "premiumUntil": "2027-10-28T00:00:00.000Z" }
- * `premiumUntil` may be replaced by `interval: "monthly" | "yearly"`.
+ * Billing webhook for a pre-Razorpay provider. Requires `BILLING_WEBHOOK_SECRET`
+ * and returns 501 when no provider is wired up: the API never pretends a
+ * payment succeeded.
  */
 export const billingWebhook = asyncHandler(async (req, res) => {
   if (!env.billing.webhookSecret) {
@@ -214,18 +163,25 @@ export const billingWebhook = asyncHandler(async (req, res) => {
       user.premiumUntil = until;
     }
     user.premiumSource = 'billing';
+    await user.save();
+    await recordLocalSubscription(user, payload.interval || 'monthly', payload.interval === 'yearly' ? 12 : 1, 'none');
   } else {
     user.plan = 'free';
     user.premiumUntil = null;
     user.premiumSource = 'none';
+    await user.save();
+    await Subscription.updateOne(
+      { userId: user._id },
+      { $set: { status: 'cancelled', cancelAtPeriodEnd: true, note: 'Downgraded by the billing provider.' } }
+    ).catch(() => {});
   }
-  await user.save();
 
+  const subscription = await Subscription.findOne({ userId: user._id });
   res.json({
     success: true,
     data: {
       user: user.toPublicJSON(),
-      subscription: resolveEntitlements(user),
+      subscription: resolveEntitlements(user, subscription),
       event: payload.event || 'manual.plan_change',
     },
   });

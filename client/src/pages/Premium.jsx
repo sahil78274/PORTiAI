@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowRight,
@@ -41,7 +41,7 @@ const FAQ = [
   },
   {
     q: 'How do I buy Premium?',
-    a: 'Use the Upgrade to Premium button with the billing period you want. If the deployment has a checkout provider connected, you are sent to its secure payment page and the plan is activated on the server once the payment is confirmed. When no provider is connected, the button explains exactly what has to be configured — it never pretends an upgrade succeeded.',
+    a: 'Open the Pricing page, choose monthly or yearly and confirm the recurring-billing terms. Razorpay handles the payment, and Premium is activated only after the PortiAI server verifies the Razorpay signature and the captured payment. The monthly plan is ₹9 for the first month, then ₹299 a month; the yearly plan is ₹3,050.',
   },
   {
     q: 'Why does my plan change without a page reload?',
@@ -62,10 +62,12 @@ export default function Premium() {
 
   /** Availability comes from the public plans endpoint; context is the fallback. */
   const billing = catalogueBilling || subscription?.billing || {};
-  const premiumPlan = plans.find((plan) => plan.id === 'premium') || null;
+  const premiumPlan = plans.find((plan) => plan.id === 'monthly') || null;
   const selected = interval === 'yearly' ? pricing?.yearly : pricing?.monthly;
-  const checkoutReady = billing.upgradePath === 'checkout';
+  const razorpayReady = billing.upgradePath === 'razorpay';
+  const checkoutReady = razorpayReady || billing.upgradePath === 'checkout';
   const devReady = billing.upgradePath === 'development';
+  const navigate = useNavigate();
 
   const check = async () => {
     setChecking(true);
@@ -82,6 +84,10 @@ export default function Premium() {
    */
   const startUpgrade = async () => {
     setConfigMessage('');
+    if (razorpayReady) {
+      navigate('/pricing');
+      return;
+    }
     setUpgrading(true);
     try {
       const result = await upgrade(interval);
@@ -217,16 +223,18 @@ export default function Premium() {
 
                 <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <p className="text-[30px] font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">
-                    {selected?.display}
+                    {interval === 'yearly' ? pricing.yearly.display : pricing.monthly.introDisplay}
                   </p>
-                  <p className="text-[13px] text-muted">{selected?.cadenceLabel}</p>
+                  <p className="text-[13px] text-muted">
+                    {interval === 'yearly' ? 'per year' : 'first month'}
+                  </p>
                   <span className="text-[11px] uppercase tracking-[0.1em] text-faint">{pricing.currency}</span>
                 </div>
 
                 <p className="mt-1.5 text-[12px] leading-5 text-muted">
                   {interval === 'yearly'
-                    ? `${pricing.yearly.fullYearAtMonthlyRate} paid monthly — you save ${pricing.yearly.saving} per year.`
-                    : `Billed every month. Or ${pricing.yearly.display} per year and save ${pricing.yearly.saving}.`}
+                    ? `${pricing.yearly.originalDisplay} at the monthly rate — you save ${pricing.yearly.saving} per year (${pricing.yearly.savingPercent}%).`
+                    : `Then ${pricing.monthly.display} every month, recurring until you cancel. Or ${pricing.yearly.display} per year and save ${pricing.yearly.saving}.`}
                 </p>
                 {!pricing.confirmed && pricing.note ? (
                   <p className="mt-1 text-[11px] leading-4 text-faint">{pricing.note}</p>
@@ -291,10 +299,12 @@ export default function Premium() {
             <div className="mt-3 rounded-md border border-line bg-canvasAlt p-3.5">
               <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
                 <CreditCard size={13} className="text-accent" aria-hidden="true" />
-                {checkoutReady ? 'Secure checkout connected' : devReady ? 'Development activation' : 'Checkout not connected'}
+                {razorpayReady ? 'Razorpay checkout connected' : checkoutReady ? 'Secure checkout connected' : devReady ? 'Development activation' : 'Checkout not connected'}
               </p>
               <p className="mt-1 text-[12px] leading-5 text-muted">
-                {checkoutReady
+                {razorpayReady
+                  ? 'Upgrade opens the Pricing page. Razorpay handles the payment; the PortiAI server verifies the signature and the payment before Premium is activated.'
+                  : checkoutReady
                   ? 'Upgrade opens the payment provider’s secure page. Premium is activated on the PortiAI server only after the provider confirms the payment.'
                   : devReady
                     ? 'This development deployment activates Premium on the server as soon as you press Upgrade — no payment is taken. The switch is disabled when NODE_ENV=production.'

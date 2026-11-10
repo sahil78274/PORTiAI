@@ -8,6 +8,19 @@ import {
 } from '../utils/portfolioDefaults.js';
 import { sanitizeText, sanitizeUrl, sanitizeStringArray } from '../utils/sanitize.js';
 
+/**
+ * Portfolio media URLs may be absolute http(s) URLs or a same-origin media path
+ * (`/api/uploads/<id>`) returned by this deployment's upload endpoint. Only the
+ * upload path is allowed as a relative value, so `javascript:` and other
+ * schemes can never slip through.
+ */
+const MEDIA_PATH = /^\/api\/uploads\/[a-f0-9]{24}$/i;
+const sanitizeMediaUrl = (value) => {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (MEDIA_PATH.test(raw)) return raw;
+  return sanitizeUrl(raw);
+};
+
 export const createPortfolioSchema = z
   .object({
     title: z.string().trim().max(120).optional(),
@@ -86,7 +99,7 @@ export const normalizePortfolioBody = (body = {}) => {
       summary: sanitizeText(p.summary, 1200),
       location: sanitizeText(p.location, 120),
       contactEmail: sanitizeText(p.contactEmail, 254),
-      photoUrl: sanitizeUrl(p.photoUrl),
+      photoUrl: sanitizeMediaUrl(p.photoUrl),
       links: Array.isArray(p.links)
         ? p.links
             .slice(0, 8)
@@ -131,6 +144,10 @@ export const normalizePortfolioBody = (body = {}) => {
         projectUrl: sanitizeUrl(item?.projectUrl),
         githubUrl: sanitizeUrl(item?.githubUrl),
         contributions: sanitizeText(item?.contributions, 1500),
+        imageUrl: sanitizeMediaUrl(item?.imageUrl),
+        imageAlt: sanitizeText(item?.imageAlt, 160),
+        // imageMeta is filled in on the server from the Upload document; a
+        // client-supplied value is ignored.
       }))
       .filter((item) => item.name || item.description);
   }

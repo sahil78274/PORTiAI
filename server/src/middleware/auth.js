@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
+import { env, isAdminEmail } from '../config/env.js';
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -54,9 +54,25 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
     throw ApiError.unauthorized('This session has been signed out. Please sign in again.');
   }
 
+  // ADMIN_EMAILS is an environment allow-list; promote the stored role once so
+  // the admin panel is reachable even before the grant script is run.
+  if (user.role !== 'admin' && isAdminEmail(user.email)) {
+    user.role = 'admin';
+    await User.updateOne({ _id: user._id }, { $set: { role: 'admin' } });
+  }
+
   req.user = user;
   next();
 });
+
+/**
+ * Admin-only gate. Used after `requireAuth`, so `req.user` is a fresh database
+ * document. A non-admin receives 403 — the API never relies on a hidden link.
+ */
+export const requireAdmin = (req, _res, next) => {
+  if (req.user?.role === 'admin' || isAdminEmail(req.user?.email)) return next();
+  return next(ApiError.forbidden('Administrator access is required for this resource.'));
+};
 
 /** Attaches req.user when a valid cookie exists, but never rejects. */
 export const optionalAuth = asyncHandler(async (req, _res, next) => {

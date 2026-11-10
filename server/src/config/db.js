@@ -72,10 +72,29 @@ export async function connectDatabase() {
   const { host, name } = mongoose.connection;
   console.log(`[db] Connected to MongoDB (${name} @ ${host})`);
 
-  // Ensure declared indexes (email uniqueness, slug uniqueness) exist.
+  /*
+   * Ensure declared indexes exist. Billing correctness depends on the unique
+   * sparse indexes on provider payment/subscription ids and idempotency keys,
+   * so these are synced at startup rather than left to a manual migration.
+   */
   const { User } = await import('../models/User.js');
   const { Portfolio } = await import('../models/Portfolio.js');
-  await Promise.all([User.syncIndexes(), Portfolio.syncIndexes()]);
+  const { Subscription } = await import('../models/Subscription.js');
+  const { Payment } = await import('../models/Payment.js');
+  const { BillingPlan } = await import('../models/BillingPlan.js');
+  const { AiProject } = await import('../models/AiProject.js');
+  const { AiGeneration } = await import('../models/AiGeneration.js');
+  const { WebhookEvent } = await import('../models/WebhookEvent.js');
+  await Promise.all([
+    User.syncIndexes(),
+    Portfolio.syncIndexes(),
+    Subscription.syncIndexes(),
+    Payment.syncIndexes(),
+    BillingPlan.syncIndexes(),
+    AiProject.syncIndexes(),
+    AiGeneration.syncIndexes(),
+    WebhookEvent.syncIndexes(),
+  ]);
 
   return mongoose.connection;
 }

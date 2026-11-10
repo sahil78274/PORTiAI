@@ -1,4 +1,4 @@
-import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 /**
@@ -92,6 +92,7 @@ export default function SplitLayout({ portfolio, blogHref, accent }) {
                     borderRadius: 'var(--p-radius)',
                   }}
                 >
+                  <ProjectCover project={project} ratio="16 / 9" rounded="rounded-[calc(var(--p-radius)*0.6)]" className="mb-3" />
                   <h3 className="text-[15.5px] font-semibold tracking-[-0.01em]">{project.name}</h3>
                   {project.description ? (
                     <p className="mt-2 text-[13px] leading-6" style={{ color: 'var(--p-muted)' }}>

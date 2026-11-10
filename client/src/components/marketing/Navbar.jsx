@@ -14,6 +14,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 const LINKS = [
   { label: 'Templates', to: '/templates' },
   { label: 'Features', to: '/features' },
+  { label: 'Pricing', to: '/pricing' },
   { label: 'Premium', to: '/premium' },
 ];
 

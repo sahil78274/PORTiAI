@@ -1,4 +1,4 @@
-import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 /**
@@ -78,6 +78,7 @@ export default function MosaicLayout({ portfolio, blogHref, accent }) {
               </div>
             </div>
             <div className="sm:pl-6" style={{ borderColor: 'var(--p-line)' }}>
+              <ProjectCover project={project} ratio="16 / 9" rounded="rounded-[calc(var(--p-radius)*0.6)]" className="mb-3" />
               {project.technologies?.length ? (
                 <div className="flex flex-wrap gap-1.5">
                   {project.technologies.slice(0, 6).map((tech) => (

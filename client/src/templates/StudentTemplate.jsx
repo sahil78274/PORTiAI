@@ -1,4 +1,4 @@
-import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, SECTION_LABELS, formatDate } from './shared.jsx';
+import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, ProjectCover, splitSkills, BlogLink, EmptyTemplateNotice, SECTION_LABELS, formatDate } from './shared.jsx';
 
 /**
  * Student Portfolio — soft header band, single readable column, education first.
@@ -90,7 +90,9 @@ export default function StudentTemplate({ portfolio, blogHref }) {
             <h2 className="text-[15px] font-semibold">Projects</h2>
             <div className="mt-3 space-y-4">
               {portfolio.projects.filter((project) => project?.name).map((project, index) => (
-                <article key={`${project.name}-${index}`} className="rounded-lg border border-[#e6e9ea] p-4">
+                <article key={`${project.name}-${index}`} className="overflow-hidden rounded-lg border border-[#e6e9ea]">
+                  <ProjectCover project={project} ratio="16 / 8" />
+                  <div className="p-4">
                   <h3 className="text-[14px] font-medium">{project.name}</h3>
                   {project.description ? <p className="mt-1 text-[13px] leading-6 text-[#4c5a62]">{project.description}</p> : null}
                   {project.contributions ? <p className="mt-1 text-[13px] leading-6 text-[#5c6970]">{project.contributions}</p> : null}
@@ -104,6 +106,7 @@ export default function StudentTemplate({ portfolio, blogHref }) {
                     </ul>
                   ) : null}
                   <ProjectLinks project={project} className="mt-2" />
+                  </div>
                 </article>
               ))}
             </div>

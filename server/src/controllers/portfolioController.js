@@ -5,6 +5,7 @@ import { generateUniqueSlug } from '../utils/slug.js';
 import { normalizePortfolioBody } from '../validators/portfolioInput.js';
 import { defaultPortfolioContent, TEMPLATE_DEFAULTS, normalizeTemplateId } from '../utils/portfolioDefaults.js';
 import { assertTemplateAccess } from '../services/subscriptionService.js';
+import { attachProjectImageMeta, assertPhotoOwnership } from '../services/projectImageService.js';
 
 const ID_PATTERN = /^[a-f0-9]{24}$/i;
 
@@ -135,6 +136,18 @@ export const updatePortfolio = asyncHandler(async (req, res) => {
   // controlled by dedicated endpoints.
   const updates = normalizePortfolioBody(req.body || {});
   assertTemplateAccess(req.user, updates.templateId);
+
+  /*
+   * Project screenshots: prove the upload belongs to this account and copy the
+   * authoritative metadata onto the project. The client never supplies
+   * imageMeta.
+   */
+  if (updates.projects) {
+    updates.projects = await attachProjectImageMeta(updates.projects, req.user._id);
+  }
+  if (updates.profile?.photoUrl) {
+    await assertPhotoOwnership(updates.profile.photoUrl, req.user._id);
+  }
   if (Object.keys(updates).length === 0) {
     throw ApiError.badRequest('No portfolio fields were supplied.');
   }

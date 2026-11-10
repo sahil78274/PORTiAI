@@ -1,4 +1,4 @@
-import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 const tileClass = 'p-5 sm:p-6';
@@ -81,6 +81,7 @@ export default function BentoLayout({ portfolio, blogHref, accent }) {
 
         {data.projects.slice(0, 3).map((project, index) => (
           <section key={`${project.name}-${index}`} className={`${tileClass} ${index === 0 ? 'col-span-2' : ''}`} style={tileStyle}>
+            <ProjectCover project={project} ratio={index === 0 ? '16 / 7' : '16 / 9'} rounded="rounded-[calc(var(--p-radius)*0.55)]" className="mb-3" />
             <div className="flex items-start justify-between gap-3">
               <h3 className="text-[14.5px] font-semibold leading-snug">{project.name}</h3>
               <span className="font-mono text-[10.5px]" style={{ color: 'var(--p-muted)' }}>

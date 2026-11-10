@@ -36,7 +36,7 @@ a successful payment.
 | Template catalogue | Done | **106 templates**: 100 premium (10 layouts × 10 visual styles, each pair used once) plus the six original free designs. Every entry has a stable id, name, category, tags, style, appearance, description, accent and access tier (`client/src/data/templateCatalogue.js`) |
 | Template gallery | Done | Search across names/keywords, category/style/appearance/access filters, featured/newest/A–Z sorting, 12-at-a-time Load more with accurate counts, live rendered previews (lazy-mounted), empty state, Premium lock indicators, in-use badges |
 | Template preview | Done | Modal preview at desktop/tablet/mobile plus a dedicated `/templates/:id` page with a full-height live render, design metadata, related templates and Use-template action |
-| Premium plans and entitlement | Done | Server-side plan on the user document, `GET /api/subscription`, public pricing via `GET /api/subscription/plans` (monthly + yearly, from `server/src/config/pricing.js`), working **Upgrade to Premium** flow (`POST /api/subscription/checkout` → hosted checkout or development activation), gating on portfolio create/update, entitlement re-checked on a poll and on tab focus, upgrade prompt on locked templates, operator grant script, signed billing webhook. No client-side unlock |
+| Premium plans and entitlement | Done | Three plans on one dedicated `/pricing` page: Free, **Monthly ₹9 first month then ₹299/month recurring**, **Yearly ₹3,050 (₹3,588 at the monthly rate, 15% off)**. Razorpay Checkout.js with server-side order/subscription creation, HMAC signature verification, captured-payment check, mandate authorisation for the recurring ₹299, webhook signature verification, idempotency, receipts, cancellation, renewal/expiry sweep and entitlement checks on every premium route. Maintained entitlement on `/api/subscription`; poll + tab-focus refresh; operator grant script. No client-side unlock |
 | Editor | Done | Seven tabs, debounced autosave with status, desktop/tablet/mobile previews, accent/font/density, section order and visibility, blog settings, publish |
 | My Portfolios | Done | Grid/list views, search + status filters + sort, thumbnails, preview, duplicate, share, delete with confirmation, analysis score |
 | Portfolio analyzer | Done | Portfolio rubric (7 categories, 100 points) and a website scanner (6 categories) for a live URL or uploaded HTML; severity-grouped findings; apply selected rewrites |
@@ -45,13 +45,16 @@ a successful payment.
 | Public portfolio + blog | Done | `/p/:slug` and `/p/:slug/blog`, rendered by the chosen template from saved data, SEO title/description, no dashboard chrome |
 | Settings | Done | Profile, password change, appearance and notification preferences, account deletion with password confirmation |
 | AI generation | Done | Biography, summary, project description, achievement, skills, blog text, section copy, chat-builder drafting; validated JSON; quota handling |
+| AI Project Builder | Done | Premium-only `/dashboard/ai-builder`: idea → stack (HTML/CSS/JS, React, React+Express, MERN, Python) → complexity/design prefs → complete generated files, README and setup steps. Organised file tree, code editor with manual save, AI regenerate/modify one file, full regeneration, ZIP download, sandboxed static preview where the stack allows it, monthly credits, and one-click add to a portfolio. Free accounts get a professional locked screen; the API returns `403 PREMIUM_REQUIRED` |
+| Project images | Done | JPG/PNG/WebP upload per project with 16:9 preview, replace, remove, alt text, type/size validation and automatic resizing. The server verifies ownership, stores only the URL + `imageMeta`, and every template renders a cover with `object-fit: cover` or a designed placeholder |
+| Admin dashboard | Done | `/dashboard/admin` (and `/api/admin/*`) for subscribers, monthly/yearly/active/cancelled/expired counts, revenue, AI generation and credit usage, failed payments and webhook health. Restricted to `role=admin` or `ADMIN_EMAILS`; no secrets in any response |
 | Documentation | Done | README, API reference, analyzer rubric, deployment guide, testing log, project report outline |
 
 ### Route map
 
 | Route | Access |
 | --- | --- |
-| `/`, `/features`, `/templates`, `/templates/:id`, `/premium`, `/privacy`, `/terms` | public |
+| `/`, `/features`, `/templates`, `/templates/:id`, `/premium`, `/pricing`, `/privacy`, `/terms` | public |
 | `/login`, `/register`, `/forgot-password` | public (redirect to the dashboard when already signed in) |
 | `/p/:slug`, `/p/:slug/blog`, `/p/:slug/blog/:postSlug` | public portfolio and blog |
 | `/dashboard` | signed in |
@@ -60,6 +63,8 @@ a successful payment.
 | `/dashboard/portfolio/:id/edit`, `/dashboard/portfolio/:id/analyze` | signed in (owner only) |
 | `/dashboard/analyzer`, `/dashboard/blog`, `/dashboard/blog/:id` | signed in |
 | `/dashboard/publish/:id`, `/dashboard/settings` | signed in (owner only) |
+| `/dashboard/billing`, `/dashboard/ai-builder` | signed in |
+| `/dashboard/admin` | signed in as an administrator (`role=admin` or `ADMIN_EMAILS`) |
 
 Things that are deliberately **not** implemented, and the UI says so instead of pretending:
 
@@ -69,10 +74,11 @@ Things that are deliberately **not** implemented, and the UI says so instead of 
   buttons are not shown rather than being mocked.
 * **Automatic AI content on every save** — AI is opt-in per field so the shared free-tier quota is not
   consumed by background requests.
-* **A bundled payment provider** — the checkout *flow* is implemented (hosted-checkout redirect plus a
-  signed webhook that verifies the payment server-side), but no provider account or credentials ship in
-  this repository. Until `BILLING_CHECKOUT_URL_*` and `BILLING_WEBHOOK_SECRET` are configured, the API
-  answers `503 BILLING_NOT_CONFIGURED` and `/premium` says so instead of faking a successful payment.
+* **Live payment credentials** — the Razorpay integration is complete, but no account or keys ship in
+  this repository. Until `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` are set,
+  `/pricing` explains that payments are unavailable and nothing can be charged or activated. In
+  non-production the existing `BILLING_DEV_UPGRADE` switch can still activate a plan for testing and is
+  always disabled when `NODE_ENV=production`.
 * **Custom domains and PDF export** — neither is implemented.
 
 ---
@@ -290,7 +296,17 @@ In production the frontend and the API are separate origins, so the variable mus
 | `PORT` | production | Port the API listens on (Render sets this) |
 | `NODE_ENV` | production | `development` / `production`; drives cookie flags and error verbosity |
 | `MONGODB_URI` | production | MongoDB Atlas connection string |
-| `GEMINI_API_KEY` | no | Server-side Gemini key. Missing key ⇒ AI endpoints return 503 with a clear message; the rule-based analyzer still works |
+| `GEMINI_API_KEY` | for AI | Server-side Gemini key. Missing key ⇒ AI endpoints and the Project Builder return 503 with a clear message; the rule-based analyzer still works |
+| `AI_PROVIDER` | no | `gemini` (default) or `openai` (any OpenAI-compatible endpoint) |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` | no | Required only when `AI_PROVIDER=openai` |
+| `AI_MODEL` | no | Optional model override for the project builder |
+| `AI_PROJECT_CREDITS_MONTHLY` | no | AI Project Builder credits per user per month, default 20 |
+| `AI_PROJECT_TIMEOUT_MS` | no | Provider timeout for one generation stage, default 55000 |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | for payments | Razorpay API credentials. The secret stays on the server; only `key_id` reaches Checkout.js |
+| `RAZORPAY_WEBHOOK_SECRET` | for payments | Signing secret for `/api/subscription/webhook/razorpay` |
+| `RAZORPAY_PLAN_ID_MONTHLY` / `_YEARLY` | no | Reuse existing Razorpay plan ids instead of creating them |
+| `PREMIUM_PRICE_INTRO` / `_MONTHLY` / `_YEARLY` / `_YEARLY_ORIGINAL` | no | Server-side price overrides (defaults 9 / 299 / 3050 / 3588) |
+| `ADMIN_EMAILS` | no | Comma-separated emails allowed to open the admin dashboard |
 | `GEMINI_MODEL` | no | Default `gemini-2.5-flash`; must be enabled for your key |
 | `GEMINI_TIMEOUT_MS` | no | Request timeout, default 25000 |
 | `CLIENT_URL` | yes | Comma-separated allowed frontend origins (CORS), no trailing slash |
@@ -315,9 +331,9 @@ and visible to any visitor. The Gemini key and the session secret stay on the se
 
 Full request/response documentation: [`docs/API.md`](docs/API.md).
 
-Tests: `cd client && npm test` (48 catalogue/theme/draft checks), `cd client && npm run smoke` (renders
-all 106 templates and every route to static HTML), `cd server && npm test` (66 HTTP checks against a
-real database), `node scripts/sync-template-catalogue.mjs --check`.
+Tests: `cd client && npm test` (62 catalogue/theme/draft checks), `cd client && npm run smoke` (renders
+all 106 templates and every route to static HTML), `cd server && npm test` (109 HTTP checks against a
+real database — 73 API + 36 commerce/AI) covering Razorpay verification, webhooks, AI generation, image ownership and admin reporting. `npm test` runs both suites.
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
@@ -352,15 +368,36 @@ real database), `node scripts/sync-template-catalogue.mjs --check`.
 | GET | `/api/public/:slug` | – | Published portfolio only |
 | GET | `/api/public/:slug/blog` | – | Published posts of a published, blog-enabled portfolio |
 | GET | `/api/public/:slug/blog/:postSlug` | – | A single published post |
-| GET | `/api/subscription` | ✔ | Current entitlements, catalogue sizes, plan copy |
-| POST | `/api/subscription/webhook` | shared secret | Billing provider callback (501 until `BILLING_WEBHOOK_SECRET` is set) |
+| GET | `/api/subscription/plans` | – | Free/monthly/yearly plans, prices and payment availability |
+| GET | `/api/subscription` | ✔ | Current entitlements, subscription record, AI credits, catalogue |
+| POST | `/api/subscription/razorpay/checkout` | ✔ | Create a ₹9 order / yearly subscription from server-side prices |
+| POST | `/api/subscription/razorpay/verify` | ✔ | Verify the Checkout.js signature and captured payment; activates Premium |
+| POST | `/api/subscription/razorpay/mandate` | ✔ | Create/reuse the ₹299 monthly mandate after the intro month |
+| GET | `/api/subscription/history` | ✔ | Subscription history and receipts |
+| GET | `/api/subscription/payments/:id` | ✔ | One receipt (owner only) |
+| POST | `/api/subscription/cancel` | ✔ | Cancel at period end (or immediately) with an access-until date |
+| POST | `/api/subscription/webhook/razorpay` | signature | Raw-body Razorpay webhook, idempotent and amount-checked |
+| POST | `/api/subscription/webhook` | shared secret | Legacy hosted-checkout callback |
+| GET | `/api/ai-projects/meta` | ✔ premium | Stacks, complexities and AI availability |
+| GET | `/api/ai-projects/credits` | ✔ premium | Monthly AI credit balance |
+| GET/POST | `/api/ai-projects`, `/api/ai-projects/generate` | ✔ premium | List / generate a project |
+| GET/DELETE | `/api/ai-projects/:id` | ✔ premium | Read or delete an owned project |
+| POST | `/api/ai-projects/:id/regenerate` | ✔ premium | Rebuild all files (1 credit) |
+| POST | `/api/ai-projects/:id/files/regenerate` | ✔ premium | Regenerate/modify one file (1 credit) |
+| PATCH | `/api/ai-projects/:id/files` | ✔ premium | Manual file save (free) |
+| GET | `/api/ai-projects/:id/download` | ✔ premium | ZIP download |
+| POST | `/api/ai-projects/:id/add-to-portfolio` | ✔ premium | Append to an owned portfolio |
+| POST | `/api/uploads` | ✔ | Upload a portrait or project screenshot |
+| GET/DELETE | `/api/uploads/:id` | public / owner | Serve image / delete own media |
+| GET | `/api/admin/summary` | admin | Subscribers, revenue, AI usage, failures |
+| GET | `/api/admin/subscriptions`, `/payments`, `/ai-usage`, `/webhooks` | admin | Paginated reporting |
 
 All private endpoints require the session cookie and re-check ownership in the database. Another
 user's portfolio id returns `404` (not `403`) so ids cannot be probed.
 
 Selecting a premium template without an active plan returns `403` with `error.code = "PREMIUM_REQUIRED"`,
 on both `POST /api/portfolios` and `PUT /api/portfolios/:id`. The plan itself can only change server-side
-(operator script or signed webhook).
+(verified Razorpay checkout, signed webhook or the operator script).
 
 ---
 
@@ -402,38 +439,42 @@ back to Dark instead of breaking the page.
 
 ### Entitlement and pricing
 
-`User.plan` (`free` | `premium`, optional `premiumUntil`) is written only by the server. The API gates
-premium template selection on create and update, and `/api/subscription` is polled by the client (plus
-on tab focus) so a plan that becomes active unlocks the catalogue without a reload.
+`User.plan` (`free` | `premium`), `premiumUntil` and the linked `Subscription` record are written only by
+the server. Premium means **`plan === "premium"` and `premiumUntil > now`**; every premium template write
+and every `/api/ai-projects/*` call re-checks it. The client polls `/api/subscription` and refreshes on
+tab focus, so a plan that becomes active unlocks the UI without a reload.
 
-**Price.** Every amount shown anywhere comes from one file, `server/src/config/pricing.js`, and is
-configurable without touching code:
+**Prices.** One file, `server/src/config/pricing.js`, is the source of truth. Amounts are sent to
+Razorpay in minor units; the browser can never supply a price.
 
-| Variable | Meaning | If unset |
+| Plan | Charged today | Then |
 | --- | --- | --- |
-| `PREMIUM_PRICE_MONTHLY` | Total charged per month | Indicative `199` |
-| `PREMIUM_PRICE_YEARLY` | Total charged per year | Indicative `1999` |
-| `PREMIUM_CURRENCY` | ISO currency code (default `INR`) | `INR` |
+| Monthly | ₹9 one-time intro (first month) | ₹299 every month, recurring |
+| Yearly | ₹3,050 | ₹3,050 every year; ₹3,588 at the monthly rate, saving ₹538 (15%) |
+| Free | ₹0 | ₹0 |
 
-While the amounts are the indicative ones the API reports `pricing.source: "default"` and the Premium
-page labels the price as indicative. Set both variables to remove the note and show the real price.
+Overrides: `PREMIUM_PRICE_INTRO`, `PREMIUM_PRICE_MONTHLY`, `PREMIUM_PRICE_YEARLY`,
+`PREMIUM_PRICE_YEARLY_ORIGINAL`, `PREMIUM_CURRENCY`.
 
-**Upgrade path.** `POST /api/subscription/checkout` is the only user-initiated route, and it never
-grants access by itself in production:
+**Upgrade path.** `/pricing` is the only purchase UI.
 
-1. **Hosted checkout** — set `BILLING_CHECKOUT_URL_MONTHLY` / `BILLING_CHECKOUT_URL_YEARLY`. The API
-   returns that URL, the browser goes to the provider, and the plan is activated only by the signed
-   webhook (`BILLING_WEBHOOK_SECRET`) after a verified payment.
-2. **Development activation** — outside production, `BILLING_DEV_UPGRADE` (default on) lets the signed-in
-   user activate Premium from the UI so the unlock flow can be tested without a provider. It is always
-   disabled when `NODE_ENV=production`.
-3. **Operator grant** — with neither configured the API answers `503 BILLING_NOT_CONFIGURED` and the UI
-   shows that message instead of a fake success:
-   ```bash
-   cd server
-   node scripts/grant-premium.mjs --email you@example.com --plan premium
-   node scripts/grant-premium.mjs --email you@example.com --plan free
-   ```
+1. **Monthly** — `POST /api/subscription/razorpay/checkout` creates a ₹9 order. After Checkout.js succeeds
+   the server verifies the signature and the captured Razorpay payment, grants one month, and the client
+   opens a second Checkout window to authorise the ₹299 mandate. The mandate uses
+   `start_at = premiumUntil`, so the first recurring charge happens when the ₹9 month ends. If the user
+   closes that window, the paid month stays active and Billing offers “authorise recurring billing”.
+2. **Yearly** — one ₹3,050 Razorpay subscription is created and verified the same way.
+3. **Webhooks** — `POST /api/subscription/webhook/razorpay` verifies
+   `HMAC_SHA256(raw_body, RAZORPAY_WEBHOOK_SECRET)`, de-duplicates by event id and only extends access when
+   the amount and currency match the plan. It covers renewals, failures and subscription cancellations.
+4. **Development activation** — outside production, `BILLING_DEV_UPGRADE` (default on) can activate a plan
+   without a provider. Always disabled when `NODE_ENV=production`.
+5. **Operator grant** — `node scripts/grant-premium.mjs --email … --plan …`.
+
+**Cancellation and expiry.** Cancelling stops future renewals and keeps access to the end of the paid
+period; the billing page shows the exact date. The expiry sweep runs at boot and every 10 minutes.
+Failed renewals increment `retryCount`, keep paid access until the period ends, and are visible in the
+admin panel.
 
 ## 7. Security model
 
@@ -487,7 +528,7 @@ Both suites were executed in this environment; see [`docs/TESTING.md`](docs/TEST
 commands and output.
 
 ```bash
-cd server && npm test                              # 42 HTTP checks: real Express app, real mongod, stub Gemini
+cd server && npm test                              # 109 HTTP checks (73 API + 36 commerce/AI): real Express app, real MongoDB, stub Gemini + Razorpay
 cd client && npm test                              # 10 unit checks: 9-template registry, normalisation, fallback
 cd client && npm run build                         # production build (passes cleanly)
 GEMINI_API_KEY=… node server/scripts/check-gemini.mjs   # one real request to Google, with translated errors

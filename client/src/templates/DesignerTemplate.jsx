@@ -1,4 +1,4 @@
-import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, projectImage, formatDate } from './shared.jsx';
+import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, ProjectCover, formatDate } from './shared.jsx';
 
 /**
  * Creative Designer — warm paper, display typography, asymmetric image-led grid.
@@ -62,17 +62,10 @@ export default function DesignerTemplate({ portfolio, blogHref }) {
                 const wide = index % 3 === 0;
                 return (
                   <article key={`${project.name}-${index}`} className={wide ? 'sm:col-span-2' : ''}>
-                    <div className={`overflow-hidden bg-[#efe9df] ${wide ? 'aspect-[16/8]' : 'aspect-[4/3]'}`}>
-                      <img
-                        src={projectImage(project, index)}
-                        alt={project.name ? `${project.name} — project visual` : ''}
-                        loading="lazy"
-                        className="h-full w-full object-cover"
-                        onError={(event) => {
-                          event.currentTarget.style.visibility = 'hidden';
-                        }}
-                      />
-                    </div>
+                    <ProjectCover
+                      project={project}
+                      ratio={wide ? '16 / 8' : '4 / 3'}
+                    />
                     <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4">
                       <h3 className="font-serif text-[20px] leading-snug">{project.name}</h3>
                       {project.technologies?.length ? (

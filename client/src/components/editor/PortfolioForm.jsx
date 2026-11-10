@@ -135,6 +135,145 @@ const PhotoField = ({ value, onChange }) => {
   );
 };
 
+/**
+ * Project thumbnail control.
+ *
+ * Uploads through the same media store as the profile photo, but keeps a 16:9
+ * crop so every project card lines up. The draft is updated immediately, so
+ * the live preview and the saved card use exactly the same URL. Removing the
+ * image clears both the URL and its alt text and the templates fall back to
+ * their designed placeholder.
+ */
+const ProjectImageField = ({ value, alt, onChange, onAltChange, projectName, index = 0 }) => {
+  const toast = useToast();
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState('');
+  const preview = value && !failed ? uploadService.resolveUrl(value) : '';
+
+  const onFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setError('');
+    setFailed(false);
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError('Choose a JPG, PNG or WebP image.');
+      return;
+    }
+    if (file.size > 12 * 1024 * 1024) {
+      setError('That file is larger than 12 MB. Choose a smaller image.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const { url } = await uploadService.uploadImage(file, { purpose: 'project' });
+      onChange(url);
+      setFailed(false);
+      toast.success('Project image uploaded.', { description: 'Save the draft to publish it with this project.' });
+    } catch (uploadError) {
+      setError(uploadError.message || 'The image could not be uploaded.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="editor-subcard flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="text-[12px] font-medium leading-snug text-inkSoft">Project image / thumbnail</span>
+        <span className="shrink-0 text-2xs font-normal lowercase tracking-normal text-faint">optional</span>
+      </div>
+
+      <div className="flex flex-wrap items-start gap-3">
+        <span className="relative flex aspect-[16/9] w-full max-w-[240px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-lineStrong bg-canvasAlt">
+          {preview ? (
+            <img
+              src={preview}
+              alt={alt || (projectName ? `${projectName} thumbnail` : 'Project thumbnail')}
+              className="h-full w-full object-cover"
+              onError={() => setFailed(true)}
+            />
+          ) : (
+            <span className="flex flex-col items-center gap-1.5 px-3 text-center">
+              <ImagePlus size={19} className="text-faint" aria-hidden="true" />
+              <span className="text-[10.5px] leading-4 text-faint">16:9 screenshot works best</span>
+            </span>
+          )}
+          {uploading ? (
+            <span className="absolute inset-0 flex items-center justify-center bg-overlay">
+              <Loader2 size={18} className="animate-spin text-accent" aria-hidden="true" />
+            </span>
+          ) : null}
+        </span>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className="btn-secondary btn-sm"
+            >
+              {uploading ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <ImagePlus size={12} aria-hidden="true" />}
+              {uploading ? 'Uploading…' : value ? 'Replace image' : 'Upload image'}
+            </button>
+            {value ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange('');
+                  onAltChange?.('');
+                  setFailed(false);
+                  setError('');
+                }}
+                className="btn-ghost btn-sm text-danger hover:bg-dangerSoft hover:text-danger"
+              >
+                <Trash2 size={12} aria-hidden="true" />
+                Remove
+              </button>
+            ) : null}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={onFile}
+              aria-label="Upload a project image"
+            />
+          </div>
+
+          <p className="text-xs leading-relaxed text-muted">
+            JPG, PNG or WebP. Resized to 1440 px and cropped to fit the card. Shown at the top of this project in every
+            template.
+          </p>
+
+          {value ? (
+            <Field label="Image description" htmlFor={`project-image-alt-${index}`} hint="Read by screen readers; leave blank for a sensible default.">
+              <TextInput
+                id={`project-image-alt-${index}`}
+                value={alt || ''}
+                onChange={(event) => onAltChange?.(event.target.value)}
+                placeholder="Dashboard showing the event calendar and registrations"
+                maxLength={160}
+              />
+            </Field>
+          ) : null}
+
+          {error ? (
+            <p className="rounded-md border border-dangerLine bg-dangerSoft px-2.5 py-2 text-[11.5px] leading-5 text-danger" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ItemCard = ({ title, index, total, onMove, onRemove, children, removeLabel = 'Remove' }) => (
   <div className="editor-subcard">
     <div className="mb-3.5 flex items-center justify-between gap-2 border-b border-line pb-2.5">
@@ -689,6 +828,15 @@ export function ProjectsSection({ draft, setDraft }) {
               />
             </Field>
           </div>
+
+          <ProjectImageField
+            value={item.imageUrl || ''}
+            alt={item.imageAlt || ''}
+            projectName={item.name}
+            index={index}
+            onChange={(imageUrl) => update(index, { imageUrl })}
+            onAltChange={(imageAlt) => update(index, { imageAlt })}
+          />
 
           <div className="editor-field-group">
             <Field label="Description" htmlFor={`project-description-${index}`} hint="What it does, how you built it, what works today.">

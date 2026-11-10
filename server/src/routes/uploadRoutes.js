@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createUpload, getUpload } from '../controllers/uploadController.js';
+import { createUpload, getUpload, deleteUpload } from '../controllers/uploadController.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,5 +8,6 @@ const router = Router();
 router.get('/:id', getUpload);
 
 router.post('/', requireAuth, createUpload);
+router.delete('/:id', requireAuth, deleteUpload);
 
 export default router;

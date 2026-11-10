@@ -1,4 +1,4 @@
-import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, formatDate } from './shared.jsx';
+import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, ProjectCover, splitSkills, BlogLink, EmptyTemplateNotice, formatDate } from './shared.jsx';
 
 /**
  * Executive Portfolio — navy masthead, serif headings, fixed details rail.
@@ -100,6 +100,7 @@ export default function ExecutiveTemplate({ portfolio, blogHref }) {
               <ul className="mt-3 divide-y divide-[#e7e3d9]">
                 {portfolio.projects.filter((project) => project?.name).map((project, index) => (
                   <li key={`${project.name}-${index}`} className="py-4 first:pt-2">
+                    <ProjectCover project={project} ratio="16 / 8" rounded="rounded-sm" className="mb-3 max-w-sm" />
                     <h3 className="text-[15px] font-semibold">{project.name}</h3>
                     {project.description ? <p className="mt-1 text-[13px] leading-6 text-[#3a434e]">{project.description}</p> : null}
                     <ProjectLinks project={project} className="mt-2" />

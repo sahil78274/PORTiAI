@@ -2,6 +2,8 @@ import { createApp } from './app.js';
 import { env, isCheckoutConfigured, isDevUpgradeEnabled } from './config/env.js';
 import { connectDatabase, disconnectDatabase } from './config/db.js';
 import { isAiEnabled } from './services/geminiService.js';
+import { isRazorpayConfigured, isRazorpayWebhookConfigured } from './config/env.js';
+import { expireDueSubscriptions } from './services/billingService.js';
 
 const start = async () => {
   try {
@@ -17,10 +19,30 @@ const start = async () => {
     console.log(`[startup] Allowed client origin(s): ${env.clientUrls.join(', ')}`);
     console.log(`[startup] Gemini: ${isAiEnabled() ? `configured (${env.gemini.model})` : 'not configured — rule-based analysis only'}`);
     console.log(
-      `[startup] Billing: checkout ${
+      `[startup] Billing: Razorpay ${
+        isRazorpayConfigured() ? 'configured' : 'not configured'
+      }; webhook ${isRazorpayWebhookConfigured() ? 'verified' : 'not configured'}; legacy checkout ${
         isCheckoutConfigured() ? 'connected' : 'not configured'
-      }; development upgrade ${isDevUpgradeEnabled() ? 'ENABLED (disabled in production)' : 'disabled'}`,
+      }; development upgrade ${isDevUpgradeEnabled() ? 'ENABLED (disabled in production)' : 'disabled'}`
     );
+
+    /*
+     * Subscription expiry sweep. Runs once at startup and every 10 minutes so a
+     * lapsed plan loses Premium even when no browser is open. Individual billing
+     * reads also trigger it, so the state is correct on first view.
+     */
+    const sweep = () =>
+      expireDueSubscriptions()
+        .then(({ usersExpired, subscriptionsExpired }) => {
+          if (usersExpired || subscriptionsExpired) {
+            console.log(
+              `[billing] expiry sweep: ${usersExpired} user(s), ${subscriptionsExpired} subscription(s) expired`
+            );
+          }
+        })
+        .catch((error) => console.warn('[billing] expiry sweep failed:', error.message));
+    sweep();
+    setInterval(sweep, 10 * 60 * 1000).unref();
   });
 
   const shutdown = async (signal) => {

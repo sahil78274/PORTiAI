@@ -69,6 +69,49 @@ export const env = {
     timeoutMs: Number(required('GEMINI_TIMEOUT_MS', '25000')),
     dailyRequestCap: Number(required('AI_DAILY_REQUEST_CAP', '200')),
   },
+  /**
+   * AI provider abstraction.
+   *
+   * `gemini` (the default) uses the existing Gemini client. `openai` talks to
+   * any OpenAI-compatible chat-completions endpoint, which covers OpenAI,
+   * Groq, Together, OpenRouter and local gateways. Keys are read here only and
+   * never leave the server.
+   */
+  ai: {
+    provider: ['gemini', 'openai'].includes(String(process.env.AI_PROVIDER || '').toLowerCase())
+      ? String(process.env.AI_PROVIDER).toLowerCase()
+      : 'gemini',
+    model: required('AI_MODEL', ''),
+    openaiApiKey: required('OPENAI_API_KEY', ''),
+    openaiBaseUrl: required('OPENAI_BASE_URL', 'https://api.openai.com/v1').replace(/\/$/, ''),
+    /** Project-builder generation limits (AI cost control). */
+    projectCreditsMonthly: Math.max(1, Number(required('AI_PROJECT_CREDITS_MONTHLY', '20')) || 20),
+    projectTimeoutMs: Number(required('AI_PROJECT_TIMEOUT_MS', '55000')),
+  },
+  /**
+   * Razorpay configuration.
+   *
+   * `keyId` is public and is handed to the browser checkout. `keySecret` and
+   * `webhookSecret` are used only for server-to-server calls and signature
+   * verification, and are never included in any API response.
+   */
+  razorpay: {
+    keyId: required('RAZORPAY_KEY_ID', ''),
+    keySecret: required('RAZORPAY_KEY_SECRET', ''),
+    webhookSecret: required('RAZORPAY_WEBHOOK_SECRET', ''),
+    /** Overridable for tests; production always uses the real API. */
+    apiBaseUrl: required('RAZORPAY_API_BASE_URL', 'https://api.razorpay.com').replace(/\/$/, ''),
+    /** Existing plan ids, if the account already has them provisioned. */
+    planIdMonthly: required('RAZORPAY_PLAN_ID_MONTHLY', ''),
+    planIdYearly: required('RAZORPAY_PLAN_ID_YEARLY', ''),
+    monthlyTotalCount: Math.max(1, Number(required('RAZORPAY_MONTHLY_TOTAL_COUNT', '120')) || 120),
+    yearlyTotalCount: Math.max(1, Number(required('RAZORPAY_YEARLY_TOTAL_COUNT', '20')) || 20),
+  },
+  /** Email addresses that always see the admin panel (comma separated). */
+  adminEmails: required('ADMIN_EMAILS', '')
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean),
   cookieName: 'portiai_session',
   sessionDays: Number(required('SESSION_DAYS', '7')),
   /**
@@ -113,3 +156,13 @@ export const checkoutUrlFor = (interval) =>
   (interval === 'yearly' ? env.billing.checkoutUrlYearly : env.billing.checkoutUrlMonthly) || '';
 
 export const isGeminiConfigured = () => Boolean(env.gemini.apiKey);
+
+/** True when Razorpay can be used for server-to-server calls. */
+export const isRazorpayConfigured = () => Boolean(env.razorpay.keyId && env.razorpay.keySecret);
+
+/** True when Razorpay webhook signatures can be verified. */
+export const isRazorpayWebhookConfigured = () => Boolean(env.razorpay.webhookSecret);
+
+/** True when an email address has been granted admin access. */
+export const isAdminEmail = (email) =>
+  Boolean(email) && env.adminEmails.includes(String(email).trim().toLowerCase());

@@ -387,114 +387,177 @@ Provider messages, keys and stack traces are never echoed to the client.
 
 ---
 
-## Subscription and premium entitlement
+## Subscription, Razorpay and Premium entitlement
 
-Premium access is decided by the server from the user's plan in MongoDB. The client can read it, but
-cannot change it.
+Premium is granted only by the server, after either a verified Razorpay payment or an operator action.
+The browser receives display prices, the public Razorpay `key_id` and its own entitlement — never a
+secret, and never a way to set a plan.
+
+### Prices
+
+| Plan | Charge today | Then | Notes |
+| --- | --- | --- | --- |
+| Monthly | ₹9 (one-time intro, first month only) | ₹299 / month, recurring | The ₹299 mandate starts when the ₹9 month ends |
+| Yearly | ₹3,050 | ₹3,050 / year, recurring | ₹3,588 at the monthly rate — saves ₹538 (15%) |
+| Free | ₹0 | ₹0 | Premium templates and the AI Project Builder are locked |
+
+Amounts live in `server/src/config/pricing.js` and are sent to Razorpay in minor units. The browser
+never supplies an amount, currency or plan id.
 
 ### `GET /api/subscription/plans`
 
-Public — no session. The single source of the prices and plan copy used by `/premium` (the amounts come
-from `server/src/config/pricing.js`, so the browser never hardcodes one).
+Public. Returns the plan catalogue, formatted prices and payment availability.
 
 ```json
 {
   "success": true,
   "data": {
     "plans": [
-      { "id": "free", "name": "Free", "amount": 0, "price": "Free", "cadence": "forever", "features": ["…"] },
-      { "id": "premium", "name": "Premium", "amount": 199, "currency": "INR", "price": "₹199",
-        "cadence": "per month", "interval": "monthly", "features": ["…"],
-        "pricing": { "monthly": { "amount": 199, "display": "₹199" },
-                     "yearly": { "amount": 1999, "display": "₹1,999", "saving": "₹389", "savingPercent": 16 },
-                     "confirmed": false, "note": "Indicative price — set PREMIUM_PRICE_MONTHLY …" } }
+      { "id": "free", "name": "Free", "amount": 0, "display": "Free", "features": ["…"] },
+      { "id": "monthly", "name": "Monthly", "amount": 299, "display": "₹299",
+        "introAmount": 9, "introDisplay": "₹9", "recurring": true, "disclosure": "First month ₹9, then ₹299 every month until you cancel." },
+      { "id": "yearly", "name": "Yearly", "amount": 3050, "display": "₹3,050",
+        "originalDisplay": "₹3,588", "saving": "₹538", "savingPercent": 15, "recurring": true }
     ],
-    "pricing": {
-      "currency": "INR", "source": "default", "confirmed": false,
-      "monthly": { "amount": 199, "display": "₹199", "period": "month", "cadenceLabel": "per month" },
-      "yearly": { "amount": 1999, "display": "₹1,999", "period": "year", "savingAmount": 389, "savingPercent": 16 }
-    },
-    "billing": { "providerConfigured": false, "checkoutConfigured": false,
-                 "devUpgradeEnabled": true, "upgradePath": "development" }
+    "pricing": { "currency": "INR", "source": "plan", "confirmed": true, "monthly": { "…": "…" }, "yearly": { "…": "…" } },
+    "billing": {
+      "razorpayConfigured": true,
+      "webhookConfigured": true,
+      "checkoutConfigured": false,
+      "devUpgradeEnabled": false,
+      "paymentRequired": true,
+      "upgradePath": "razorpay"
+    }
   }
 }
 ```
 
-`pricing.source` is `env` when `PREMIUM_PRICE_MONTHLY` **and** `PREMIUM_PRICE_YEARLY` are set, otherwise
-`default` and the UI labels the amount as indicative.
+`upgradePath` is one of `razorpay`, `checkout` (legacy hosted URL), `development` (no provider,
+non-production only) or `operator` (no self-service path).
 
 ### `GET /api/subscription`
 
-Requires a session. Returns the caller's entitlements plus the same `plans`, `pricing` and `billing`
-blocks as `/plans`.
+Requires a session. Runs the expiry sweep, then returns entitlements, the subscription record, AI
+credits and the same catalogue:
 
 ```json
 {
   "success": true,
   "data": {
     "subscription": {
-      "plan": "free",
-      "isPremium": false,
-      "label": "Free",
-      "premiumSince": null,
-      "premiumUntil": null,
-      "source": "none",
-      "templates": { "total": 106, "free": 6, "premium": 100, "accessible": 6 },
-      "billing": {
-        "providerConfigured": false, "checkoutConfigured": false,
-        "devUpgradeEnabled": true, "upgradePath": "development", "paymentRequired": false
-      }
+      "plan": "premium", "isPremium": true, "premiumUntil": "2026-12-10T…",
+      "status": "active", "interval": "monthly", "cancelAtPeriodEnd": false,
+      "renewal": { "willRenew": true }, "templates": { "accessible": 106 }
     },
-    "plans": [ { "id": "free", "...": "..." }, { "id": "premium", "...": "..." } ]
+    "subscriptionRecord": { "id": "…", "provider": "razorpay", "amount": 29900, "…": "…" },
+    "credits": { "limit": 20, "used": 1, "remaining": 19 },
+    "plans": [], "pricing": {}, "billing": {}
   }
 }
 ```
 
-`GET /api/auth/me`, `POST /api/auth/login` and `POST /api/auth/register` also include
-`data.subscription`, so the first render after sign-in already knows the plan.
+Premium means `plan === "premium"` **and** `premiumUntil > now`. `GET /api/auth/me`, login and
+register include the same `subscription` block.
 
-### Premium template gate
+### `POST /api/subscription/razorpay/checkout`
 
-`POST /api/portfolios` and `PUT /api/portfolios/:id` return **403** when the supplied `templateId` is a
-premium design and the account has no active plan:
+Auth required. Body: `{ "interval": "monthly" | "yearly", "idempotencyKey": "…" }`.
 
-```json
-{ "success": false, "error": { "code": "PREMIUM_REQUIRED", "message": "That template is part of PortiAI Premium. …" } }
-```
+| Plan state | `mode` | What the client does |
+| --- | --- | --- |
+| Monthly, intro unused | `razorpay_order` | Opens Checkout for `orderId` (₹9), then calls verify and the mandate endpoint |
+| Yearly | `razorpay_subscription` | Opens Checkout for `subscriptionId` (₹3,050) |
+| Already premium this interval | `already_active` | No payment UI; entitlement is refreshed |
+| Intro already paid, mandate pending | `already_paid` | No second ₹9 charge; the billing page offers the ₹299 mandate |
 
-Free template ids are always accepted. A downgrade does not break existing portfolios — they keep
-their saved design — but new selections require the plan.
+Response fields: `keyId` (public), `orderId` / `subscriptionId`, `amount` (minor units), `currency`,
+`paymentRecordId`, `description`, `prefill`, `startAt` (for a post-intro mandate), `mode`.
 
-### `POST /api/subscription/checkout`
+Repeating a request with the same `idempotencyKey` returns the same Payment record instead of creating
+a second order.
 
-Requires a session. Body: `{ "interval": "monthly" | "yearly" }` (default `monthly`). This is the only
-user-initiated upgrade route, and it never grants access by itself in production:
+### `POST /api/subscription/razorpay/verify`
 
-| Deployment state | Response |
-| --- | --- |
-| `BILLING_CHECKOUT_URL_MONTHLY`/`_YEARLY` set | `200 { "mode": "checkout", "url": "https://provider/…", "activation": "webhook" }` — the plan changes only when the provider calls the webhook |
-| no provider, `NODE_ENV !== production`, `BILLING_DEV_UPGRADE` not `false` | `200 { "mode": "activated", "activation": "development", "subscription": { … }, "message": "…" }` — written server-side with `premiumSource: "dev"` |
-| neither | `503 BILLING_NOT_CONFIGURED` with an explanation of the missing variables. Nothing is changed |
+Auth required. Body contains only Checkout.js identifiers:
 
 ```json
-{ "success": false, "error": { "code": "BILLING_NOT_CONFIGURED",
-  "message": "No payment provider is connected to this deployment yet, so Premium cannot be purchased here. …" } }
+{
+  "paymentRecordId": "…",
+  "razorpay_payment_id": "pay_…",
+  "razorpay_order_id": "order_…",
+  "razorpay_subscription_id": "sub_…",
+  "razorpay_signature": "…"
+}
 ```
 
-### `POST /api/subscription/webhook`
+The server:
 
-Billing provider callback. Requires the `x-billing-secret` header to match `BILLING_WEBHOOK_SECRET`.
-Returns **501 `NOT_IMPLEMENTED`** when no provider is configured, which is the default in this
-repository.
+1. loads the Payment by id **and** `userId` (a foreign record is a 404);
+2. verifies `HMAC_SHA256(order_id|payment_id, key_secret)` or `HMAC_SHA256(payment_id|subscription_id, key_secret)`
+   in constant time;
+3. fetches the payment from Razorpay and requires `captured`, the expected amount and currency;
+4. marks the record captured and extends `premiumUntil` (idempotently — a replay never extends twice).
 
-```json
-{ "event": "invoice.paid", "email": "user@example.com", "plan": "premium", "premiumUntil": "2027-10-28T00:00:00.000Z" }
-```
+Only then does it return `{ "verified": true, "subscription": {…}, "entitlements": {…}, "mandate": {…} }`.
+A bad signature is `400 PAYMENT_VERIFICATION_FAILED`; a Razorpay payment that is not captured is
+rejected. **No client-side success callback can activate Premium.**
 
-`premiumUntil` may be replaced by `"interval": "monthly" | "yearly"`, in which case the server computes
-the end date (one or twelve months from now). A wrong or missing `x-billing-secret` returns `401`.
+The `mandate` object (`subscriptionId`, `paymentRecordId`, `amount`, `startAt`) is present after the ₹9
+payment. The client opens a second Checkout window; its callback is verified with the same endpoint.
 
-Plans can also be provisioned directly by an operator:
+### `POST /api/subscription/razorpay/mandate`
+
+Auth required. Creates (or reuses) the ₹299/month Razorpay subscription whose `start_at` is the end of
+the intro month. Returns the same Checkout fields. Used by the billing page when the user closed the
+second window after paying ₹9.
+
+### `GET /api/subscription/history`
+
+Auth required. Returns `subscription`, `entitlements`, `credits`, `payments[]` (receipts only),
+`cancellation` (copy and access-until date) and `billing`.
+
+### `GET /api/subscription/payments/:id`
+
+Auth required. Owner-only receipt. Returns `receiptNumber`, amount, kind, status, `signatureVerified`,
+provider ids and failure reason. Never returns gateway credentials.
+
+### `POST /api/subscription/cancel`
+
+Auth required. Body: `{ "immediate": false, "reason": "…" }`. Default cancels at period end: renewals
+stop, Premium continues until `currentPeriodEnd`. Immediate cancellation ends access now. The response
+contains `accessUntil` and an explanation.
+
+### `POST /api/subscription/webhook/razorpay`
+
+No session. Mounted with `express.raw({ type: "*/*" })` **before** the JSON parser so the exact bytes are
+available for signature verification.
+
+* Header `x-razorpay-signature` = `HMAC_SHA256(raw_body, RAZORPAY_WEBHOOK_SECRET)`; invalid or missing → **401**.
+* Every accepted event is stored in `WebhookEvent` with a unique `eventId` — a replay returns
+  `200 { "status": "duplicate" }` and changes nothing.
+* `payment.captured` / `subscription.charged` extend the paid period only when the amount and currency
+  match the server's plan; otherwise `200 { "status": "ignored" }` and no Payment is recorded.
+* `payment.failed` marks the subscription `failed`, increments `retryCount` and keeps Premium until the
+  paid period ends.
+* `subscription.cancelled` / `subscription.completed` / `subscription.halted` update status without
+  deleting history.
+* Missing `RAZORPAY_WEBHOOK_SECRET` → **501**; the webhook is never processed unverified.
+
+### Legacy provider-agnostic routes
+
+`POST /api/subscription/checkout` still supports `BILLING_CHECKOUT_URL_*` and the non-production
+`BILLING_DEV_UPGRADE` switch. When Razorpay is configured it returns
+**409 `USE_RAZORPAY_CHECKOUT`** and points the client at `/pricing`. `POST /api/subscription/webhook`
+remains for the hosted-checkout path and returns 501 without `BILLING_WEBHOOK_SECRET`.
+
+### Expiry and renewal
+
+`expireDueSubscriptions()` runs at boot and every 10 minutes. It marks records `expired` when
+`currentPeriodEnd` has passed (or `cancelled` when a cancellation takes effect) and clears entitlement.
+Premium template writes and every AI route re-check the stored plan, so access is lost even before the
+sweep runs.
+
+### Operator provisioning
 
 ```bash
 cd server
@@ -622,25 +685,110 @@ link-local, private-range and `.local` targets (`400 BLOCKED_HOST`). Requests ti
 
 ## Image uploads
 
-Stores the profile photographs used by portfolios. Images are downscaled to 512 px in the browser,
-then posted as a base64 data URL; the server verifies the real file signature before storing the bytes.
+Used for profile photographs and project cards. The browser downscales images before upload; the
+server checks the real file signature before storing bytes.
 
 ### `POST /api/uploads`
 
-Auth required. Body: `{ "dataUrl": "data:image/png;base64,…" }`.
+Auth required. Body:
 
-* Accepted types: PNG, JPEG, WebP (checked by magic bytes, not by the declared MIME type).
-* Maximum decoded size: 500 KB. Maximum 30 stored images per account.
-* Returns `201` with `{ upload: { id, mimeType, size, createdAt }, path, url }`. `url` is absolute and
-  can be written straight into `profile.photoUrl`.
+```json
+{ "dataUrl": "data:image/png;base64,…", "purpose": "portrait" | "project", "width": 1200, "height": 675, "originalName": "shot.png" }
+```
+
+* Accepted types: PNG, JPEG, WebP (magic bytes, not the declared MIME type).
+* Limits: portrait 500 KB, project screenshot 1.5 MB, 80 stored images per account.
+* Returns `201 { upload: { id, purpose, mimeType, size, width, height, createdAt }, path, url }`.
+  `path` is `/api/uploads/<id>`; store that (or an absolute URL) in `profile.photoUrl` / `projects[].imageUrl`.
+* Project images carry `imageMeta` copied by the server; a client-supplied `imageMeta` is ignored.
 
 ### `GET /api/uploads/:id`
 
-Public. Returns the image bytes with its `Content-Type` and
-`Cache-Control: public, max-age=31536000, immutable`. Unknown ids return `404`. The read is public
-because published portfolios load these images for anonymous visitors.
+Public. Returns the image with its `Content-Type` and a long immutable cache. Published portfolios load
+these for anonymous visitors.
+
+### `DELETE /api/uploads/:id`
+
+Auth required, owner only. Used when replacing media; the API refuses to delete another account's upload.
+
+### Project image rules
+
+`projects[].imageUrl` accepts an absolute `http(s)` URL or this deployment's `/api/uploads/<id>` path.
+`projects[].imageAlt` is sanitised text. On save the server resolves the upload, proves it belongs to the
+caller (**403 `FORBIDDEN`** on a foreign upload) and stores `imageMeta` (mime type, dimensions, size).
+Binary data never goes into the portfolio document.
+
+## AI Project Builder
+
+Premium only. Every endpoint below first calls `assertPremiumAccess` and returns
+**403 `PREMIUM_REQUIRED`** for a free account, even if the UI were bypassed. The AI provider key is read
+on the server only.
+
+Errors: **503 `AI_NOT_CONFIGURED`** when no provider key exists, **429 `AI_CREDITS_EXHAUSTED`** before the
+provider is called, **429** for provider quota/rate limits, **502** for unusable provider output. A failed
+generation refunds the credit.
+
+### `GET /api/ai-projects/meta`
+
+`{ stacks: [{ id, label, kind, guidance }], complexities: ["starter","standard","advanced"], aiAvailable }`.
+
+### `GET /api/ai-projects/credits`
+
+`{ credits: { plan, limit, used, remaining, periodStart, periodEnd }, aiAvailable }`.
+
+### `POST /api/ai-projects/generate`
+
+Body:
+
+```json
+{
+  "idea": "A placement prep tracker for students…",
+  "stack": "html-css-js" | "react" | "react-express" | "mern" | "python",
+  "complexity": "starter" | "standard" | "advanced",
+  "designPreferences": "Dark theme, amber accent",
+  "requestId": "uuid"
+}
+```
+
+Spends one credit, stores a `generating` project, calls the configured provider (plan → files), validates
+every file and returns `201 { project, issues, credits }`. The same `(userId, requestId)` is idempotent:
+a replay returns the existing project without spending another credit. File content is complete source
+code plus a README and setup steps; nothing is invented locally.
+
+### Other project routes
+
+| Route | Purpose | Credit |
+| --- | --- | --- |
+| `GET /api/ai-projects` | Projects + credits | 0 |
+| `GET /api/ai-projects/:id` | Full files, README, preview, issues | 0 |
+| `POST /api/ai-projects/:id/regenerate` | Rebuild the whole project | 1 |
+| `POST /api/ai-projects/:id/files/regenerate` | `{ path, instruction, mode: "regenerate"｜"modify" }` | 1 |
+| `PATCH /api/ai-projects/:id/files` | `{ path, content }` manual edit | 0 |
+| `GET /api/ai-projects/:id/download` | ZIP of every file (`application/zip`) | 0 |
+| `POST /api/ai-projects/:id/add-to-portfolio` | `{ portfolioId }`, appends title/description/tech | 0 |
+| `DELETE /api/ai-projects/:id` | Delete the generated project | 0 |
+
+Ownership is checked on every `:id`; another user's project is a 404. `add-to-portfolio` requires an
+owned portfolio and enforces its 20-project limit. `previewHtml` exists only for stacks that run without
+a build; the client renders it in a sandboxed iframe.
+
+## Admin reporting
+
+Requires a signed-in account with `role: "admin"` or an email in `ADMIN_EMAILS`; otherwise **403
+`FORBIDDEN`**. Read-only. No key secret, webhook secret, password hash or session token appears in any
+response.
+
+| Route | Returns |
+| --- | --- |
+| `GET /api/admin/summary` | Users, premium count, active/monthly/yearly subscriptions, status counts, revenue total & this month, failed payments, AI generations/credits, webhook failures |
+| `GET /api/admin/subscriptions?status=&interval=&page=&limit=` | Subscription records with customer email and provider ids |
+| `GET /api/admin/payments?status=&kind=&page=&limit=` | Receipt-shaped payment rows, failure reasons, signature status |
+| `GET /api/admin/ai-usage?page=&limit=` | Generations, latest projects, top credit consumers |
+| `GET /api/admin/webhooks?page=&limit=` | Deliveries, signature validity, attempts, errors |
 
 ## Rate limits
+
+
 
 | Scope | Limit |
 | --- | --- |
