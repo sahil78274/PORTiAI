@@ -45,6 +45,27 @@ const userSchema = new mongoose.Schema(
       enum: ['none', 'grant', 'billing', 'dev'],
       default: 'none',
     },
+    /**
+     * Administrative role. Only `admin` may open /api/admin. The role is set by
+     * `scripts/grant-admin.mjs` or by listing the address in ADMIN_EMAILS; no
+     * client request can change it.
+     */
+    role: { type: String, enum: ['user', 'admin'], default: 'user', index: true },
+    /** Razorpay customer id, reused so renewals attach to the same customer. */
+    razorpayCustomerId: { type: String, trim: true, default: '', index: true },
+    /**
+     * AI Project Builder credits.
+     *
+     * The allowance is per calendar month. `used` is incremented atomically
+     * before a provider call and refunded when generation fails, so a burst of
+     * parallel requests cannot exceed the allowance.
+     */
+    aiCredits: {
+      limit: { type: Number, default: 0 },
+      used: { type: Number, default: 0 },
+      periodStart: { type: Date, default: null },
+      periodEnd: { type: Date, default: null },
+    },
   },
   { timestamps: true, versionKey: false }
 );
@@ -60,6 +81,8 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     plan: this.plan || 'free',
     premiumSince: this.premiumSince || null,
     premiumUntil: this.premiumUntil || null,
+    role: this.role || 'user',
+    isAdmin: this.role === 'admin',
     createdAt: this.createdAt,
   };
 };

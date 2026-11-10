@@ -1,4 +1,4 @@
-import { templateData, ContactRow, Marker, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, ContactRow, Marker, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 const IndexItem = ({ number, label, href }) => (
@@ -68,6 +68,7 @@ export default function MagazineLayout({ portfolio, blogHref, accent }) {
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <div>
+                      <ProjectCover project={project} ratio="16 / 8" rounded="rounded-[calc(var(--p-radius)*0.6)]" className="mb-3 max-w-xl" />
                       <h3 className="text-[19px] font-semibold leading-tight tracking-[-0.02em]">{project.name}</h3>
                       {project.description ? (
                         <p className="mt-1.5 text-[14px] leading-7" style={{ color: 'var(--p-muted)' }}>

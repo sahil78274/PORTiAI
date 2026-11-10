@@ -21,10 +21,33 @@ services:
         value: production
       - key: MONGODB_URI
         sync: false # set in the Render dashboard
+      - key: AI_PROVIDER
+        value: gemini
       - key: GEMINI_API_KEY
         sync: false # set in the Render dashboard
       - key: GEMINI_MODEL
         value: gemini-2.5-flash
+      - key: AI_PROJECT_CREDITS_MONTHLY
+        value: "20"
+      # Razorpay: add the three secrets in the Render dashboard. The webhook
+      # URL is https://<api-host>/api/subscription/webhook/razorpay.
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: PREMIUM_PRICE_INTRO
+        value: "9"
+      - key: PREMIUM_PRICE_MONTHLY
+        value: "299"
+      - key: PREMIUM_PRICE_YEARLY
+        value: "3050"
+      - key: PREMIUM_PRICE_YEARLY_ORIGINAL
+        value: "3588"
+      # Comma-separated emails allowed to open the admin dashboard.
+      - key: ADMIN_EMAILS
+        sync: false
       - key: SESSION_SECRET
         generateValue: true
       # Browser origins allowed to call the API with the session cookie.

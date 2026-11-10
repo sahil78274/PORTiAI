@@ -17,6 +17,7 @@ const COLUMNS = [
     title: 'Product',
     links: [
       { label: 'Features', to: '/features' },
+      { label: 'Pricing & plans', to: '/pricing' },
       { label: 'How it works', to: '/#how-it-works' },
       { label: 'Dashboard', to: '/dashboard' },
       { label: 'My portfolios', to: '/dashboard/portfolios' },

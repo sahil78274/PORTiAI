@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { apiBaseUrl } from '../services/api.js';
 // lucide-react no longer ships brand icons, so GitHub/LinkedIn/X use neutral
 // glyphs with explicit accessible labels.
 import { Code2, Briefcase, Globe, Mail, MapPin, AtSign, ExternalLink, FileCode2, Newspaper } from 'lucide-react';
@@ -184,7 +186,7 @@ export const Avatar = ({ portfolio, size = 88, className = '', rounded = 'rounde
   if (photoUrl) {
     return (
       <img
-        src={photoUrl}
+        src={mediaSrc(photoUrl)}
         alt={fullName ? `${fullName}${title ? `, ${title}` : ''}` : 'Profile photo'}
         className={`shrink-0 border object-cover ${rounded} ${className}`}
         style={{ width: size, height: size }}
@@ -234,14 +236,108 @@ export const splitSkills = (portfolio) => {
   };
 };
 
-/** Project cover used by image-led templates. */
-export const projectImage = (project, index = 0) => {
-  if (project?.coverUrl) return project.coverUrl;
-  const fallbacks = [
-    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=70',
-    'https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=1200&q=70',
-    'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?auto=format&fit=crop&w=1200&q=70',
-    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=70',
-  ];
-  return fallbacks[index % fallbacks.length];
+/**
+ * Media saved by this deployment can be stored as `/api/uploads/<id>` (works
+ * behind the dev proxy). On a split frontend/API deployment that path does not
+ * exist on the static host, so it is made absolute with the compiled API base.
+ */
+const mediaSrc = (url) => {
+  if (typeof url !== 'string' || !url.startsWith('/api/uploads/')) return url || '';
+  if (!/^https?:\/\//i.test(apiBaseUrl)) return url;
+  return `${apiBaseUrl.replace(/\/api\/?$/, '')}${url}`;
+};
+
+/** Project artwork: the uploaded image first, then the legacy cover field. */
+export const projectImage = (project) => mediaSrc(project?.imageUrl || project?.coverUrl || '');
+
+/** Two-letter monogram used by the placeholder cover. */
+const projectMonogram = (name = '') =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'PR';
+
+/**
+ * Project cover with a professional placeholder.
+ *
+ * Used at the top of every project card, in all templates, so a portfolio
+ * looks finished whether or not screenshots were uploaded. Images are cropped
+ * with `object-fit: cover` at a fixed ratio, which keeps cards aligned in a
+ * grid. Broken URLs fall back to the placeholder instead of leaving a gap.
+ *
+ * `children` renders over the cover (Gallery/Showcase use the artwork as the
+ * card's header). Colours come from the template's `--accent` token, so the
+ * placeholder inherits each template's palette.
+ */
+export const ProjectCover = ({
+  project,
+  className = '',
+  ratio = '16 / 9',
+  fill = false,
+  rounded = '',
+  children = null,
+}) => {
+  const [failed, setFailed] = useState(false);
+  const src = projectImage(project);
+  const showImage = Boolean(src) && !failed;
+
+  return (
+    <div
+      className={`relative isolate overflow-hidden ${fill ? 'absolute inset-0' : ''} ${rounded} ${className}`}
+      style={{
+        aspectRatio: fill ? undefined : ratio,
+        background: showImage
+          ? '#e9e7e2'
+          : 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 17%, transparent) 0%, color-mix(in srgb, var(--accent) 4%, transparent) 58%, color-mix(in srgb, var(--accent) 10%, transparent) 100%)',
+        border: showImage ? undefined : '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
+      }}
+    >
+      {showImage ? (
+        <img
+          src={src}
+          alt={project?.imageAlt || (project?.name ? `${project.name} project preview` : 'Project preview')}
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-4 text-center">
+          <span
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-[15px] font-semibold tracking-[-0.02em]"
+            style={{
+              background: 'color-mix(in srgb, var(--accent) 14%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--accent) 26%, transparent)',
+              color: 'var(--accent)',
+            }}
+            aria-hidden="true"
+          >
+            {projectMonogram(project?.name)}
+          </span>
+          <span
+            className="line-clamp-1 max-w-[85%] text-[10px] font-medium uppercase tracking-[0.16em]"
+            style={{ color: 'color-mix(in srgb, var(--accent) 76%, currentColor)' }}
+          >
+            {project?.name || 'Project'}
+          </span>
+        </div>
+      )}
+
+      {children ? (
+        <>
+          {showImage ? (
+            <div
+              className="absolute inset-0"
+              style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.14) 52%, rgba(0,0,0,0.05) 100%)' }}
+              aria-hidden="true"
+            />
+          ) : null}
+          <div className="relative z-10 h-full w-full">{children}</div>
+        </>
+      ) : null}
+    </div>
+  );
 };

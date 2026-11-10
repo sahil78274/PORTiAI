@@ -105,10 +105,20 @@ NODE_ENV=production
 MONGODB_URI=mongodb+srv://…
 GEMINI_API_KEY=…
 GEMINI_MODEL=gemini-2.5-flash
+AI_PROVIDER=gemini
+AI_PROJECT_CREDITS_MONTHLY=20
 SESSION_SECRET=<openssl rand -base64 48>
 CLIENT_URL=https://your-app.vercel.app
 AI_DAILY_REQUEST_CAP=200
 AI_RATE_LIMIT_PER_MIN=12
+
+# Razorpay (test or live keys)
+RAZORPAY_KEY_ID=rzp_…
+RAZORPAY_KEY_SECRET=…
+RAZORPAY_WEBHOOK_SECRET=…
+
+# Comma-separated operator emails for /dashboard/admin
+ADMIN_EMAILS=you@example.com
 ```
 
 Notes:
@@ -189,29 +199,43 @@ node scripts/grant-premium.mjs --list
 The customer's gallery unlocks on its own (the client re-checks `/api/subscription` on a poll and when
 the tab regains focus) — no re-login and no new account.
 
-**Pricing.** Every price on `/premium` is read from the API, which reads
-`server/src/config/pricing.js`. Set `PREMIUM_PRICE_MONTHLY`, `PREMIUM_PRICE_YEARLY` and (optionally)
-`PREMIUM_CURRENCY` to publish real amounts. Until both amounts are set the API reports
-`pricing.source: "default"` and the page shows an "indicative price" note — check it before launch.
+**Pricing.** Every amount on `/pricing`, `/premium`, Razorpay and the admin panel comes from
+`server/src/config/pricing.js`. Defaults are ₹9 intro / ₹299 monthly / ₹3,050 yearly (₹3,588
+original). Override with `PREMIUM_PRICE_INTRO`, `PREMIUM_PRICE_MONTHLY`, `PREMIUM_PRICE_YEARLY`,
+`PREMIUM_PRICE_YEARLY_ORIGINAL` and `PREMIUM_CURRENCY`. The browser never sends a price.
 
-**Checkout.** Set `BILLING_CHECKOUT_URL_MONTHLY` and `BILLING_CHECKOUT_URL_YEARLY` to your payment
-provider's hosted checkout pages. `POST /api/subscription/checkout` then returns the URL for the chosen
-period; the plan is still activated **only** by the webhook below, never by the browser or the return
-URL. With no checkout URL configured the endpoint answers `503 BILLING_NOT_CONFIGURED` and the UI says
-so instead of pretending the upgrade worked.
+**Razorpay checkout.** Set `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` on the API. `/pricing` then
+creates orders and subscriptions server-side:
 
-`BILLING_DEV_UPGRADE` lets a signed-in user activate Premium without a provider so the unlock flow can
-be tested; it defaults to on outside production and is always disabled when `NODE_ENV=production`.
+1. Monthly: a ₹9 order, verified on the server, grants the first month. A second Checkout window
+   authorises the ₹299/month mandate with `start_at` set to the end of that month.
+2. Yearly: one ₹3,050 subscription, verified the same way.
 
-**Billing webhook (production integration).** Set `BILLING_WEBHOOK_SECRET` on the API, then have your
-billing provider call `POST /api/subscription/webhook` with the `x-billing-secret` header:
+Premium is written only after the signature and the Razorpay payment are verified. If the keys are
+missing, the API reports payments as not configured and `/pricing` says so instead of accepting a
+payment. `BILLING_DEV_UPGRADE` remains available outside production only.
 
-```json
-{ "event": "invoice.paid", "email": "customer@example.com", "plan": "premium", "premiumUntil": "2027-10-28T00:00:00.000Z" }
+**Razorpay webhook.** Set `RAZORPAY_WEBHOOK_SECRET` and add this endpoint in the Razorpay dashboard:
+
+```
+https://<api-host>/api/subscription/webhook/razorpay
 ```
 
-`interval` (`monthly` | `yearly`) may be sent instead of `premiumUntil`. Without the secret the endpoint
-returns `501 NOT_IMPLEMENTED` and `/premium` reports that checkout is not connected. Never put a provider secret in the frontend — the browser only reads entitlement.
+Subscribe to `payment.captured`, `payment.failed`, `subscription.charged`, `subscription.cancelled`,
+`subscription.halted` and `subscription.completed`. The route reads the raw body, verifies
+`x-razorpay-signature`, de-duplicates by event id, checks the amount against the server-side price and
+updates renewals, failures and cancellations. Invalid signatures return 401 and change nothing. The
+legacy `POST /api/subscription/webhook` remains for hosted-checkout deployments that set
+`BILLING_WEBHOOK_SECRET`.
+
+**Admin dashboard.** Add operator emails to `ADMIN_EMAILS` (or set `role: "admin"` in MongoDB). They can
+open `/dashboard/admin`; every `/api/admin/*` route also requires that role and returns no payment
+secrets.
+
+**AI Project Builder.** Generation uses `GEMINI_API_KEY` by default. For an OpenAI-compatible provider set
+`AI_PROVIDER=openai`, `OPENAI_API_KEY` and optionally `OPENAI_BASE_URL` / `AI_MODEL`. Credits default to
+20 per user per month (`AI_PROJECT_CREDITS_MONTHLY`) and reset on the 1st. Without a key the builder
+shows a clear configuration message and returns 503; it never fabricates a project locally.
 
 If you edit `client/src/data/templateCatalogue.js`, regenerate the server manifest and commit it:
 

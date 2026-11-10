@@ -1,5 +1,5 @@
-import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
-import { dateRange } from '../../shared.jsx';
+import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
+import { dateRange, projectImage } from '../../shared.jsx';
 
 /**
  * Showcase — one hero case study, then the reel.
@@ -62,11 +62,34 @@ export default function ShowcaseLayout({ portfolio, blogHref, accent }) {
           <div className="overflow-hidden" style={cardStyle}>
             <div className="grid gap-0 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
               <div
-                className="flex min-h-[190px] flex-col justify-between p-6"
-                style={{ background: 'linear-gradient(160deg, var(--p-accent) 0%, var(--p-surface-accent) 100%)', color: 'var(--p-accent-ink)' }}
+                className="relative flex min-h-[190px] flex-col justify-between overflow-hidden p-6"
+                style={{
+                  background: 'linear-gradient(160deg, var(--p-accent) 0%, var(--p-surface-accent) 100%)',
+                  color: projectImage(featured) ? '#ffffff' : 'var(--p-accent-ink)',
+                }}
               >
-                <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] opacity-80">Featured work</span>
-                <p className="text-[clamp(20px,2.9cqw,32px)] font-semibold leading-[1.06] tracking-[-0.03em]">{featured.name}</p>
+                {projectImage(featured) ? (
+                  <>
+                    <img
+                      src={projectImage(featured)}
+                      alt={featured.imageAlt || (featured.name ? `${featured.name} project preview` : 'Project preview')}
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      className="absolute inset-0 h-full w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.06) 100%)' }}
+                      aria-hidden="true"
+                    />
+                  </>
+                ) : null}
+                <span className="relative z-10 text-[10.5px] font-semibold uppercase tracking-[0.18em] opacity-80">Featured work</span>
+                <p className="relative z-10 text-[clamp(20px,2.9cqw,32px)] font-semibold leading-[1.06] tracking-[-0.03em]">{featured.name}</p>
               </div>
               <div className="p-6">
                 {featured.description ? (
@@ -99,6 +122,7 @@ export default function ShowcaseLayout({ portfolio, blogHref, accent }) {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {rest.map((project, index) => (
               <article key={`${project.name}-${index}`} className="p-5" style={cardStyle}>
+                <ProjectCover project={project} ratio="16 / 9" rounded="rounded-[calc(var(--p-radius)*0.6)]" className="mb-3" />
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="text-[15px] font-semibold leading-snug">{project.name}</h3>
                   <span className="font-mono text-[10.5px]" style={{ color: 'var(--p-muted)' }}>

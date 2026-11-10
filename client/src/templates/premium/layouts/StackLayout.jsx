@@ -1,4 +1,4 @@
-import { templateData, Avatar, Marker, ContactRow, Rule, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, Avatar, Marker, ContactRow, Rule, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 /**
@@ -69,6 +69,7 @@ export default function StackLayout({ portfolio, blogHref, accent }) {
                   0{index + 1}
                 </span>
                 <div>
+                  <ProjectCover project={project} ratio="16 / 9" rounded="rounded-[calc(var(--p-radius)*0.6)]" className="mb-3.5 max-w-lg" />
                   <h3 className="text-[17px] font-semibold tracking-[-0.01em]">{project.name}</h3>
                   {project.description ? (
                     <p className="mt-1.5 max-w-xl text-[14px] leading-6" style={{ color: 'var(--p-muted)' }}>

@@ -1,4 +1,4 @@
-import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, formatDate } from './shared.jsx';
+import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, ProjectCover, splitSkills, BlogLink, EmptyTemplateNotice, formatDate } from './shared.jsx';
 
 /**
  * Dark Professional — charcoal canvas, sticky details column, wide project sections.
@@ -105,6 +105,7 @@ export default function DarkTemplate({ portfolio, blogHref }) {
               <ul className="mt-3 divide-y divide-white/[0.08]">
                 {portfolio.projects.filter((project) => project?.name).map((project, index) => (
                   <li key={`${project.name}-${index}`} className="py-6 first:pt-3">
+                    <ProjectCover project={project} ratio="16 / 9" rounded="rounded-lg" className="mb-4 max-w-md" />
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                       <h3 className="text-[17px] font-medium text-[#f2f2ed]">{project.name}</h3>
                       {project.technologies?.length ? (

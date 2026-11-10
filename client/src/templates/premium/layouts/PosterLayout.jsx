@@ -1,4 +1,4 @@
-import { templateData, ContactRow, Marker, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, ContactRow, Marker, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 /**
@@ -59,6 +59,7 @@ export default function PosterLayout({ portfolio, blogHref, accent }) {
                     className="border-l-2 pl-5"
                     style={{ borderColor: index === 0 ? 'var(--p-accent)' : 'var(--p-line)' }}
                   >
+                    <ProjectCover project={project} ratio="16 / 9" rounded="rounded-[calc(var(--p-radius)*0.6)]" className="mb-3 max-w-xl" />
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <h3 className="text-[18px] font-semibold leading-tight tracking-[-0.02em]">{project.name}</h3>
                       <span className="font-mono text-[11px]" style={{ color: 'var(--p-muted)' }}>

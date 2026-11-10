@@ -1,4 +1,4 @@
-import { renderableSections, splitSkills, SocialLinks, ContactDetails, ProjectLinks, BlogLink, SECTION_LABELS } from '../shared.jsx';
+import { renderableSections, splitSkills, SocialLinks, ContactDetails, ProjectLinks, BlogLink, SECTION_LABELS, ProjectCover } from '../shared.jsx';
 
 /**
  * Shared data + small primitives for the premium layouts.
@@ -100,4 +100,4 @@ export const ContactRow = ({ portfolio, className = '' }) => {
   );
 };
 
-export { SocialLinks, ContactDetails, ProjectLinks, BlogLink, SECTION_LABELS };
+export { SocialLinks, ContactDetails, ProjectLinks, BlogLink, SECTION_LABELS, ProjectCover };

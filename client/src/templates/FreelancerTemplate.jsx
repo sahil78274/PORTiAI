@@ -1,4 +1,4 @@
-import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, projectImage, formatDate, Avatar } from './shared.jsx';
+import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, ProjectCover, formatDate, Avatar } from './shared.jsx';
 
 /**
  * Modern Freelancer — split introduction, selected work grid, capabilities,
@@ -85,17 +85,7 @@ export default function FreelancerTemplate({ portfolio, blogHref }) {
             <div className="mt-5 grid gap-6 sm:grid-cols-2">
               {projects.map((project, index) => (
                 <article key={`${project.name}-${index}`} className="overflow-hidden rounded-lg border border-[#e5e6e1]">
-                  <div className="aspect-[16/9] bg-[#eef0ec]">
-                    <img
-                      src={projectImage(project, index)}
-                      alt={project.name ? `${project.name} preview` : ''}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                      onError={(event) => {
-                        event.currentTarget.style.visibility = 'hidden';
-                      }}
-                    />
-                  </div>
+                  <ProjectCover project={project} ratio="16 / 9" />
                   <div className="p-4">
                     <h3 className="text-[15px] font-semibold">{project.name}</h3>
                     {project.description ? <p className="mt-1.5 text-[13px] leading-6 text-[#4b555c]">{project.description}</p> : null}

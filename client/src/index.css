@@ -628,6 +628,14 @@
     @apply inline-flex items-center gap-1 rounded border border-accent-line bg-accent-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-hover;
   }
 
+  .badge-neutral {
+    @apply badge border-lineStrong bg-canvasAlt text-muted;
+  }
+
+  .badge-success {
+    @apply badge border-successLine bg-successSoft text-success;
+  }
+
   .badge-free {
     @apply inline-flex items-center gap-1 rounded border border-line bg-canvasAlt px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted;
   }

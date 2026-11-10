@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
   CircleUserRound,
+  CreditCard,
   ExternalLink,
   FolderOpen,
   Gauge,
@@ -17,7 +18,9 @@ import {
   Plus,
   Search,
   Settings,
+  ShieldCheck,
   Sparkles,
+  Wand2,
   X,
 } from 'lucide-react';
 import Logo from '../components/ui/Logo.jsx';
@@ -29,16 +32,22 @@ import { initials } from '../utils/format.js';
 const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/dashboard/builder', label: 'AI Builder', icon: Sparkles },
+  { to: '/dashboard/ai-builder', label: 'AI Projects', icon: Wand2 },
   { to: '/dashboard/templates', label: 'Templates', icon: LayoutTemplate },
   { to: '/dashboard/portfolios', label: 'My Portfolios', icon: FolderOpen },
   { to: '/dashboard/analyzer', label: 'Analyzer', icon: Gauge },
   { to: '/dashboard/blog', label: 'Blog', icon: Newspaper },
+  { to: '/dashboard/billing', label: 'Billing', icon: CreditCard },
+  { to: '/dashboard/admin', label: 'Admin', icon: ShieldCheck, adminOnly: true },
   { to: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
 const TITLES = {
   '/dashboard': 'Dashboard',
   '/dashboard/builder': 'AI Builder',
+  '/dashboard/ai-builder': 'AI Project Builder',
+  '/dashboard/billing': 'Billing & subscription',
+  '/dashboard/admin': 'Admin dashboard',
   '/dashboard/templates': 'Templates',
   '/dashboard/portfolios': 'My Portfolios',
   '/dashboard/analyzer': 'Analyzer',
@@ -125,7 +134,7 @@ export default function DashboardLayout() {
 
   const navItems = (onNavigate) => (
     <nav aria-label="Workspace" className="flex flex-col gap-0.5">
-      {NAV.map(({ to, label, icon: Icon, end }) => (
+      {NAV.filter((item) => !item.adminOnly || user?.isAdmin).map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
           to={to}

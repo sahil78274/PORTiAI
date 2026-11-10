@@ -16,6 +16,7 @@
 import mongoose from 'mongoose';
 import { env } from '../src/config/env.js';
 import { User } from '../src/models/User.js';
+import { Subscription } from '../src/models/Subscription.js';
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -63,14 +64,14 @@ try {
 
   if (plan === 'premium') {
     const until = flag('until');
-    user.plan = 'premium';
-    user.premiumSince = user.premiumSince || new Date();
-    user.premiumUntil = until ? new Date(until) : null;
-    user.premiumSource = 'grant';
     if (until && Number.isNaN(new Date(until).getTime())) {
       console.error('--until must be a valid ISO date, e.g. 2027-10-28T00:00:00.000Z');
       process.exit(1);
     }
+    user.plan = 'premium';
+    user.premiumSince = user.premiumSince || new Date();
+    user.premiumUntil = until ? new Date(until) : null;
+    user.premiumSource = 'grant';
   } else {
     user.plan = 'free';
     user.premiumUntil = null;
@@ -78,6 +79,43 @@ try {
   }
 
   await user.save();
+
+  /* Keep the admin reporting and billing history consistent with the grant. */
+  const subscription = await Subscription.findOne({ userId: user._id });
+  if (plan === 'premium') {
+    if (subscription) {
+      subscription.status = 'active';
+      subscription.currentPeriodEnd = user.premiumUntil;
+      subscription.cancelAtPeriodEnd = false;
+      subscription.cancelledAt = null;
+      subscription.cancelEffectiveAt = null;
+      subscription.endedAt = null;
+      subscription.note = 'Activated by an operator with scripts/grant-premium.mjs.';
+      await subscription.save();
+    } else {
+      await Subscription.create({
+        userId: user._id,
+        provider: 'none',
+        status: 'active',
+        interval: null,
+        amount: 0,
+        currency: 'INR',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: user.premiumUntil,
+        startedAt: new Date(),
+        note: 'Activated by an operator with scripts/grant-premium.mjs.',
+      });
+    }
+  } else if (subscription && ['active', 'pending', 'failed'].includes(subscription.status)) {
+    subscription.status = 'cancelled';
+    subscription.cancelAtPeriodEnd = false;
+    subscription.cancelledAt = new Date();
+    subscription.cancelEffectiveAt = new Date();
+    subscription.endedAt = new Date();
+    subscription.note = 'Revoked by an operator with scripts/grant-premium.mjs.';
+    await subscription.save();
+  }
+
   console.log(`${email} is now on the ${user.plan} plan${user.premiumUntil ? ` until ${user.premiumUntil.toISOString()}` : ''}.`);
 } finally {
   await mongoose.disconnect();

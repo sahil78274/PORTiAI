@@ -10,6 +10,7 @@
  *   npm test
  */
 import http from 'node:http';
+import net from 'node:net';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -180,6 +181,18 @@ const startGeminiStub = () =>
 /* ------------------------------------------------------------------ */
 /* Environment is configured before the app modules are imported       */
 /* ------------------------------------------------------------------ */
+/** A free loopback port, so the embedded MongoDB twin never clashes with a dev server. */
+const freeTwinPort = () =>
+  new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    probe.unref();
+    probe.on('error', reject);
+    probe.listen(0, '127.0.0.1', () => {
+      const { port } = probe.address();
+      probe.close(() => resolve(port));
+    });
+  });
+
 const dataDir = path.join(process.cwd(), '.data', 'test-mongodb');
 await fs.mkdir(dataDir, { recursive: true });
 
@@ -192,7 +205,7 @@ try {
   process.env.MONGODB_URI = mongod.getUri('portiai_test');
 } catch (err) {
   const { createMongodbTwinServer } = await import('@volter/twin-mongodb');
-  mongod = await createMongodbTwinServer({ port: 27019 });
+  mongod = await createMongodbTwinServer({ port: await freeTwinPort() });
   process.env.MONGODB_URI = `${mongod.url}/portiai_test`;
 }
 process.env.PORT = String(API_PORT);
@@ -654,9 +667,9 @@ await test('GET /subscription requires authentication and returns the caller\'s 
   const res = await alice.get('/subscription');
   assert.equal(res.status, 200);
   assert.equal(res.body.data.subscription.isPremium, false);
-  const premiumPlan = res.body.data.plans.find((plan) => plan.id === 'premium');
-  assert.ok(premiumPlan, 'the premium plan is described');
-  assert.ok(premiumPlan.features.some((feature) => /premium templates/i.test(feature)));
+  const monthlyPlan = res.body.data.plans.find((plan) => plan.id === 'monthly');
+  assert.ok(monthlyPlan, 'the monthly plan is described');
+  assert.ok(monthlyPlan.features.some((feature) => /premium templates/i.test(feature)));
 });
 
 await test('a free account cannot create or switch to a premium template', async () => {
@@ -686,17 +699,26 @@ await test('public pricing exposes the configured amounts without a session', as
   assert.equal(pricing.monthly.period, 'month');
   assert.equal(pricing.yearly.period, 'year');
   assert.equal(pricing.monthly.amount * 12 - pricing.yearly.amount, pricing.yearly.savingAmount);
-  // Without PREMIUM_PRICE_* in the environment the amounts are marked indicative.
-  assert.equal(pricing.source, 'default');
-  assert.equal(pricing.confirmed, false);
-  assert.match(pricing.note, /PREMIUM_PRICE_MONTHLY/);
+  // Published prices: ₹9 first month, then ₹299; ₹3,050 per year against ₹3,588.
+  assert.equal(pricing.source, 'plan');
+  assert.equal(pricing.confirmed, true);
+  assert.equal(pricing.note, null);
+  assert.equal(pricing.monthly.amount, 299);
+  assert.equal(pricing.monthly.introAmount, 9);
+  assert.equal(pricing.yearly.amount, 3050);
+  assert.equal(pricing.yearly.originalAmount, 3588);
+  assert.equal(pricing.yearly.savingAmount, 538);
+  assert.equal(pricing.yearly.savingPercent, 15);
 
-  const premiumPlan = plans.find((plan) => plan.id === 'premium');
-  assert.equal(premiumPlan.name, 'Premium');
-  assert.equal(premiumPlan.price, pricing.monthly.display);
-  assert.equal(premiumPlan.amount, pricing.monthly.amount);
-  assert.equal(premiumPlan.pricing.yearly.amount, pricing.yearly.amount);
-  assert.ok(premiumPlan.features.some((feature) => /premium templates/i.test(feature)));
+  assert.deepEqual(plans.map((plan) => plan.id), ['free', 'monthly', 'yearly']);
+  const monthlyPlan = plans.find((plan) => plan.id === 'monthly');
+  const yearlyPlan = plans.find((plan) => plan.id === 'yearly');
+  assert.equal(monthlyPlan.price, pricing.monthly.display);
+  assert.equal(monthlyPlan.amount, pricing.monthly.amount);
+  assert.equal(monthlyPlan.introAmount, pricing.monthly.introAmount);
+  assert.equal(yearlyPlan.amount, pricing.yearly.amount);
+  assert.equal(yearlyPlan.originalAmount, pricing.yearly.originalAmount);
+  assert.ok(monthlyPlan.features.some((feature) => /AI Project Builder/i.test(feature)));
 
   assert.equal(billing.checkoutConfigured, false);
   assert.equal(billing.devUpgradeEnabled, true, 'development mode is on outside production');

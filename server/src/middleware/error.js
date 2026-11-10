@@ -12,7 +12,15 @@ export const errorHandler = (error, req, res, _next) => {
   let message = error.message || 'Something went wrong on our side.';
   let details = error.details;
 
-  if (error.name === 'ValidationError') {
+  if (error.name === 'ZodError') {
+    status = 400;
+    code = 'VALIDATION_ERROR';
+    details = (error.issues || []).map((issue) => ({
+      field: Array.isArray(issue.path) ? issue.path.join('.') : String(issue.path || ''),
+      message: issue.message,
+    }));
+    message = details[0]?.message || 'Invalid request data.';
+  } else if (error.name === 'ValidationError') {
     status = 400;
     code = 'VALIDATION_ERROR';
     details = Object.values(error.errors).map((err) => ({ field: err.path, message: err.message }));

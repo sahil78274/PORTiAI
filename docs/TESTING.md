@@ -867,3 +867,129 @@ design system, catalogue, builder or auth.
 | Free users cannot bypass | Backend gate on create **and** update returns `403 PREMIUM_REQUIRED`; the test suite proves a locked design is not applied. No localStorage/boolean shortcut exists — the client only reads the API's answer |
 | Existing behaviour intact | Full `server` suite 70/70 (auth, portfolios, publishing, blog, uploads, analyser, AI), client 52/52, build and catalogue sync unchanged |
 
+
+---
+
+## 14. Razorpay subscriptions, AI Project Builder and project images (2026-11-10)
+
+Two backend suites run against a real Express app and a real MongoDB (memory server, with the bundled
+`@volter/twin-mongodb` twin as fallback). Razorpay and Gemini are local HTTP stubs that speak the real
+REST contracts; no application code is mocked.
+
+```bash
+cd server
+npm test              # api.test.js then commerce-ai.test.js
+npm run test:api      # 73 checks
+npm run test:commerce # 36 checks
+```
+
+Latest runs:
+
+```
+api.test.js          73/73 checks passed
+commerce-ai.test.js  36/36 checks passed
+client vite build    ✓ 2066 modules transformed, built in ~7 s
+```
+
+### What `commerce-ai.test.js` covers
+
+```
+Plans and prices
+  ✓ free / monthly / yearly catalogue with ₹9 intro and ₹3,050 yearly
+  ✓ yearly shows ₹3,588 original and 15% saving
+
+Monthly subscription
+  ✓ ₹9 intro order is created server-side (900 paise)
+  ✓ a verified ₹9 payment activates one month
+  ✓ the same payment cannot be re-verified to extend access
+  ✓ the ₹299 mandate starts when the intro month ends
+  ✓ a closed mandate window leaves the paid month intact
+
+Yearly subscription
+  ✓ ₹3,050 is charged through a verified Razorpay subscription
+
+Webhook verification and renewal handling
+  ✓ invalid signature → 401 and no state change
+  ✓ verified renewal extends the period and records the receipt
+  ✓ replayed event → duplicate, no second extension
+  ✓ amount mismatch → ignored, no Payment row
+  ✓ failed renewal → subscription failed, retryCount++, premium retained
+
+AI Project Builder
+  ✓ metadata reports configured AI and stacks
+  ✓ premium user generates a complete project and spends one credit
+  ✓ identical requestId is idempotent and spends nothing extra
+  ✓ ZIP downloads with every file
+  ✓ manual save and AI file modification
+  ✓ free users are blocked with PREMIUM_REQUIRED
+  ✓ exhausted credits return 429 before the provider is called
+  ✓ provider failure refunds the credit and stores no ready project
+  ✓ generated project can be added to an owned portfolio
+
+Project images
+  ✓ upload with metadata, attached to a project by the server
+  ✓ publishing exposes the image URL on the public portfolio
+  ✓ another user cannot attach a foreign upload (403)
+  ✓ removing an image leaves a valid project with no binary data
+
+Billing history, cancellation and expiry
+  ✓ owner sees subscription history and receipts
+  ✓ cancellation keeps Premium until the paid period ends
+  ✓ expired subscription loses Premium on the next read
+
+Admin reporting
+  ✓ ordinary accounts receive 403
+  ✓ ADMIN_EMAILS account sees subscribers, revenue, AI usage and failures
+  ✓ no admin response contains a key secret or webhook secret
+```
+
+### Verified against a running preview (real HTTP, real MongoDB)
+
+A development API (twin MongoDB) plus the Vite dev server were started and checked with `curl`:
+
+* `GET /pricing` serves the SPA; `GET /api/health` reports `ok`.
+* `GET /api/subscription/plans` returns `free`, `monthly`, `yearly` with 9/299/3050/3588 and 15%.
+* Register → development upgrade activates one month (no payment, non-production only).
+* A 1200×675 PNG was uploaded as a **project** image (`125,460` bytes, metadata recorded), attached to a
+  project as `/api/uploads/<id>`, and the portfolio published.
+* `GET /api/public/<slug>` returns the project with `imageUrl`, `imageAlt` and server-side `imageMeta`.
+* `GET /api/uploads/<id>` returns `200 image/png` with the exact byte count.
+* `GET /api/ai-projects/meta` without a session returns 401 (the UI additionally locks free accounts).
+
+### Not verified here (needs external credentials / a real browser)
+
+* A live Razorpay test-mode payment, real mandate authorisation and live webhook delivery. The code paths
+  are exercised against the stub; set the four Razorpay values and use test-mode cards to confirm the
+  hosted checkout UI.
+* Real Gemini/OpenAI output quality. The provider contract is tested with a stub; set `GEMINI_API_KEY`
+  (or `AI_PROVIDER=openai`) to generate real projects.
+* Visual cropping of uploaded images in every template in a real browser. The build passes and the
+  public JSON carries the image, but pixel-level review needs a browser.
+
+### 12-item manual checklist
+
+| # | Check | Result |
+| --- | --- | --- |
+| 1 | Monthly purchase charges ₹9 | Server order is 900 paise (stub); live Razorpay payment pending credentials |
+| 2 | ₹299 recurring is disclosed before checkout and explicitly authorised | Checkbox + disclosure in `/pricing`; mandate created with `start_at` after the intro month; verified by tests |
+| 3 | Yearly purchase charges ₹3,050 | Verified server-side through a subscription (stub) |
+| 4 | Verified payment activates Premium | Verified signature + captured provider payment only |
+| 5 | Unverified payment never activates Premium | Bad signature → 400, no activation; test passes |
+| 6 | Cancel/expiry loses access at the end of the billing period | Cancel keeps access until period end; expiry sweep clears it; tests pass |
+| 7 | Free users are blocked from AI APIs | 403 `PREMIUM_REQUIRED` on every `/api/ai-projects/*` route |
+| 8 | Premium users can generate and download | Generation + ZIP tests pass; live provider output pending a key |
+| 9 | AI projects can be added to a portfolio | Ownership + 20-project limit enforced; test passes |
+| 10 | Project image can be uploaded, previewed, replaced and removed | Upload/attach/remove tested; editor shows preview and replace/remove controls |
+| 11 | Images appear in the live portfolio and templates | Public API exposes the image; every template renders `ProjectCover` with `object-fit: cover` and a placeholder |
+| 12 | Existing auth, editor, autosave, publishing, templates and analyzer still work | `api.test.js` 73/73 passes, including those paths |
+
+### Manual setup for a full production-like test
+
+1. Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` and a real `MONGODB_URI`.
+2. Add the webhook URL `https://<api-host>/api/subscription/webhook/razorpay` in the Razorpay dashboard
+   with the events listed in `server/.env.example`.
+3. Set `ADMIN_EMAILS` to the operator account, then sign in and open `/dashboard/admin`.
+4. Set `GEMINI_API_KEY` (or `AI_PROVIDER=openai` + `OPENAI_API_KEY`) and optionally
+   `AI_PROJECT_CREDITS_MONTHLY`.
+5. Use Razorpay test-mode cards: pay ₹9, authorise the ₹299 mandate, then confirm the webhook delivery
+   appears under Admin → Webhooks and the subscription reports `active`.

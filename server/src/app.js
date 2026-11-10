@@ -17,6 +17,11 @@ import analyzeRoutes from './routes/analyzeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import { isAiEnabled } from './services/geminiService.js';
+import { isProjectAiConfigured } from './services/aiProvider.js';
+import { isRazorpayConfigured, isRazorpayWebhookConfigured } from './config/env.js';
+import { razorpayWebhook } from './controllers/billingController.js';
+import aiProjectRoutes from './routes/aiProjectRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 export const createApp = () => {
   const app = express();
@@ -53,6 +58,17 @@ export const createApp = () => {
     })
   );
 
+  /*
+   * Razorpay webhooks must be verified against the exact raw bytes, so this
+   * route is mounted before the JSON body parser. Everything else below gets
+   * parsed JSON as usual.
+   */
+  app.post(
+    '/api/subscription/webhook/razorpay',
+    express.raw({ type: 'application/json', limit: '1mb' }),
+    razorpayWebhook
+  );
+
   // 1 MB allows an uploaded HTML document (capped again in the scan validator).
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
@@ -65,6 +81,9 @@ export const createApp = () => {
         uptimeSeconds: Math.round(process.uptime()),
         database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
         ai: isAiEnabled() ? 'configured' : 'not_configured',
+        aiProjects: isProjectAiConfigured() ? 'configured' : 'not_configured',
+        payments: isRazorpayConfigured() ? 'configured' : 'not_configured',
+        paymentWebhook: isRazorpayWebhookConfigured() ? 'configured' : 'not_configured',
         environment: env.nodeEnv,
         // Which browser origins this deployment accepts — the first thing to
         // check when the site reports that it cannot reach the API.
@@ -79,6 +98,8 @@ export const createApp = () => {
   app.use('/api/subscription', subscriptionRoutes);
   app.use('/api/portfolios', portfolioRoutes);
   app.use('/api/ai', aiRoutes);
+  app.use('/api/ai-projects', aiProjectRoutes);
+  app.use('/api/admin', adminRoutes);
   app.use('/api/public', publicRoutes);
   app.use('/api/blog', blogRoutes);
   app.use('/api/analyze', analyzeRoutes);

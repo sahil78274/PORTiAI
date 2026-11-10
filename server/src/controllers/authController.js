@@ -2,9 +2,15 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { Portfolio } from '../models/Portfolio.js';
 import { Upload } from '../models/Upload.js';
+import { Payment } from '../models/Payment.js';
+import { AiProject } from '../models/AiProject.js';
+import { AiGeneration } from '../models/AiGeneration.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { resolveEntitlements } from '../services/subscriptionService.js';
+import { Subscription } from '../models/Subscription.js';
+import { getAiCredits } from '../services/aiCreditService.js';
+import { isAdminEmail } from '../config/env.js';
 import {
   signSessionToken,
   setSessionCookie,
@@ -12,6 +18,19 @@ import {
 } from '../middleware/auth.js';
 
 const BCRYPT_ROUNDS = 12;
+
+/**
+ * ADMIN_EMAILS is an environment allow-list. Promote the stored role at
+ * sign-in/registration so the session response (and the admin link) is correct
+ * immediately, without waiting for the first authenticated request.
+ */
+const applyAdminAllowList = async (user) => {
+  if (user.role !== 'admin' && isAdminEmail(user.email)) {
+    user.role = 'admin';
+    await User.updateOne({ _id: user._id }, { $set: { role: 'admin' } });
+  }
+  return user;
+};
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -23,13 +42,14 @@ export const register = asyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
   const user = await User.create({ name, email, passwordHash });
+  await applyAdminAllowList(user);
 
   const token = signSessionToken(user);
   setSessionCookie(res, token);
 
   res.status(201).json({
     success: true,
-    data: { user: user.toPublicJSON(), subscription: resolveEntitlements(user) },
+    data: { user: user.toPublicJSON(), subscription: resolveEntitlements(user), credits: await getAiCredits(user).catch(() => null) },
   });
 });
 
@@ -48,12 +68,20 @@ export const login = asyncHandler(async (req, res) => {
   const matches = await bcrypt.compare(password, user.passwordHash);
   if (!matches) throw invalid;
 
+  await applyAdminAllowList(user);
+
   const token = signSessionToken(user);
   setSessionCookie(res, token);
 
+  const subscription = await Subscription.findOne({ userId: user._id });
   res.json({
     success: true,
-    data: { user: user.toPublicJSON(), subscription: resolveEntitlements(user) },
+    data: {
+      user: user.toPublicJSON(),
+      subscription: resolveEntitlements(user, subscription),
+      subscriptionRecord: subscription ? subscription.toOwnerJSON() : null,
+      credits: await getAiCredits(user).catch(() => null),
+    },
   });
 });
 
@@ -71,11 +99,14 @@ export const me = asyncHandler(async (req, res) => {
     Portfolio.countDocuments({ userId: req.user._id }),
     Portfolio.countDocuments({ userId: req.user._id, published: true }),
   ]);
+  const subscription = await Subscription.findOne({ userId: req.user._id });
   res.json({
     success: true,
     data: {
       user: req.user.toPublicJSON(),
-      subscription: resolveEntitlements(req.user),
+      subscription: resolveEntitlements(req.user, subscription),
+      subscriptionRecord: subscription ? subscription.toOwnerJSON() : null,
+      credits: await getAiCredits(req.user).catch(() => null),
       stats: { portfolios: total, published },
     },
   });
@@ -125,6 +156,13 @@ export const deleteAccount = asyncHandler(async (req, res) => {
 
   await Portfolio.deleteMany({ userId: user._id });
   await Upload.deleteMany({ userId: user._id });
+  // Billing and AI records belong to the account and go with it. Captured
+  // payment history for tax purposes should be exported before deletion; the
+  // admin panel can do that beforehand.
+  await Payment.deleteMany({ userId: user._id });
+  await Subscription.deleteOne({ userId: user._id });
+  await AiProject.deleteMany({ userId: user._id });
+  await AiGeneration.deleteMany({ userId: user._id });
   await User.deleteOne({ _id: user._id });
   clearSessionCookie(res);
 

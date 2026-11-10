@@ -1,4 +1,5 @@
 import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { projectImage } from '../../shared.jsx';
 import { dateRange } from '../../shared.jsx';
 
 const panelBackground = (accent, index) => {
@@ -56,13 +57,41 @@ export default function GalleryLayout({ portfolio, blogHref, accent }) {
               }}
             >
               <div
-                className="relative flex aspect-[16/10] items-end justify-between p-4"
-                style={{ background: panelBackground(accent, index), color: 'var(--p-accent-ink)' }}
+                className="relative flex aspect-[16/10] items-end justify-between overflow-hidden p-4"
+                style={{ background: panelBackground(accent, index), color: projectImage(project) ? '#ffffff' : 'var(--p-accent-ink)' }}
               >
-                <span className="text-[clamp(14px,1.7cqw,19px)] font-semibold leading-tight tracking-[-0.02em] drop-shadow-sm">
+                {projectImage(project) ? (
+                  <>
+                    <img
+                      src={projectImage(project)}
+                      alt={project.imageAlt || (project.name ? `${project.name} project preview` : 'Project preview')}
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      className="absolute inset-0 h-full w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.16) 55%, rgba(0,0,0,0.04) 100%)' }}
+                      aria-hidden="true"
+                    />
+                  </>
+                ) : (
+                  <span
+                    className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-lg text-[13px] font-semibold opacity-90"
+                    style={{ border: '1px solid color-mix(in srgb, var(--p-accent-ink) 35%, transparent)' }}
+                    aria-hidden="true"
+                  >
+                    {project.name.trim().slice(0, 1).toUpperCase() || 'P'}
+                  </span>
+                )}
+                <span className="relative z-10 text-[clamp(14px,1.7cqw,19px)] font-semibold leading-tight tracking-[-0.02em] drop-shadow-sm">
                   {project.name}
                 </span>
-                <span className="font-mono text-[11px] opacity-80">0{index + 1}</span>
+                <span className="relative z-10 font-mono text-[11px] opacity-80">0{index + 1}</span>
               </div>
               <div className="p-4">
                 {project.description ? (

@@ -1,4 +1,4 @@
-import { templateData, ContactRow, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, ContactRow, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 const Line = ({ label, children }) => (
@@ -102,6 +102,7 @@ export default function TerminalLayout({ portfolio, blogHref, accent }) {
                     className="p-3.5"
                     style={{ border: '1px solid var(--p-line)', borderRadius: 'calc(var(--p-radius)/1.4)' }}
                   >
+                    <ProjectCover project={project} ratio="16 / 9" rounded="rounded-[calc(var(--p-radius)/2)]" className="mb-2.5" />
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <h3 className="text-[13.5px] font-semibold" style={{ fontFamily: 'var(--p-font)' }}>
                         {project.name}

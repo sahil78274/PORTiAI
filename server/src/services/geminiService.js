@@ -55,10 +55,12 @@ export async function callGemini({
   json = false,
   temperature = 0.6,
   maxOutputTokens = 1200,
+  model = env.gemini.model,
+  timeoutMs = env.gemini.timeoutMs,
 }) {
   if (!isGeminiConfigured()) throw buildError('NOT_CONFIGURED');
 
-  const url = `${env.gemini.apiBaseUrl}/v1beta/models/${encodeURIComponent(env.gemini.model)}:generateContent`;
+  const url = `${env.gemini.apiBaseUrl}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const body = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
@@ -70,7 +72,7 @@ export async function callGemini({
   if (system) body.systemInstruction = { parts: [{ text: system }] };
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), env.gemini.timeoutMs);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let response;
   try {
@@ -133,7 +135,7 @@ export async function callGemini({
     throw buildError('BAD_RESPONSE');
   }
 
-  return { text, model: env.gemini.model, finishReason: candidate?.finishReason || null };
+  return { text, model, finishReason: candidate?.finishReason || null };
 }
 
 /** Best-effort JSON extraction: tolerates code fences and leading prose. */

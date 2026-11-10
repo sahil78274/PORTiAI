@@ -1,24 +1,51 @@
 import { Router } from 'express';
-import { getPlans, getSubscription, startCheckout, billingWebhook } from '../controllers/subscriptionController.js';
+import {
+  getPlans,
+  getSubscription,
+  razorpayCheckout,
+  razorpayVerify,
+  razorpayMandate,
+  history,
+  receipt,
+  cancel,
+} from '../controllers/billingController.js';
+import { startCheckout, billingWebhook } from '../controllers/subscriptionController.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
-/** Public pricing. No session, no entitlement data — just plans and amounts. */
+/** Public pricing: three plans, amounts and whether checkout is available. */
 router.get('/plans', getPlans);
 
-/** Current entitlements for the signed-in user. Read-only. */
+/** Current entitlements, subscription status and AI credits for the signed-in user. */
 router.get('/', requireAuth, getSubscription);
 
+/* ------------------------------------------------------------- Razorpay */
+
 /**
- * Start an upgrade for the signed-in user. Returns a hosted checkout URL when
- * one is configured, activates in development mode, or returns 503 when the
- * deployment has no way to take a payment. Never grants access by itself in
- * production.
+ * Start a purchase. Returns the Razorpay order / subscription ids plus the
+ * public key id for Checkout.js. No plan is granted by this request.
  */
+router.post('/razorpay/checkout', requireAuth, razorpayCheckout);
+
+/** Verify a Checkout.js callback and activate only if Razorpay confirms it. */
+router.post('/razorpay/verify', requireAuth, razorpayVerify);
+
+/** Authorise the recurring mandate after the ₹9 first month. */
+router.post('/razorpay/mandate', requireAuth, razorpayMandate);
+
+/* ---------------------------------------------------- History & cancel */
+
+router.get('/history', requireAuth, history);
+router.get('/payments/:id', requireAuth, receipt);
+router.post('/cancel', requireAuth, cancel);
+
+/* ------------------------------------------------------- Legacy paths */
+
+/** Development-only instant upgrade or a pre-Razorpay hosted checkout. */
 router.post('/checkout', requireAuth, startCheckout);
 
-/** Billing provider callback. Disabled (501) unless BILLING_WEBHOOK_SECRET is set. */
+/** Legacy provider callback. Disabled (501) unless BILLING_WEBHOOK_SECRET is set. */
 router.post('/webhook', billingWebhook);
 
 export default router;

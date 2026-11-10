@@ -13,31 +13,71 @@ const resolveUploadUrl = (path) => {
   return path;
 };
 
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const HARD_LIMIT_BYTES = 12 * 1024 * 1024;
+
+/** Purpose-specific browser-side preprocessing. */
+const PRESETS = {
+  portrait: { maxSize: 512, quality: 0.86, label: 'profile photo', uploadLimit: 500 * 1024 },
+  project: { maxSize: 1440, quality: 0.82, label: 'project screenshot', uploadLimit: 1.5 * 1024 * 1024 },
+};
+
 export const uploadService = {
   /**
-   * Downscales the chosen file in the browser, then posts it as a data URL.
-   * Returns { url, upload } where `url` can be stored in profile.photoUrl.
+   * Validates, downscales and uploads an image.
+   *
+   * @param {File} file
+   * @param {{ purpose?: 'portrait'|'project' }} options
+   * @returns {Promise<{ url: string, upload: object, path: string }>}
    */
-  uploadImage: async (file) => {
+  uploadImage: async (file, { purpose = 'portrait' } = {}) => {
+    const preset = PRESETS[purpose] || PRESETS.portrait;
     if (!file) throw new Error('Choose an image file first.');
-    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
-      throw new Error('Use a PNG, JPEG or WebP image.');
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      throw new Error('Use a JPG, PNG or WebP image.');
     }
-    if (file.size > 8 * 1024 * 1024) {
-      throw new Error('That file is over 8 MB. Choose a smaller image.');
+    if (file.size > HARD_LIMIT_BYTES) {
+      throw new Error('That file is over 12 MB. Choose a smaller image.');
     }
 
-    const dataUrl = await downscaleToDataUrl(file);
-    const data = await api.post('/uploads', { dataUrl });
-    return { url: data.url || resolveUploadUrl(data.path), upload: data.upload };
+    const prepared = await downscaleToDataUrl(file, preset.maxSize, preset.quality);
+
+    if (prepared.bytes > preset.uploadLimit) {
+      throw new Error(
+        `That ${preset.label} is still too large after resizing (${Math.round(prepared.bytes / 1024)} KB). Try a simpler image.`
+      );
+    }
+
+    const data = await api.post('/uploads', {
+      dataUrl: prepared.dataUrl,
+      purpose,
+      width: prepared.width,
+      height: prepared.height,
+      originalName: file.name,
+    });
+
+    return { url: resolveUploadUrl(data.path || data.url), path: data.path, upload: data.upload };
   },
 
   /** Absolute URL for a value already stored on a portfolio. */
   resolveUrl: resolveUploadUrl,
+
+  /** True when a URL points at this deployment's media store. */
+  isUploadUrl: (url) => Boolean(url) && /\/api\/uploads\/[a-f0-9]{24}/i.test(url),
+
+  /** Owner-only cleanup of an image that is no longer referenced. */
+  deleteImage: async (url) => {
+    const match = /\/api\/uploads\/([a-f0-9]{24})/i.exec(String(url || ''));
+    if (!match) return null;
+    return api.delete(`/uploads/${match[1]}`);
+  },
 };
 
-/** Draws the image on a canvas at <=512px and returns a compressed data URL. */
-const downscaleToDataUrl = (file, maxSize = 512) =>
+/**
+ * Draws the image on a canvas at its longest edge ≤ `maxSize` and returns a
+ * compressed data URL plus the true dimensions that were uploaded.
+ */
+const downscaleToDataUrl = (file, maxSize = 512, quality = 0.85) =>
   new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
@@ -65,7 +105,10 @@ const downscaleToDataUrl = (file, maxSize = 512) =>
       context.drawImage(image, 0, 0, width, height);
 
       const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-      resolve(canvas.toDataURL(mimeType, 0.85));
+      const dataUrl = canvas.toDataURL(mimeType, quality);
+      const base64 = dataUrl.split(',')[1] || '';
+      const bytes = Math.ceil((base64.length * 3) / 4);
+      resolve({ dataUrl, width, height, bytes });
     };
 
     image.onerror = () => {

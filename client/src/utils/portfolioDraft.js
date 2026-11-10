@@ -49,7 +49,11 @@ export const draftFromPortfolio = (portfolio) => {
     profile: { ...base.profile, ...(portfolio.profile || {}), links: portfolio.profile?.links || [] },
     skills: portfolio.skills || [],
     education: portfolio.education || [],
-    projects: portfolio.projects || [],
+    projects: (portfolio.projects || []).map((project) => ({
+      imageUrl: '',
+      imageAlt: '',
+      ...project,
+    })),
     experience: portfolio.experience || [],
     achievements: portfolio.achievements || [],
     socialLinks: { ...base.socialLinks, ...(portfolio.socialLinks || {}) },
@@ -85,6 +89,8 @@ export const emptyProject = () => ({
   projectUrl: '',
   githubUrl: '',
   contributions: '',
+  imageUrl: '',
+  imageAlt: '',
 });
 
 export const emptyEducation = () => ({

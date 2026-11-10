@@ -10,6 +10,7 @@ import FeaturesPage from './pages/FeaturesPage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
 import TemplatePreviewPage from './pages/TemplatePreviewPage.jsx';
 import Premium from './pages/Premium.jsx';
+import Pricing from './pages/Pricing.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Terms from './pages/Terms.jsx';
 import Login from './pages/Login.jsx';
@@ -26,6 +27,9 @@ import BlogStudio from './pages/BlogStudio.jsx';
 import BlogEditor from './pages/BlogEditor.jsx';
 import PublishSuccess from './pages/PublishSuccess.jsx';
 import Settings from './pages/Settings.jsx';
+import Billing from './pages/Billing.jsx';
+import AiProjectBuilder from './pages/AiProjectBuilder.jsx';
+import AdminPanel from './pages/AdminPanel.jsx';
 import PublicPortfolio from './pages/PublicPortfolio.jsx';
 import { PublicBlogList, PublicBlogPost } from './pages/PublicBlog.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -41,6 +45,7 @@ export default function App() {
           <Route path="/templates" element={<TemplatesPage />} />
           <Route path="/templates/:id" element={<TemplatePreviewPage />} />
           <Route path="/premium" element={<Premium />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>
@@ -71,6 +76,9 @@ export default function App() {
             <Route path="/dashboard/blog/:id" element={<BlogEditor />} />
             <Route path="/dashboard/publish/:id" element={<PublishSuccess />} />
             <Route path="/dashboard/settings" element={<Settings />} />
+            <Route path="/dashboard/billing" element={<Billing />} />
+            <Route path="/dashboard/ai-builder" element={<AiProjectBuilder />} />
+            <Route path="/dashboard/admin" element={<AdminPanel />} />
           </Route>
         </Route>
 

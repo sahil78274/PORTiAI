@@ -1,4 +1,4 @@
-import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, splitSkills, BlogLink, EmptyTemplateNotice, SECTION_LABELS, formatDate } from './shared.jsx';
+import { renderableSections, templateStyle, dateRange, SocialLinks, ContactDetails, ProjectLinks, ProjectCover, splitSkills, BlogLink, EmptyTemplateNotice, SECTION_LABELS, formatDate } from './shared.jsx';
 
 /**
  * Minimal Developer — white canvas, dark type, one blue accent.
@@ -57,6 +57,7 @@ export default function DeveloperTemplate({ portfolio, blogHref }) {
               {portfolio.projects.filter((project) => project?.name).map((project, index) => (
                 <li key={`${project.name}-${index}`} className="grid gap-2 py-6 sm:grid-cols-[1fr_auto] sm:gap-6">
                   <div>
+                    <ProjectCover project={project} ratio="16 / 9" rounded="rounded-md" className="mb-3 max-w-sm" />
                     <h3 className="text-[16px] font-semibold">{project.name}</h3>
                     {project.description ? (
                       <p className="mt-1.5 max-w-xl text-[14px] leading-6 text-[#4a525b]">{project.description}</p>

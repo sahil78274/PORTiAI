@@ -46,6 +46,23 @@ const projectSchema = new mongoose.Schema(
     projectUrl: { type: String, trim: true, maxlength: 2048, default: '' },
     githubUrl: { type: String, trim: true, maxlength: 2048, default: '' },
     contributions: { type: String, trim: true, maxlength: 1500, default: '' },
+    /**
+     * Project screenshot / thumbnail.
+     *
+     * `imageUrl` points at the media store (`/api/uploads/:id`) or any https
+     * image URL. `imageMeta` is copied from the Upload document on the server —
+     * it is never taken from the client — so dimensions, type and size are
+     * trustworthy. No binary data is stored on the portfolio.
+     */
+    imageUrl: { type: String, trim: true, maxlength: 2048, default: '' },
+    imageAlt: { type: String, trim: true, maxlength: 160, default: '' },
+    imageMeta: {
+      uploadId: { type: String, trim: true, maxlength: 40, default: '' },
+      mimeType: { type: String, trim: true, maxlength: 40, default: '' },
+      width: { type: Number, default: 0 },
+      height: { type: Number, default: 0 },
+      size: { type: Number, default: 0 },
+    },
   },
   { _id: false }
 );

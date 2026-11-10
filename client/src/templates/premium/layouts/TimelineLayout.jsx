@@ -1,4 +1,4 @@
-import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink } from '../primitives.jsx';
+import { templateData, Avatar, Marker, ContactRow, Tag, ProjectLinks, BlogLink, ProjectCover } from '../primitives.jsx';
 import { dateRange } from '../../shared.jsx';
 
 /**
@@ -92,6 +92,7 @@ export default function TimelineLayout({ portfolio, blogHref, accent }) {
                 className="p-4"
                 style={{ background: 'var(--p-surface)', border: 'var(--p-border)', borderRadius: 'var(--p-radius)', boxShadow: 'var(--p-shadow)' }}
               >
+                <ProjectCover project={project} ratio="16 / 9" rounded="rounded-[calc(var(--p-radius)*0.6)]" className="mb-3" />
                 <div className="flex items-baseline justify-between gap-2">
                   <h3 className="text-[14.5px] font-semibold">{project.name}</h3>
                   <span className="font-mono text-[10px]" style={{ color: 'var(--p-muted)' }}>
