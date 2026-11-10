@@ -61,7 +61,10 @@ export const env = {
     ]),
   ],
   gemini: {
-    apiKey: required('GEMINI_API_KEY', ''),
+  apiKey: required(
+    'GEMINI_PORTFOLIO_API_KEY',
+    required('GEMINI_API_KEY', '')
+  ),
     model: required('GEMINI_MODEL', 'gemini-2.5-flash'),
     // Overridable so the request pipeline can be exercised against a local stub
     // in tests, or a regional/proxy endpoint if required.
@@ -84,6 +87,10 @@ export const env = {
     model: required('AI_MODEL', ''),
     openaiApiKey: required('OPENAI_API_KEY', ''),
     openaiBaseUrl: required('OPENAI_BASE_URL', 'https://api.openai.com/v1').replace(/\/$/, ''),
+    geminiApiKey: required(
+  'GEMINI_PROJECT_API_KEY',
+  required('GEMINI_API_KEY', '')
+),
     /** Project-builder generation limits (AI cost control). */
     projectCreditsMonthly: Math.max(1, Number(required('AI_PROJECT_CREDITS_MONTHLY', '20')) || 20),
     projectTimeoutMs: Number(required('AI_PROJECT_TIMEOUT_MS', '55000')),

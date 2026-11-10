@@ -23,7 +23,7 @@ export const projectModel = () =>
 
 export const isProjectAiConfigured = () => {
   if (env.ai.provider === 'openai') return Boolean(env.ai.openaiApiKey);
-  return isAiEnabled();
+  return Boolean(env.ai.geminiApiKey);
 };
 
 export const AI_PROJECT_ERRORS = {
@@ -124,14 +124,15 @@ export async function callAi({
   }
 
   const { text, model } = await callGemini({
-    prompt,
-    system,
-    json,
-    temperature,
-    maxOutputTokens,
-    model: projectModel(),
-    timeoutMs,
-  });
+  prompt,
+  system,
+  json,
+  temperature,
+  maxOutputTokens,
+  model: projectModel(),
+  timeoutMs,
+  apiKey: env.ai.geminiApiKey,
+});
   return { text, model, provider: 'gemini' };
 }
 

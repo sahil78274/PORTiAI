@@ -164,14 +164,24 @@ const assertTime = (deadline) => {
   }
 };
 
-const parse = (text, code = 'BAD_RESPONSE') => {
+const parse = (text, stage = 'unknown') => {
   const parsed = parseJsonFromText(text);
+
   if (!parsed) {
+    const raw = String(text || '');
+
+    console.error(`[AI Project Builder] JSON parsing failed: ${stage}`, {
+      responseLength: raw.length,
+      responsePreview: raw.slice(0, 600),
+      responseTail: raw.slice(-250),
+    });
+
     throw new AiUnavailableError(
-      code,
-      'The AI returned a response that could not be read as JSON. Try generating again.'
+      'BAD_RESPONSE',
+      `Gemini returned invalid JSON during ${stage}. Check backend logs.`
     );
   }
+
   return parsed;
 };
 
@@ -217,7 +227,7 @@ Rules for the manifest:
     timeoutMs: Math.min(30000, Math.max(10000, deadline - Date.now())),
   });
 
-  const parsed = planSchema.parse(parse(text));
+ const parsed = planSchema.parse(parse(text, 'project plan'));
 
   const seen = new Set();
   const files = [];
@@ -291,7 +301,7 @@ Rules:
     timeoutMs: Math.min(45000, Math.max(12000, deadline - Date.now())),
   });
 
-  const parsed = filesResponseSchema.parse(parse(text, attempt > 1 ? 'BAD_RESPONSE' : 'BAD_RESPONSE'));
+  const parsed = filesResponseSchema.parse(parse(text, 'file batch'));
 
   const wanted = new Set(batch.map((file) => file.path));
   const generated = new Map();
@@ -618,7 +628,7 @@ The content must be complete, runnable and free of placeholders.`;
     timeoutMs: Math.min(45000, Math.max(12000, deadline - Date.now())),
   });
 
-  const parsed = filesResponseSchema.parse(parse(text));
+  const parsed = filesResponseSchema.parse(parse(text, 'file regeneration'));
   const generated = parsed.files.find((file) => safeProjectPath(file.path) === path);
   const content = stripFences(generated?.content || '');
   if (!content.trim()) {

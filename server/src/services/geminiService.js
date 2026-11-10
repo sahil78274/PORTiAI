@@ -57,8 +57,9 @@ export async function callGemini({
   maxOutputTokens = 1200,
   model = env.gemini.model,
   timeoutMs = env.gemini.timeoutMs,
+  apiKey = env.gemini.apiKey,
 }) {
-  if (!isGeminiConfigured()) throw buildError('NOT_CONFIGURED');
+  if (!apiKey) throw buildError('NOT_CONFIGURED');
 
   const url = `${env.gemini.apiBaseUrl}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const body = {
@@ -78,7 +79,10 @@ export async function callGemini({
   try {
     response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.gemini.apiKey },
+      headers: {
+  'Content-Type': 'application/json',
+  'x-goog-api-key': apiKey,
+},
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -90,12 +94,20 @@ export async function callGemini({
   clearTimeout(timer);
 
   const raw = await response.text();
-  let payload = null;
-  try {
-    payload = raw ? JSON.parse(raw) : null;
-  } catch {
-    payload = null;
-  }
+
+if (!response.ok) {
+  console.error('[Gemini API Error]', response.status, raw);
+}
+
+let payload = null;
+
+try {
+  payload = raw ? JSON.parse(raw) : null;
+} catch {
+  payload = null;
+  console.error("[Gemini Network Error]", error);
+}
+  console.error('[Gemini API Error]', response.status, raw);
 
   if (!response.ok) {
     const providerMessage = payload?.error?.message || '';
