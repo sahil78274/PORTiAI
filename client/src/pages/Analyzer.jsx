@@ -13,7 +13,6 @@ import {
   Loader2,
   RefreshCw,
   ScanLine,
-  Upload,
   Wand2,
 } from 'lucide-react';
 import { Alert, Button, ScoreRing, Spinner } from '../components/ui/Primitives.jsx';

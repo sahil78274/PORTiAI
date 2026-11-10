@@ -20,11 +20,11 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
 const PHASES = [
-  'Planning the structure and file list…',
-  'Writing the UI components…',
-  'Writing the logic and backend routes…',
-  'Checking files for placeholders and broken imports…',
-  'Preparing the preview…',
+  { afterMs: 0, label: 'Planning the structure and file list…' },
+  { afterMs: 12000, label: 'Writing the UI components and styles…' },
+  { afterMs: 45000, label: 'Writing the logic, API routes and database models…' },
+  { afterMs: 110000, label: 'Completing the remaining files…' },
+  { afterMs: 170000, label: 'Checking every file and preparing the preview…' },
 ];
 
 const newRequestId = () => {
@@ -56,8 +56,10 @@ export default function AiProjectBuilder() {
   const [generating, setGenerating] = useState(false);
   const [phase, setPhase] = useState('');
   const [genError, setGenError] = useState('');
+  const [genErrorCode, setGenErrorCode] = useState('');
   const phaseTimer = useRef(null);
   const workspaceRef = useRef(null);
+  const generatingRef = useRef(false);
 
   const stopPhases = () => {
     if (phaseTimer.current) {
@@ -76,6 +78,7 @@ export default function AiProjectBuilder() {
       setMeta(metaData);
       setProjects(listData.projects || []);
       setCredits(listData.credits || null);
+      setPremiumBlocked(false);
     } catch (error) {
       if (error?.code === 'PREMIUM_REQUIRED' || error?.status === 403) {
         setPremiumBlocked(true);
@@ -93,6 +96,9 @@ export default function AiProjectBuilder() {
       setLoading(false);
       return;
     }
+    // The user may have upgraded in another tab or after the server rejected a
+    // generation; never keep showing the lock once the account is premium.
+    setPremiumBlocked(false);
     load();
   }, [authLoading, isPremium, load]);
 
@@ -123,14 +129,21 @@ export default function AiProjectBuilder() {
   };
 
   const generate = async (input) => {
+    // A double-click can fire two click handlers before React re-renders the
+    // disabled button. The ref closes that window; the server also has a
+    // requestId + unique index as the final guard.
+    if (generatingRef.current) return;
+    generatingRef.current = true;
     setGenError('');
+    setGenErrorCode('');
     setGenerating(true);
-    setPhase(PHASES[0]);
-    let index = 0;
+    setPhase(PHASES[0].label);
+    const started = Date.now();
     phaseTimer.current = setInterval(() => {
-      index = Math.min(index + 1, PHASES.length - 1);
-      setPhase(PHASES[index]);
-    }, 4500);
+      const elapsed = Date.now() - started;
+      const current = [...PHASES].reverse().find((step) => elapsed >= step.afterMs) || PHASES[0];
+      setPhase(current.label);
+    }, 2000);
 
     try {
       const data = await aiProjectService.generate({ ...input, requestId: newRequestId() });
@@ -146,17 +159,16 @@ export default function AiProjectBuilder() {
       if (error?.code === 'PREMIUM_REQUIRED') {
         setPremiumBlocked(true);
         await refreshSubscription();
-      } else if (error?.code === 'AI_CREDITS_EXHAUSTED') {
-        setGenError(error.message);
-        await refreshList();
       } else {
         setGenError(error.message || 'Generation failed. Nothing was saved.');
+        setGenErrorCode(error?.code || '');
         await refreshList();
       }
     } finally {
       stopPhases();
       setPhase('');
       setGenerating(false);
+      generatingRef.current = false;
     }
   };
 
@@ -171,6 +183,7 @@ export default function AiProjectBuilder() {
     setProject(null);
     setIssues([]);
     setGenError('');
+    setGenErrorCode('');
     refreshList();
   };
 
@@ -237,7 +250,7 @@ export default function AiProjectBuilder() {
 
           {meta && !meta.aiAvailable ? (
             <Alert tone="warning" title="AI provider not configured">
-              Generation is disabled until the server has a provider key. Set <code className="font-mono text-[11px]">GEMINI_API_KEY</code>{' '}
+              Generation is disabled until the server has a provider key. Set <code className="font-mono text-[11px]">GEMINI_PROJECT_API_KEY</code>{' '}
               (or <code className="font-mono text-[11px]">AI_PROVIDER=openai</code> and{' '}
               <code className="font-mono text-[11px]">OPENAI_API_KEY</code>). Your existing projects are still available below.
             </Alert>
@@ -251,6 +264,7 @@ export default function AiProjectBuilder() {
             busy={generating}
             phase={phase}
             error={genError}
+            errorCode={genErrorCode}
           />
 
           {generating ? (
@@ -263,8 +277,9 @@ export default function AiProjectBuilder() {
                 <div className="h-full w-1/3 animate-pulse rounded-full bg-accent" />
               </div>
               <p className="mt-2 text-[11px] leading-5 text-muted">
-                This can take up to two minutes. The result is validated before it is saved; if the provider fails, the
-                credit is refunded.
+                This can take up to four minutes for a full-stack project. Every manifest file is checked before the
+                result is saved; if the provider fails or a file is missing, nothing partial is saved and the credit is
+                returned.
               </p>
             </div>
           ) : null}

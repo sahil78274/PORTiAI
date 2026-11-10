@@ -39,6 +39,16 @@ const aiProjectSchema = new mongoose.Schema(
     techStack: { type: [String], default: [] },
     dependencies: { type: [String], default: [] },
     setupSteps: { type: [String], default: [] },
+    /** REST endpoints the generated frontend/backend share (informational). */
+    apiEndpoints: {
+      type: [
+        new mongoose.Schema(
+          { method: String, path: String, description: String },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     /** Inline preview document, only for stacks that render without a build. */
     previewHtml: { type: String, default: '', maxlength: 500000 },
     previewSupported: { type: Boolean, default: false },
@@ -77,6 +87,7 @@ aiProjectSchema.methods.toSummaryJSON = function toSummaryJSON() {
     previewSupported: Boolean(this.previewSupported),
     creditsUsed: this.creditsUsed,
     generatedAt: this.generatedAt,
+    errorCode: this.errorCode || '',
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     errorMessage: this.errorMessage || '',
@@ -95,6 +106,7 @@ aiProjectSchema.methods.toOwnerJSON = function toOwnerJSON() {
     })),
     readme: this.readme || '',
     setupSteps: this.setupSteps || [],
+    apiEndpoints: this.apiEndpoints || [],
     previewHtml: this.previewHtml || '',
     provider: this.provider || '',
     model: this.model || '',

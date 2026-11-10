@@ -154,7 +154,8 @@ cd ../client && npm install && cp .env.example .env
 Both platforms deploy straight from the repository:
 
 * **Render (API)** — New → Blueprint, pick the repo; `render.yaml` defines the service with root
-  directory `server`. Add `MONGODB_URI`, `GEMINI_API_KEY`, `CLIENT_URL` in the dashboard.
+  directory `server`. Add `MONGODB_URI`, `GEMINI_PROJECT_API_KEY`, `GEMINI_PORTFOLIO_API_KEY` and
+`CLIENT_URL` in the dashboard.
 * **Vercel (frontend)** — Add New → Project, pick the repo, **set Root Directory to `client`**,
   framework preset Vite, and add `VITE_API_BASE_URL=https://<your-api>.onrender.com/api`.
 

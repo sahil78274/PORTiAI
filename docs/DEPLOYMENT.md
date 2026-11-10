@@ -55,26 +55,35 @@ If it says `disconnected`, the server started but lost its connection — check 
 
 ---
 
-## 2. Gemini API key
+## 2. Gemini API keys (two integrations)
+
+PortiAI uses **separate keys**: `GEMINI_PORTFOLIO_API_KEY` for bios, summaries and analysis, and
+`GEMINI_PROJECT_API_KEY` for the AI Project Builder. Quotas are counted per Google Cloud project, but
+separate keys stop one feature from exhausting the other. `GEMINI_API_KEY` is accepted as a legacy
+fallback for both when a dedicated variable is empty.
 
 1. Sign in at <https://aistudio.google.com/apikey> with a Google account.
-2. **Create API key** in a Google Cloud project (the free tier applies per project).
-3. In AI Studio, check **Rate limits / quotas** for your project and confirm which models are enabled.
-   Pick a **Flash** or **Flash-Lite** model id (for example `gemini-2.5-flash`) and put it in
-   `GEMINI_MODEL`. A Pro model on a free key answers 404 and the app will report that the configured
-   model is not available.
-4. Never commit the key. It is read only on the server, from `GEMINI_API_KEY`.
+2. **Create two API keys** in a Google Cloud project (or two projects if you want independent quotas).
+3. In AI Studio, check **Rate limits / quotas** and confirm which models are enabled. Pick **Flash**
+   or **Flash-Lite** ids (for example `gemini-2.5-flash`) for both
+   `GEMINI_PORTFOLIO_MODEL` and `GEMINI_PROJECT_MODEL`. A Pro model may answer 404 on a free key; the
+   app names the configured model in the error instead of failing silently.
+4. Keep `GEMINI_PROJECT_THINKING_BUDGET=0`. Gemini 2.5 Flash otherwise spends part of the output
+   budget on hidden thinking, which can truncate JSON/file batches.
+5. Never commit a key. Keys are read only on the server.
 
-**Verify the key against the real API** (optional; not run in this repository's test suite because no
-key is available here):
+**Verify each key against the real API** (optional; not run in the repository's automated suite because
+no real key is available there):
 
 ```bash
 cd server
-GEMINI_API_KEY=your-key node scripts/check-gemini.mjs
+GEMINI_PORTFOLIO_API_KEY=your-portfolio-key node scripts/check-gemini.mjs
+GEMINI_PROJECT_API_KEY=your-project-key node scripts/check-gemini.mjs --project
 ```
 
-The script performs one tiny request, prints the model's reply, and translates quota / invalid-key
-errors into the same wording the UI would show.
+Each command performs one tiny request and prints either the reply or the translated quota /
+invalid-key / permission / model error. The `--project` check also verifies JSON mode and the dedicated
+model.
 
 ---
 
@@ -85,7 +94,9 @@ errors into the same wording the UI would show.
 1. Push the repository to GitHub.
 2. Render dashboard → **New → Blueprint** → select the repository. `render.yaml` at the project root
    defines the service.
-3. Fill in the values marked `sync: false`: `MONGODB_URI`, `GEMINI_API_KEY`, `CLIENT_URL`.
+3. Fill in the values marked `sync: false`: `MONGODB_URI`, `GEMINI_PORTFOLIO_API_KEY`,
+   `GEMINI_PROJECT_API_KEY`, Razorpay keys and `CLIENT_URL` (plus `GEMINI_API_KEY` only if you rely on
+   the legacy fallback).
 
 ### Option B — manual web service
 
@@ -103,9 +114,15 @@ Environment variables:
 ```env
 NODE_ENV=production
 MONGODB_URI=mongodb+srv://…
-GEMINI_API_KEY=…
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_PORTFOLIO_API_KEY=…
+GEMINI_PORTFOLIO_MODEL=gemini-2.5-flash
+GEMINI_PROJECT_API_KEY=…
+GEMINI_PROJECT_MODEL=gemini-2.5-flash
+GEMINI_PROJECT_THINKING_BUDGET=0
 AI_PROVIDER=gemini
+AI_PROVIDER_TIMEOUT_MS=75000
+AI_PROJECT_TIMEOUT_MS=240000
+AI_PROVIDER_RETRIES=1
 AI_PROJECT_CREDITS_MONTHLY=20
 SESSION_SECRET=<openssl rand -base64 48>
 CLIENT_URL=https://your-app.vercel.app
@@ -232,10 +249,17 @@ legacy `POST /api/subscription/webhook` remains for hosted-checkout deployments 
 open `/dashboard/admin`; every `/api/admin/*` route also requires that role and returns no payment
 secrets.
 
-**AI Project Builder.** Generation uses `GEMINI_API_KEY` by default. For an OpenAI-compatible provider set
-`AI_PROVIDER=openai`, `OPENAI_API_KEY` and optionally `OPENAI_BASE_URL` / `AI_MODEL`. Credits default to
-20 per user per month (`AI_PROJECT_CREDITS_MONTHLY`) and reset on the 1st. Without a key the builder
-shows a clear configuration message and returns 503; it never fabricates a project locally.
+**AI Project Builder.** Generation uses `GEMINI_PROJECT_API_KEY` (and `GEMINI_PROJECT_MODEL`) by default.
+For an OpenAI-compatible provider set `AI_PROVIDER=openai`, `OPENAI_API_KEY` and optionally
+`OPENAI_BASE_URL` / `AI_MODEL`. Credits default to 20 per user per month
+(`AI_PROJECT_CREDITS_MONTHLY`) and reset on the 1st.
+
+The pipeline is plan → validated manifest → file batches. Missing or truncated files are retried
+individually; only a complete, validated project is saved. `AI_PROJECT_TIMEOUT_MS` is the overall
+budget (default 240 s) and `AI_PROVIDER_TIMEOUT_MS` caps one provider request (default 75 s). Keep the
+API request timeout on any proxy/CDN above the overall budget. Without a key the builder returns 503
+and never fabricates a project locally. Set `GEMINI_PROJECT_THINKING_BUDGET=0` so output tokens are
+spent on files rather than Gemini 2.5 thinking.
 
 If you edit `client/src/data/templateCatalogue.js`, regenerate the server manifest and commit it:
 
@@ -278,9 +302,12 @@ node scripts/sync-template-catalogue.mjs --check  # CI guard
 | `Invalid scheme, expected connection string…` | Placeholder text left in the variable | Paste the real `mongodb+srv://…` string |
 | `bad auth : authentication failed` | Wrong password, unencoded special characters | Reset the Atlas user password and percent-encode characters such as `@ : / ?` |
 | `Could not connect to MongoDB` + `IP not whitelisted` | Atlas network access | Add `0.0.0.0/0` or the caller's IP |
-| AI error `NOT_CONFIGURED` | `GEMINI_API_KEY` empty on the server | Add it and redeploy; every other feature still works |
-| AI error `QUOTA` / `RATE` | Free-tier limit reached | Wait for the reset (daily resets at midnight Pacific), or continue without AI |
-| AI error `The configured Gemini model … is not available` | Pro model or a retired id on a free key | Set `GEMINI_MODEL` to a Flash / Flash-Lite model |
+| AI error `NOT_CONFIGURED` | The relevant key is empty on the server | Set `GEMINI_PROJECT_API_KEY` (builder) or `GEMINI_PORTFOLIO_API_KEY` (portfolio) and redeploy |
+| AI error `QUOTA` / `RATE` | Free-tier limit reached or too many requests | Wait for the reset (daily resets at midnight Pacific), or continue without AI |
+| AI error `PERMISSION` | Key exists but the Generative Language API is disabled or not allowed | Enable the API in the key's Google Cloud project, or use another key |
+| AI error `MODEL_NOT_FOUND` / the configured model is not available | Pro model or a retired id on a free key | Set `GEMINI_PROJECT_MODEL` / `GEMINI_PORTFOLIO_MODEL` to a Flash or Flash-Lite model |
+| AI error `TRUNCATED` or `INCOMPLETE_PROJECT` on a large project | Output budget exhausted or a file was skipped | The credit is refunded; retry, use Standard, or set `GEMINI_PROJECT_THINKING_BUDGET=0` |
+| Project generation is cut off by a proxy | Proxy request timeout below `AI_PROJECT_TIMEOUT_MS` | Raise the proxy timeout (Render web services allow long requests), or lower the project timeout |
 | Analysis page says “AI feedback is not configured” | Expected when no key is set | Rule-based scoring is still accurate |
 | 429 from `/api/auth/login` | Auth rate limit (30 / 15 min) | Wait, or raise the limit for a demo |
 | Refreshing a nested route gives 404 on Vercel | Missing SPA rewrite | Keep `vercel.json` in `client/` |
@@ -295,7 +322,7 @@ node scripts/sync-template-catalogue.mjs --check  # CI guard
 # terminal 1 — API in production-like mode
 cd server
 NODE_ENV=production MONGODB_URI="…" SESSION_SECRET="$(openssl rand -base64 48)" \
-CLIENT_URL="http://localhost:4173" GEMINI_API_KEY="…" npm start
+CLIENT_URL="http://localhost:4173" GEMINI_PROJECT_API_KEY="…" GEMINI_PORTFOLIO_API_KEY="…" npm start
 
 # terminal 2 — built frontend served statically
 cd client

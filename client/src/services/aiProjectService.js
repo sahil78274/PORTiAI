@@ -1,4 +1,4 @@
-import { api, apiBaseUrl } from './api.js';
+import { api, apiBaseUrl, ApiError } from './api.js';
 
 /** AI Project Builder endpoints. All are premium-gated on the server. */
 export const aiProjectService = {
@@ -6,8 +6,32 @@ export const aiProjectService = {
   credits: () => api.get('/ai-projects/credits'),
   list: () => api.get('/ai-projects'),
   get: (id) => api.get(`/ai-projects/${id}`),
-  generate: ({ idea, stack, complexity, designPreferences, requestId }) =>
-    api.post('/ai-projects/generate', { idea, stack, complexity, designPreferences, requestId }),
+  generate: async ({ idea, stack, complexity, designPreferences, requestId }) => {
+    /*
+     * A full-stack generation is a long request. Give the server’s own budget
+     * (AI_PROJECT_TIMEOUT_MS, default 240s) some headroom, then fail with a
+     * clear client-side timeout instead of spinning forever.
+     */
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 300000);
+    try {
+      return await api.post(
+        '/ai-projects/generate',
+        { idea, stack, complexity, designPreferences, requestId },
+        { signal: controller.signal }
+      );
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new ApiError(
+          'The generation request timed out in the browser. The server may still finish it — open your projects and refresh in a minute. No second credit is spent until you start another generation.',
+          { code: 'CLIENT_TIMEOUT' }
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  },
   regenerate: (id) => api.post(`/ai-projects/${id}/regenerate`),
   regenerateFile: (id, { path, instruction, mode = 'regenerate' }) =>
     api.post(`/ai-projects/${id}/files/regenerate`, { path, instruction, mode }),

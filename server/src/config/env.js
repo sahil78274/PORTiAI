@@ -61,24 +61,28 @@ export const env = {
     ]),
   ],
   gemini: {
-  apiKey: required(
-    'GEMINI_PORTFOLIO_API_KEY',
-    required('GEMINI_API_KEY', '')
-  ),
-    model: required('GEMINI_MODEL', 'gemini-2.5-flash'),
+    /**
+     * Portfolio AI key. The older single-key name is still honoured for
+     * backwards compatibility, but the Project Builder never uses this key.
+     */
+    apiKey: required('GEMINI_PORTFOLIO_API_KEY', required('GEMINI_API_KEY', '')),
+    model: required('GEMINI_PORTFOLIO_MODEL', required('GEMINI_MODEL', 'gemini-2.5-flash')),
     // Overridable so the request pipeline can be exercised against a local stub
     // in tests, or a regional/proxy endpoint if required.
-    apiBaseUrl: required('GEMINI_API_BASE_URL', 'https://generativelanguage.googleapis.com'),
+    apiBaseUrl: required('GEMINI_PORTFOLIO_API_BASE_URL', required('GEMINI_API_BASE_URL', 'https://generativelanguage.googleapis.com')),
     timeoutMs: Number(required('GEMINI_TIMEOUT_MS', '25000')),
     dailyRequestCap: Number(required('AI_DAILY_REQUEST_CAP', '200')),
   },
   /**
    * AI provider abstraction.
    *
-   * `gemini` (the default) uses the existing Gemini client. `openai` talks to
-   * any OpenAI-compatible chat-completions endpoint, which covers OpenAI,
-   * Groq, Together, OpenRouter and local gateways. Keys are read here only and
-   * never leave the server.
+   * `gemini` (the default) uses the dedicated Project Builder key. `openai`
+   * talks to any OpenAI-compatible chat-completions endpoint, which covers
+   * OpenAI, Groq, Together, OpenRouter and local gateways. Keys are read here
+   * only and never leave the server.
+   *
+   * Key separation is intentional: a portfolio key must not silently spend
+   * the Project Builder's quota (or vice versa).
    */
   ai: {
     provider: ['gemini', 'openai'].includes(String(process.env.AI_PROVIDER || '').toLowerCase())
@@ -87,13 +91,37 @@ export const env = {
     model: required('AI_MODEL', ''),
     openaiApiKey: required('OPENAI_API_KEY', ''),
     openaiBaseUrl: required('OPENAI_BASE_URL', 'https://api.openai.com/v1').replace(/\/$/, ''),
-    geminiApiKey: required(
-  'GEMINI_PROJECT_API_KEY',
-  required('GEMINI_API_KEY', '')
-),
+    /** Project Builder key: GEMINI_PROJECT_API_KEY, never the portfolio key. */
+    geminiApiKey: required('GEMINI_PROJECT_API_KEY', required('GEMINI_API_KEY', '')),
+    geminiModel: required('GEMINI_PROJECT_MODEL', required('GEMINI_MODEL', 'gemini-2.5-flash')),
+    geminiApiBaseUrl: required(
+      'GEMINI_PROJECT_API_BASE_URL',
+      required('GEMINI_API_BASE_URL', 'https://generativelanguage.googleapis.com')
+    ),
+    /** Timeout for a single provider request (plan or one file batch). */
+    providerRequestTimeoutMs: Math.min(
+      180000,
+      Math.max(10000, Number(required('AI_PROVIDER_TIMEOUT_MS', '75000')) || 75000)
+    ),
+    /**
+     * Overall budget for one generation, including planning, batches and
+     * retries. A large full-stack project needs more than one minute, so this
+     * is deliberately separate from the per-request timeout.
+     */
+    projectTimeoutMs: Math.min(
+      600000,
+      Math.max(30000, Number(required('AI_PROJECT_TIMEOUT_MS', '240000')) || 240000)
+    ),
+    /**
+     * Gemini 2.5 spends output budget on hidden thinking by default. 0 gives
+     * the JSON/file output the full maxOutputTokens budget. Set -1 to keep the
+     * provider default, or a positive number to allow that much thinking.
+     */
+    thinkingBudget: Number(required('GEMINI_PROJECT_THINKING_BUDGET', '0')),
+    /** One retry for transient provider failures (network/429/5xx). */
+    providerRetries: Math.min(3, Math.max(0, Number(required('AI_PROVIDER_RETRIES', '1')) || 0)),
     /** Project-builder generation limits (AI cost control). */
     projectCreditsMonthly: Math.max(1, Number(required('AI_PROJECT_CREDITS_MONTHLY', '20')) || 20),
-    projectTimeoutMs: Number(required('AI_PROJECT_TIMEOUT_MS', '55000')),
   },
   /**
    * Razorpay configuration.
