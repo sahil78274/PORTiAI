@@ -68,8 +68,9 @@ fallback for both when a dedicated variable is empty.
    or **Flash-Lite** ids (for example `gemini-2.5-flash`) for both
    `GEMINI_PORTFOLIO_MODEL` and `GEMINI_PROJECT_MODEL`. A Pro model may answer 404 on a free key; the
    app names the configured model in the error instead of failing silently.
-4. Keep `GEMINI_PROJECT_THINKING_BUDGET=0`. Gemini 2.5 Flash otherwise spends part of the output
-   budget on hidden thinking, which can truncate JSON/file batches.
+4. Keep `GEMINI_PROJECT_THINKING_BUDGET=0`. On Gemini 2.5 this disables hidden thinking; on Gemini 3.x
+   the client sends the supported `thinkingLevel: "low"` because Flash-Lite rejects a zero budget with
+   HTTP 400. Gemini 3 cannot fully disable thinking.
 5. Never commit a key. Keys are read only on the server.
 
 **Verify each key against the real API** (optional; not run in the repository's automated suite because
@@ -259,7 +260,7 @@ individually; only a complete, validated project is saved. `AI_PROJECT_TIMEOUT_M
 budget (default 240 s) and `AI_PROVIDER_TIMEOUT_MS` caps one provider request (default 75 s). Keep the
 API request timeout on any proxy/CDN above the overall budget. Without a key the builder returns 503
 and never fabricates a project locally. Set `GEMINI_PROJECT_THINKING_BUDGET=0` so output tokens are
-spent on files rather than Gemini 2.5 thinking.
+spent on files rather than hidden thinking; the field is model-family aware (2.5 budget / 3.x level).
 
 If you edit `client/src/data/templateCatalogue.js`, regenerate the server manifest and commit it:
 
@@ -307,6 +308,7 @@ node scripts/sync-template-catalogue.mjs --check  # CI guard
 | AI error `PERMISSION` | Key exists but the Generative Language API is disabled or not allowed | Enable the API in the key's Google Cloud project, or use another key |
 | AI error `MODEL_NOT_FOUND` / the configured model is not available | Pro model or a retired id on a free key | Set `GEMINI_PROJECT_MODEL` / `GEMINI_PORTFOLIO_MODEL` to a Flash or Flash-Lite model |
 | AI error `TRUNCATED` or `INCOMPLETE_PROJECT` on a large project | Output budget exhausted or a file was skipped | The credit is refunded; retry, use Standard, or set `GEMINI_PROJECT_THINKING_BUDGET=0` |
+| HTTP 400 `INVALID_ARGUMENT` at `stage=plan` on `gemini-3.5-flash-lite` | Unsupported thinking field (older code sent `thinkingBudget: 0`) | Upgrade the backend; the client now sends `thinkingLevel: "low"` for Gemini 3.x and logs full provider details |
 | Project generation is cut off by a proxy | Proxy request timeout below `AI_PROJECT_TIMEOUT_MS` | Raise the proxy timeout (Render web services allow long requests), or lower the project timeout |
 | Analysis page says “AI feedback is not configured” | Expected when no key is set | Rule-based scoring is still accurate |
 | 429 from `/api/auth/login` | Auth rate limit (30 / 15 min) | Wait, or raise the limit for a demo |

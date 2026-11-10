@@ -103,7 +103,7 @@ and Gemma models as free-capable, and **Pro-tier models have been removed from t
 * Use **two keys**: `GEMINI_PROJECT_API_KEY` for the Project Builder and `GEMINI_PORTFOLIO_API_KEY`
   for bios/analysis. Quota is counted per Google Cloud project, but keeping the keys separate means one
   feature cannot exhaust the other. `GEMINI_API_KEY` remains a legacy fallback for both.
-* Project generation disables Gemini 2.5 hidden thinking by default (`GEMINI_PROJECT_THINKING_BUDGET=0`)
+* Project generation disables Gemini 2.5 hidden thinking by default (`GEMINI_PROJECT_THINKING_BUDGET=0`). On Gemini 3.x it sends `thinkingLevel: "low"`, because 3.x Flash-Lite rejects `thinkingBudget: 0` with HTTP 400
   so the output budget belongs to JSON and files, not internal reasoning tokens.
 * Quotas are counted **per Google Cloud project**, not per key, and reset at midnight Pacific time.
 * The backend enforces its own per-account ceiling (`AI_DAILY_REQUEST_CAP`, default 200/day) and a
@@ -307,7 +307,7 @@ In production the frontend and the API are separate origins, so the variable mus
 | `GEMINI_PORTFOLIO_API_KEY` | for portfolio AI | Dedicated key for bios, summaries, descriptions and analysis. Missing key ⇒ those buttons return 503 |
 | `GEMINI_API_KEY` | no | Legacy fallback for both keys when the dedicated variables are empty |
 | `GEMINI_PROJECT_MODEL` / `GEMINI_PORTFOLIO_MODEL` | no | Model ids for each integration; default `gemini-2.5-flash`. Use Flash or Flash-Lite |
-| `GEMINI_PROJECT_THINKING_BUDGET` | no | Gemini 2.5 thinking tokens for the Project Builder. `0` disables them (recommended), `-1` uses the provider default |
+| `GEMINI_PROJECT_THINKING_BUDGET` | no | Project Builder thinking preference. `0` disables it on Gemini 2.5 and maps to `thinkingLevel: "low"` on Gemini 3.x (Gemini 3 cannot fully disable thinking); `-1` uses the provider default |
 | `AI_PROVIDER` | no | `gemini` (default) or `openai` (any OpenAI-compatible endpoint) |
 | `OPENAI_API_KEY` / `OPENAI_BASE_URL` | no | Required only when `AI_PROVIDER=openai` |
 | `AI_MODEL` | no | Optional model override for the project builder when `AI_PROVIDER=openai` |
@@ -344,8 +344,8 @@ and visible to any visitor. The Gemini key and the session secret stay on the se
 Full request/response documentation: [`docs/API.md`](docs/API.md).
 
 Tests: `cd client && npm test` (62 catalogue/theme/draft checks), `cd client && npm run smoke` (renders
-all 106 templates and every route to static HTML), `cd server && npm test` (**132 checks** — 73 API +
-36 commerce/AI + 23 Project Builder pipeline) covering Razorpay verification, webhooks, all three
+all 106 templates and every route to static HTML), `cd server && npm test` (**134 checks** — 73 API +
+36 commerce/AI + 25 Project Builder pipeline) covering Razorpay verification, webhooks, all three
 generation modes, retries/truncation, image ownership and admin reporting. `npm test` runs all three server suites.
 
 | Method | Path | Auth | Purpose |
@@ -544,7 +544,7 @@ Both suites were executed in this environment; see [`docs/TESTING.md`](docs/TEST
 commands and output.
 
 ```bash
-cd server && npm test                              # 132 checks (73 API + 36 commerce/AI + 23 pipeline): real Express app + MongoDB, Gemini/Razorpay stubs
+cd server && npm test                              # 134 checks (73 API + 36 commerce/AI + 25 pipeline): real Express app + MongoDB, Gemini/Razorpay stubs
 cd client && npm test                              # 62 catalogue/theme/draft checks
 cd client && npm run build                         # production build (passes cleanly)
 GEMINI_PORTFOLIO_API_KEY=… node server/scripts/check-gemini.mjs            # portfolio key/model

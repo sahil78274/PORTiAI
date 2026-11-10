@@ -881,7 +881,7 @@ cd server
 npm test              # api.test.js → commerce-ai.test.js → ai-pipeline.test.js
 npm run test:api      # 73 checks
 npm run test:commerce # 36 checks
-npm run test:pipeline # 23 checks
+npm run test:pipeline # 25 checks
 ```
 
 Latest runs:
@@ -889,7 +889,7 @@ Latest runs:
 ```
 api.test.js          73/73 checks passed
 commerce-ai.test.js  36/36 checks passed
-ai-pipeline.test.js  23/23 checks passed
+ai-pipeline.test.js  25/25 checks passed
 client vite build    ✓ built in ~5 s
 ```
 
@@ -1024,10 +1024,14 @@ real.
    generation and vice versa.
 7. **Gemini 2.5 thinking consumed output tokens.** With thinking enabled, JSON/file batches can hit
    `MAX_TOKENS` before the content is complete, producing intermittent truncation.
-8. **Credit/idempotency race.** The credit was consumed before the project record was created; a
+8. **Gemini 3.x thinking configuration was invalid.** The client sent `thinkingBudget: 0` to
+   `gemini-3.5-flash-lite`, which rejects that field with a bare `400 INVALID_ARGUMENT` at the plan
+   stage. Gemini 3.x cannot fully disable thinking; the accepted lowest level is `thinkingLevel: "low"`.
+   This was the confirmed production-independent local failure for Starter and Standard.
+9. **Credit/idempotency race.** The credit was consumed before the project record was created; a
    concurrent duplicate request could hit the unique index after spending a credit and return a 500.
    Abandoned `generating` rows were never recovered or refunded.
-9. **Frontend retry/duplicate gaps.** A double click could submit twice before React disabled the button;
+10. **Frontend retry/duplicate gaps.** A double click could submit twice before React disabled the button;
    the progress copy froze on "Preparing preview"; no client-side timeout; a full regeneration could leave
    the editor pointing at an old file path; errors did not distinguish exhausted credits from refunds.
 
@@ -1043,7 +1047,8 @@ real.
 * Separate `GEMINI_PROJECT_API_KEY` + `GEMINI_PROJECT_MODEL` and
   `GEMINI_PORTFOLIO_API_KEY` + `GEMINI_PORTFOLIO_MODEL`. The Project Builder uses only its own key/model;
   `GEMINI_API_KEY` remains a legacy fallback for both. `GEMINI_PROJECT_THINKING_BUDGET=0` frees the
-  output budget from hidden thinking on Flash models.
+  output budget from hidden thinking on Flash models; Gemini 3.x uses the accepted `thinkingLevel: "low"`
+  instead of the rejected `thinkingBudget: 0`, and unknown model ids get no thinking field.
 * Two independent time budgets: `AI_PROVIDER_TIMEOUT_MS` per request (75 s) and
   `AI_PROJECT_TIMEOUT_MS` overall (240 s), plus one bounded retry for network/429/5xx.
 * Planning now carries the actual complexity mode, required stack structure, API contract and minimum
@@ -1069,7 +1074,7 @@ real.
 cd server && npm test
 # api.test.js           73/73 checks passed
 # commerce-ai.test.js   36/36 checks passed
-# ai-pipeline.test.js   23/23 checks passed   (132 total)
+# ai-pipeline.test.js   25/25 checks passed   (134 total)
 
 cd client && npm test    # 62/62 checks passed
 cd client && npm run build
@@ -1081,7 +1086,9 @@ cd client && npm run build
 ```
 Gemini configuration
   ✓ project key/model are separate from the portfolio key; the portfolio key is never sent,
-    the key travels in `x-goog-api-key` (never the URL), and JSON mode + `thinkingBudget: 0` are sent
+    the key travels in `x-goog-api-key` (never the URL), and JSON mode + model-specific thinking are sent
+    (`thinkingBudget: 0` on Gemini 2.5, `thinkingLevel: "low"` on Gemini 3.5 Flash-Lite)
+  ✓ a provider 400 logs status, full details, BadRequest field violations and request id, with no key
 JSON parsing and path safety
   ✓ fences + prose + escaped quotes + braces inside strings
   ✓ truncated JSON → TRUNCATED, never repaired
@@ -1113,8 +1120,10 @@ proxy configuration is present.
 
 ### 15.4 Remaining limitations
 
-* **No real Gemini/OpenAI key was available here.** The tests prove the HTTP contract, retry/parse/
-  validation logic and mode handling, not the live model's code quality. Before launch run
+* **No real Gemini/OpenAI key was available here.** The confirmed Gemini 3.5 Flash-Lite 400 is
+  reproduced with a local HTTP stub that rejects `thinkingBudget: 0`, and the request shape is verified
+  against the provider contract. The tests prove the HTTP/JSON/retry/validation logic and mode handling,
+  not the live model's code quality. Before launch run
   `GEMINI_PROJECT_API_KEY=… node server/scripts/check-gemini.mjs --project` and generate one Starter,
   one Standard and one Advanced project in the UI.
 * Generated projects are syntax-checked, not installed and run in this environment. Running `npm install`

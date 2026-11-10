@@ -50,14 +50,67 @@ const ERROR_MESSAGES = {
 
 export const isAiEnabled = () => isGeminiConfigured();
 
-/** One concise server log line per provider failure — never the request or a key. */
-const logProviderFailure = ({ status, code, model, stage, detail }) => {
-  const safeDetail = String(detail || '')
-    .replace(/[\r\n]+/g, ' ')
-    .slice(0, 280);
+/**
+ * Picks the thinking configuration each model family actually accepts.
+ *
+ * This is deliberately capability-based rather than a broad regex. Gemini 2.5
+ * accepts `thinkingBudget: 0` to disable thinking. Gemini 3.x cannot disable
+ * thinking, and `gemini-3.5-flash-lite` rejects `thinkingBudget: 0` with
+ * HTTP 400 INVALID_ARGUMENT; its documented lowest level is `thinkingLevel:
+ * "low"`. Unknown models get no thinkingConfig at all, which is always a
+ * valid request.
+ */
+export const thinkingConfigForModel = (model, thinkingBudget) => {
+  const name = String(model || '').trim();
+  const budget = Number(thinkingBudget);
+  if (!name || !Number.isFinite(budget) || budget < 0) return null;
+
+  // Gemini 2.5 family: a zero budget is the documented way to turn thinking off.
+  if (/^gemini-2\.5(?:-|$)/i.test(name)) {
+    return { thinkingBudget: Math.max(0, Math.floor(budget)) };
+  }
+
+  // Gemini 3.x cannot fully disable thinking. `low` is the lowest level shared
+  // by the 3.x Flash, Flash-Lite and Pro families (3.8 Flash rejects `minimal`).
+  if (/^gemini-3(?:[.-]|$)/i.test(name)) {
+    return budget === 0 ? { thinkingLevel: 'low' } : null;
+  }
+
+  // Aliases and future model ids are left alone rather than guessing a field
+  // the model may reject.
+  return null;
+};
+
+/** Redacts credential-shaped values before any provider detail is logged. */
+const redactSecrets = (value) =>
+  String(value || '')
+    .replace(/AIza[0-9A-Za-z_-]{20,}/g, '[redacted-key]')
+    .replace(/([?&](?:key|api_key|apikey)=)[^&\s"']+/gi, '$1[redacted]')
+    .replace(/("(?:apiKey|api_key|key)"\s*:\s*")[^"]+/gi, '$1[redacted]')
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]');
+
+/**
+ * One safe server log line per provider failure.
+ *
+ * Captures Google's status/message/details and any BadRequest field
+ * violations so a 400 is actionable. It never logs the prompt, request body,
+ * API key or any other credential.
+ */
+const logProviderFailure = ({ status, code, model, stage, detail, payload, requestId }) => {
+  const safeDetail = redactSecrets(String(detail || '').replace(/[\r\n]+/g, ' ')).slice(0, 500);
+  let providerError = '';
+  if (payload?.error) {
+    try {
+      providerError = redactSecrets(JSON.stringify(payload.error)).slice(0, 1600);
+    } catch {
+      providerError = '';
+    }
+  }
   console.warn(
-    `[gemini] stage=${stage || 'request'} status=${status || 'n/a'} model=${model || 'n/a'} code=${code}` +
-      (safeDetail ? ` detail="${safeDetail}"` : '')
+    `[gemini] stage=${stage || 'request'} requestId=${requestId || 'n/a'} status=${status || 'n/a'} ` +
+      `model=${model || 'n/a'} code=${code}` +
+      (safeDetail ? ` detail="${safeDetail}"` : '') +
+      (providerError ? ` providerError=${providerError}` : '')
   );
 };
 
@@ -82,7 +135,7 @@ const extractRetryAfter = (payload) => {
  * @param {{
  *   prompt: string, system?: string, json?: boolean, temperature?: number,
  *   maxOutputTokens?: number, model?: string, timeoutMs?: number,
- *   apiKey?: string, stage?: string
+ *   apiKey?: string, stage?: string, requestId?: string
  * }} options
  */
 export async function callGemini({
@@ -97,13 +150,15 @@ export async function callGemini({
   apiBaseUrl = env.gemini.apiBaseUrl,
   thinkingBudget,
   stage = 'portfolio',
+  requestId = '',
 }) {
   if (!apiKey) {
-    logProviderFailure({ status: 'n/a', code: 'NOT_CONFIGURED', model, stage });
+    logProviderFailure({ status: 'n/a', code: 'NOT_CONFIGURED', model, stage, requestId });
     throw new AiUnavailableError('NOT_CONFIGURED', ERROR_MESSAGES.NOT_CONFIGURED, undefined, { stage });
   }
 
   const url = `${apiBaseUrl.replace(/\/$/, '')}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const thinkingConfig = thinkingConfigForModel(model, thinkingBudget);
   const body = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
@@ -112,13 +167,11 @@ export async function callGemini({
       candidateCount: 1,
       ...(json ? { responseMimeType: 'application/json' } : {}),
       /*
-       * Gemini 2.5 models spend output tokens on internal "thinking" by
-       * default. Project generation needs the whole budget for JSON/files, so
-       * the provider can disable it. Older model ids do not accept this field.
+       * Project generation needs the output budget for JSON/files. The exact
+       * thinking field depends on the model family; see
+       * `thinkingConfigForModel` above.
        */
-      ...(Number.isFinite(thinkingBudget) && thinkingBudget >= 0 && /gemini-(2\.5|3).*flash/i.test(model)
-        ? { thinkingConfig: { thinkingBudget: Math.max(0, Number(thinkingBudget)) } }
-        : {}),
+      ...(thinkingConfig ? { thinkingConfig } : {}),
     },
   };
   if (system) body.systemInstruction = { parts: [{ text: system }] };
@@ -146,7 +199,7 @@ export async function callGemini({
     raw = await response.text();
   } catch (error) {
     if (error?.name === 'AbortError') {
-      logProviderFailure({ status: 'timeout', code: 'TIMEOUT', model, stage, detail: `${timeoutMs}ms` });
+      logProviderFailure({ status: 'timeout', code: 'TIMEOUT', model, stage, requestId, detail: `${timeoutMs}ms` });
       throw new AiUnavailableError('TIMEOUT', ERROR_MESSAGES.TIMEOUT, undefined, { stage });
     }
     const bodyFailure = Boolean(response);
@@ -156,6 +209,7 @@ export async function callGemini({
       code,
       model,
       stage,
+      requestId,
       detail: `${bodyFailure ? 'could not read response body' : 'network failure'}: ${error?.message}`,
     });
     throw new AiUnavailableError(code, ERROR_MESSAGES[code], undefined, {
@@ -205,7 +259,7 @@ export async function callGemini({
     } else if (response.status === 400) {
       code = 'BAD_RESPONSE';
       message =
-        'The AI provider rejected the request as invalid. This usually means the configured model does not support the requested output format.';
+        'The AI provider rejected the model settings (400 INVALID_ARGUMENT). Check the configured Gemini model and thinking settings on the server.';
     }
 
     logProviderFailure({
@@ -213,7 +267,9 @@ export async function callGemini({
       code,
       model,
       stage,
+      requestId,
       detail: providerMessage || providerStatusText,
+      payload,
     });
 
     throw new AiUnavailableError(code, message || ERROR_MESSAGES[code] || ERROR_MESSAGES.UNAVAILABLE, extractRetryAfter(payload), {
@@ -228,6 +284,7 @@ export async function callGemini({
       code: 'BAD_RESPONSE',
       model,
       stage,
+      requestId,
       detail: `HTTP 200 but the body was not valid JSON (${raw.length} bytes)`,
     });
     throw new AiUnavailableError('BAD_RESPONSE', ERROR_MESSAGES.BAD_RESPONSE, undefined, {
@@ -250,6 +307,7 @@ export async function callGemini({
       code: 'BLOCKED',
       model,
       stage,
+      requestId,
       detail: blockReason || finishReason,
     });
     throw new AiUnavailableError('BLOCKED', ERROR_MESSAGES.BLOCKED, undefined, {
@@ -260,7 +318,7 @@ export async function callGemini({
 
   if (!text) {
     const code = finishReason === 'MAX_TOKENS' ? 'TRUNCATED' : 'BAD_RESPONSE';
-    logProviderFailure({ status: response.status, code, model, stage, detail: finishReason || 'empty response' });
+    logProviderFailure({ status: response.status, code, model, stage, requestId, detail: finishReason || 'empty response' });
     throw new AiUnavailableError(code, ERROR_MESSAGES[code], undefined, {
       providerStatus: response.status,
       stage,
@@ -280,6 +338,7 @@ export async function callGemini({
         code: 'TRUNCATED',
         model,
         stage,
+        requestId,
         detail: `MAX_TOKENS with incomplete JSON (${text.length} chars)`,
       });
       throw new AiUnavailableError('TRUNCATED', ERROR_MESSAGES.TRUNCATED, undefined, {
