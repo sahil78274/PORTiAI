@@ -25,7 +25,7 @@ import assert from 'node:assert/strict';
 
 const PROJECT_KEY = 'project-builder-test-key';
 const PORTFOLIO_KEY = 'portfolio-test-key';
-const PROJECT_MODEL = 'gemini-2.5-flash-test';
+const PROJECT_MODEL = 'gemini-3.5-flash-lite';
 const PORTFOLIO_MODEL = 'gemini-portfolio-test';
 
 let passed = 0;
@@ -611,6 +611,56 @@ const startStub = (port) =>
         geminiStub.lastPayload = payload;
         const prompt = payload?.contents?.[0]?.parts?.[0]?.text || '';
 
+        if (geminiStub.mode === 'invalid-argument') {
+          return json(res, 400, {
+            error: {
+              code: 400,
+              message: 'Request contains an invalid argument.',
+              status: 'INVALID_ARGUMENT',
+              details: [
+                {
+                  '@type': 'type.googleapis.com/google.rpc.BadRequest',
+                  fieldViolations: [
+                    {
+                      field: 'generationConfig.thinkingConfig.thinkingBudget',
+                      description: 'Thinking budget is not supported for this model.',
+                    },
+                  ],
+                },
+              ],
+            },
+          });
+        }
+
+        /*
+         * Reproduce the production failure: Gemini 3.5 Flash-Lite rejects a
+         * zero thinkingBudget with a bare 400. The client must send
+         * thinkingLevel: 'low' for this model instead.
+         */
+        if (
+          req.url.includes('/models/gemini-3.5-flash-lite:generateContent') &&
+          payload?.generationConfig?.thinkingConfig?.thinkingBudget !== undefined
+        ) {
+          return json(res, 400, {
+            error: {
+              code: 400,
+              message: 'Request contains an invalid argument.',
+              status: 'INVALID_ARGUMENT',
+              details: [
+                {
+                  '@type': 'type.googleapis.com/google.rpc.BadRequest',
+                  fieldViolations: [
+                    {
+                      field: 'generationConfig.thinkingConfig.thinkingBudget',
+                      description: 'Thinking budget is not supported for this model.',
+                    },
+                  ],
+                },
+              ],
+            },
+          });
+        }
+
         if (geminiStub.mode === 'quota') {
           return json(res, 429, { error: { message: 'Quota exceeded for requests per day.', status: 'RESOURCE_EXHAUSTED' } });
         }
@@ -694,7 +744,7 @@ process.env.AI_PROJECT_CREDITS_MONTHLY = '20';
 
 const { env } = await import('../src/config/env.js');
 const { generateProject, safeProjectPath } = await import('../src/services/projectBuilderService.js');
-const { parseJsonFromText, parseJsonResponse } = await import('../src/services/geminiService.js');
+const { callGemini, parseJsonFromText, parseJsonResponse, thinkingConfigForModel } = await import('../src/services/geminiService.js');
 
 const tempRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'portiai-ai-project-'));
 const esbuildBin = fileURLToPath(new URL('../../client/node_modules/.bin/esbuild', import.meta.url));
@@ -752,11 +802,58 @@ await test('the Project Builder uses GEMINI_PROJECT_API_KEY and its own model, n
   await generateProject({ idea: 'A simple calculator with keyboard support', stack: 'html-css-js', complexity: 'starter' });
   assert.ok(geminiStub.keys.length > 0);
   assert.ok(geminiStub.keys.every((key) => key === PROJECT_KEY), 'no portfolio key was sent to the project endpoint');
-  assert.match(geminiStub.lastUrl, /\/v1beta\/models\/gemini-2.5-flash-test:generateContent/);
+  assert.match(geminiStub.lastUrl, /\/v1beta\/models\/gemini-3\.5-flash-lite:generateContent/);
   assert.equal(geminiStub.lastPayload.generationConfig.responseMimeType, 'application/json');
-  assert.equal(geminiStub.lastPayload.generationConfig.thinkingConfig.thinkingBudget, 0);
+  assert.deepEqual(geminiStub.lastPayload.generationConfig.thinkingConfig, { thinkingLevel: 'low' });
   assert.equal(geminiStub.lastPayload.generationConfig.candidateCount, 1);
+  assert.equal(geminiStub.lastPayload.generationConfig.responseMimeType, 'application/json');
+  assert.equal(geminiStub.lastPayload.generationConfig.responseSchema, undefined, 'no unsupported responseSchema is sent');
+  assert.equal(geminiStub.lastPayload.generationConfig.responseJsonSchema, undefined, 'no unsupported responseJsonSchema is sent');
+  assert.ok(geminiStub.lastPayload.generationConfig.maxOutputTokens <= 65536);
   assert.ok(!geminiStub.lastUrl.includes(PROJECT_KEY), 'the key is not in the URL');
+});
+
+await test('thinking config is valid for each Gemini generation', () => {
+  assert.deepEqual(thinkingConfigForModel('gemini-2.5-flash', 0), { thinkingBudget: 0 });
+  assert.deepEqual(thinkingConfigForModel('gemini-2.5-flash-lite', 0), { thinkingBudget: 0 });
+  assert.deepEqual(thinkingConfigForModel('gemini-3.5-flash-lite', 0), { thinkingLevel: 'low' });
+  assert.deepEqual(thinkingConfigForModel('gemini-3.8-flash', 0), { thinkingLevel: 'low' });
+  assert.equal(thinkingConfigForModel('gemini-2.5-flash', -1), null);
+  assert.equal(thinkingConfigForModel('gemini-3.5-flash-lite', 1024), null);
+  assert.equal(thinkingConfigForModel('gemini-flash-lite-latest', 0), null);
+});
+
+await test('a provider 400 logs status, details, field violations and no key', async () => {
+  geminiStub.mode = 'invalid-argument';
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args.join(' '));
+  try {
+    await assert.rejects(
+      callGemini({
+        prompt: 'Return JSON only.',
+        model: PROJECT_MODEL,
+        apiKey: PROJECT_KEY,
+        apiBaseUrl: env.ai.geminiApiBaseUrl,
+        thinkingBudget: 0,
+        stage: 'error-log-test',
+        requestId: 'test-request',
+      }),
+      (error) => error.code === 'BAD_RESPONSE' && error.providerStatus === 400
+    );
+  } finally {
+    console.warn = originalWarn;
+    geminiStub.mode = 'ok';
+  }
+
+  const line = warnings.find((entry) => entry.includes('stage=error-log-test'));
+  assert.ok(line, 'the provider failure was logged');
+  assert.match(line, /status=400/);
+  assert.match(line, /requestId=test-request/);
+  assert.match(line, /providerError=/);
+  assert.match(line, /fieldViolations/);
+  assert.match(line, /thinkingBudget/);
+  assert.ok(!line.includes(PROJECT_KEY), 'the API key is never logged');
 });
 
 suite('JSON parsing');

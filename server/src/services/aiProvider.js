@@ -260,6 +260,7 @@ export async function callAi({
         apiBaseUrl: env.ai.geminiApiBaseUrl,
         thinkingBudget: env.ai.thinkingBudget,
         stage,
+        requestId,
       });
       return { text, model, provider: 'gemini', finishReason, truncated };
     } catch (error) {
