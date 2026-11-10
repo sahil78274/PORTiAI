@@ -8,10 +8,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node tests/api.test.js && node tests/commerce-ai.test.js",
+    "test": "node tests/api.test.js && node tests/commerce-ai.test.js && node tests/ai-pipeline.test.js",
     "test:api": "node tests/api.test.js",
     "test:commerce": "node tests/commerce-ai.test.js",
-    "test:ai-stub": "node tests/ai-pipeline.test.js"
+    "test:pipeline": "node tests/ai-pipeline.test.js"
   },
   "engines": {
     "node": ">=18.17"

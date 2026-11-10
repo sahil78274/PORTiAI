@@ -872,15 +872,16 @@ design system, catalogue, builder or auth.
 
 ## 14. Razorpay subscriptions, AI Project Builder and project images (2026-11-10)
 
-Two backend suites run against a real Express app and a real MongoDB (memory server, with the bundled
+Three backend suites run against a real Express app and a real MongoDB (memory server, with the bundled
 `@volter/twin-mongodb` twin as fallback). Razorpay and Gemini are local HTTP stubs that speak the real
-REST contracts; no application code is mocked.
+REST contracts; no application code is mocked. Section 15 covers the Project Builder pipeline suite.
 
 ```bash
 cd server
-npm test              # api.test.js then commerce-ai.test.js
+npm test              # api.test.js → commerce-ai.test.js → ai-pipeline.test.js
 npm run test:api      # 73 checks
 npm run test:commerce # 36 checks
+npm run test:pipeline # 23 checks
 ```
 
 Latest runs:
@@ -888,7 +889,8 @@ Latest runs:
 ```
 api.test.js          73/73 checks passed
 commerce-ai.test.js  36/36 checks passed
-client vite build    ✓ 2066 modules transformed, built in ~7 s
+ai-pipeline.test.js  23/23 checks passed
+client vite build    ✓ built in ~5 s
 ```
 
 ### What `commerce-ai.test.js` covers
@@ -993,3 +995,158 @@ A development API (twin MongoDB) plus the Vite dev server were started and check
    `AI_PROJECT_CREDITS_MONTHLY`.
 5. Use Razorpay test-mode cards: pay ₹9, authorise the ₹299 mandate, then confirm the webhook delivery
    appears under Admin → Webhooks and the subscription reports `active`.
+
+## 15. AI Project Builder audit and repair (2026-11-10)
+
+Scope: the complete generation path — frontend form → Express route/controller → planning and file
+batches → Gemini/OpenAI HTTP client → JSON parsing → manifest validation → persistence → preview and
+download. The Gemini provider contract is exercised against a local HTTP stub because no real Gemini key
+is available in this environment. Every other layer (Express, MongoDB, credits, ZIP, validation) runs for
+real.
+
+### 15.1 Root causes found
+
+1. **Successful HTTP 200 responses were logged as errors.** `geminiService` printed the full response body
+   unconditionally, and the JSON parse `catch` referenced an undefined `error` variable. A non-JSON 200
+   response (proxy/HTML/empty body) crashed with `ReferenceError` instead of returning a translated error.
+2. **`MAX_TOKENS` was ignored.** A truncated file batch was parsed as normal JSON, failed in the parser,
+   and was reported as a generic malformed response. No retry and no explanation.
+3. **One small deadline covered the whole project.** `AI_PROJECT_TIMEOUT_MS` defaulted to 55 s while the
+   pipeline made a plan request plus up to six sequential file requests. Advanced/standard projects ran
+   out of budget halfway through, so the same prompt could work or fail depending on model latency.
+4. **A failed batch lost the whole project.** There was no individual retry for skipped files. Missing
+   files were left as empty strings and the project could still be saved as `ready`; only the pathological
+   "every file empty" case was rejected.
+5. **The plan was not checked against the selected complexity or stack.** Advanced mode only added one
+   sentence to the prompt. A plan with no Express server, no `package.json`, or no entry file was accepted.
+6. **The two Gemini integrations shared one key.** The Project Builder fell back to `GEMINI_API_KEY`
+   (the portfolio key) and errors named the wrong variable. A portfolio quota could break project
+   generation and vice versa.
+7. **Gemini 2.5 thinking consumed output tokens.** With thinking enabled, JSON/file batches can hit
+   `MAX_TOKENS` before the content is complete, producing intermittent truncation.
+8. **Credit/idempotency race.** The credit was consumed before the project record was created; a
+   concurrent duplicate request could hit the unique index after spending a credit and return a 500.
+   Abandoned `generating` rows were never recovered or refunded.
+9. **Frontend retry/duplicate gaps.** A double click could submit twice before React disabled the button;
+   the progress copy froze on "Preparing preview"; no client-side timeout; a full regeneration could leave
+   the editor pointing at an old file path; errors did not distinguish exhausted credits from refunds.
+
+### 15.2 Fixes
+
+* Clean, single-line provider logging on failures only. It identifies stage, HTTP status, model and error
+  code; it never logs prompts, keys or generated code. Successful 200 bodies are never logged.
+* Strict error mapping for 400/401/403/404/413/429/5xx, network failures, timeouts, blocked/safety
+  responses and empty bodies. `MODEL_NOT_FOUND` and `PERMISSION` now name the real problem.
+* `MAX_TOKENS` is treated as `TRUNCATED`; for JSON calls a complete object is accepted, otherwise the
+  response is rejected. `parseJsonResponse` returns `EMPTY` / `NO_JSON` / `TRUNCATED` / `INVALID`, strips
+  one wrapping fence, tolerates prose and scans balanced braces without rewriting source code.
+* Separate `GEMINI_PROJECT_API_KEY` + `GEMINI_PROJECT_MODEL` and
+  `GEMINI_PORTFOLIO_API_KEY` + `GEMINI_PORTFOLIO_MODEL`. The Project Builder uses only its own key/model;
+  `GEMINI_API_KEY` remains a legacy fallback for both. `GEMINI_PROJECT_THINKING_BUDGET=0` frees the
+  output budget from hidden thinking on Flash models.
+* Two independent time budgets: `AI_PROVIDER_TIMEOUT_MS` per request (75 s) and
+  `AI_PROJECT_TIMEOUT_MS` overall (240 s), plus one bounded retry for network/429/5xx.
+* Planning now carries the actual complexity mode, required stack structure, API contract and minimum
+  file count. An incomplete manifest gets one revision request and is rejected if still missing core
+  files; no fake server/client is added locally.
+* File batches are validated against the manifest. A truncated/malformed batch is split into individual
+  file requests; missing files get one focused retry. Unsafe paths, duplicate paths, empty files and
+  oversized files are rejected. Partial projects are never saved as `ready`.
+* Validation checks required entries, empty files, `TODO`/`FIXME` elisions, invalid JSON, local HTML
+  assets and relative imports. Full-stack projects must expose `/api` routes, call them from the client
+  and (for MERN) use MongoDB; remaining frontend/backend path mismatches are reported as warnings.
+  Markdown is never scanned for placeholder words, so a documentation sentence cannot fail a project.
+* The project row is created before spending the credit (unique `(userId, requestId)` remains the
+  concurrency guard), the credit is refunded if creation/consumption fails, and stale `generating` rows
+  are marked failed with a refund on the next read.
+* Frontend: a ref guard prevents double submission, phase copy follows elapsed time for up to 4 minutes,
+  the request has a 5-minute client timeout, the error card explains refunds/timeouts and offers
+  **Try again**, and `ProjectWorkspace` resets selection when a regenerated file list replaces the old one.
+
+### 15.3 Tests run
+
+```bash
+cd server && npm test
+# api.test.js           73/73 checks passed
+# commerce-ai.test.js   36/36 checks passed
+# ai-pipeline.test.js   23/23 checks passed   (132 total)
+
+cd client && npm test    # 62/62 checks passed
+cd client && npm run build
+# ✓ built in ~5 s (917 kB JS / 79.7 kB CSS; chunk-size warning only)
+```
+
+`ai-pipeline.test.js` runs the real `generateProject` pipeline against a Gemini HTTP stub and covers:
+
+```
+Gemini configuration
+  ✓ project key/model are separate from the portfolio key; the portfolio key is never sent,
+    the key travels in `x-goog-api-key` (never the URL), and JSON mode + `thinkingBudget: 0` are sent
+JSON parsing and path safety
+  ✓ fences + prose + escaped quotes + braces inside strings
+  ✓ truncated JSON → TRUNCATED, never repaired
+  ✓ empty / non-JSON responses
+  ✓ traversal, absolute, Windows, node_modules and .git paths rejected
+Starter
+  ✓ simple calculator (static HTML/CSS/JS, inlined preview, syntax-checked JS)
+  ✓ responsive landing page
+  ✓ todo application with localStorage
+Standard
+  ✓ React todo with components and hooks
+  ✓ recipe application
+  ✓ expense tracker with client + Express CRUD
+Advanced
+  ✓ MERN notes app with Mongoose model, routes, controllers and seed script
+  ✓ full-stack task manager (Vite proxy + API contract)
+  ✓ authentication app (auth routes/middleware + client login call)
+Failure handling
+  ✓ a missing file is retried individually and the project completes
+  ✓ a truncated batch is split into individual files and completes
+  ✓ persistent truncation / no usable files → rejected, no partial project
+  ✓ malformed plan, MAX_TOKENS plan, quota, 5xx and empty responses map to stable codes
+```
+
+Generated JavaScript is syntax-checked with `node --check`; JSX files are checked with the esbuild binary
+from `client/node_modules` (25 files in the last run). Generated `package.json` files are parsed as JSON.
+Full-stack fixtures verify client `fetch('/api/...')` paths exist in the server source and that the Vite
+proxy configuration is present.
+
+### 15.4 Remaining limitations
+
+* **No real Gemini/OpenAI key was available here.** The tests prove the HTTP contract, retry/parse/
+  validation logic and mode handling, not the live model's code quality. Before launch run
+  `GEMINI_PROJECT_API_KEY=… node server/scripts/check-gemini.mjs --project` and generate one Starter,
+  one Standard and one Advanced project in the UI.
+* Generated projects are syntax-checked, not installed and run in this environment. Running `npm install`
+  / build for every generated fixture would download arbitrary third-party packages during tests; do that
+  manually on a downloaded ZIP for a release candidate.
+* The pipeline still runs inside the HTTP request. It has a 240 s server budget and a 300 s browser
+  timeout; if a proxy in front of the API is configured below that, raise the proxy timeout. (Render web
+  services support long-running requests.)
+* Model output quality remains provider-dependent. The pipeline now fails honestly and refunds rather
+  than saving a broken project.
+
+### 15.5 Exact Render environment changes
+
+Add/update these on the **backend** service:
+
+```env
+GEMINI_PORTFOLIO_API_KEY=<portfolio key>
+GEMINI_PORTFOLIO_MODEL=gemini-2.5-flash
+GEMINI_PROJECT_API_KEY=<project key>
+GEMINI_PROJECT_MODEL=gemini-2.5-flash
+GEMINI_PROJECT_THINKING_BUDGET=0
+AI_PROVIDER=gemini
+AI_PROVIDER_TIMEOUT_MS=75000
+AI_PROJECT_TIMEOUT_MS=240000
+AI_PROVIDER_RETRIES=1
+AI_PROJECT_CREDITS_MONTHLY=20
+```
+
+`GEMINI_API_KEY`, `GEMINI_MODEL` and `AI_PROJECT_TIMEOUT_MS=55000` are no longer needed when the two
+dedicated keys/models are present; leave `GEMINI_API_KEY` only if you intentionally use the legacy
+fallback. No frontend variables change.
+
+Deployment steps: update the backend variables → redeploy the API → open `/api/health` and confirm
+`aiProjects: "configured"` → run both check scripts above → generate Starter, Standard and Advanced
+projects in `/dashboard/ai-builder`.

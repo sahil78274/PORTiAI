@@ -23,12 +23,26 @@ services:
         sync: false # set in the Render dashboard
       - key: AI_PROVIDER
         value: gemini
-      - key: GEMINI_API_KEY
-        sync: false # set in the Render dashboard
-      - key: GEMINI_MODEL
+      # Separate keys: portfolio AI and the AI Project Builder must not share
+      # quota. Add both secrets in the Render dashboard.
+      - key: GEMINI_PORTFOLIO_API_KEY
+        sync: false
+      - key: GEMINI_PROJECT_API_KEY
+        sync: false
+      - key: GEMINI_PORTFOLIO_MODEL
         value: gemini-2.5-flash
+      - key: GEMINI_PROJECT_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_PROJECT_THINKING_BUDGET
+        value: "0"
+      # Optional legacy fallback (not required): keep GEMINI_API_KEY only if
+      # you are not setting the two dedicated keys above.
       - key: AI_PROJECT_CREDITS_MONTHLY
         value: "20"
+      - key: AI_PROVIDER_TIMEOUT_MS
+        value: "75000"
+      - key: AI_PROJECT_TIMEOUT_MS
+        value: "240000"
       # Razorpay: add the three secrets in the Render dashboard. The webhook
       # URL is https://<api-host>/api/subscription/webhook/razorpay.
       - key: RAZORPAY_KEY_ID

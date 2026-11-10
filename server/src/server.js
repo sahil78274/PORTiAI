@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { env, isCheckoutConfigured, isDevUpgradeEnabled } from './config/env.js';
 import { connectDatabase, disconnectDatabase } from './config/db.js';
 import { isAiEnabled } from './services/geminiService.js';
+import { isProjectAiConfigured, projectModel } from './services/aiProvider.js';
 import { isRazorpayConfigured, isRazorpayWebhookConfigured } from './config/env.js';
 import { expireDueSubscriptions } from './services/billingService.js';
 
@@ -17,7 +18,12 @@ const start = async () => {
   const server = app.listen(env.port, '0.0.0.0', () => {
     console.log(`[startup] PortiAI API listening on port ${env.port} (${env.nodeEnv})`);
     console.log(`[startup] Allowed client origin(s): ${env.clientUrls.join(', ')}`);
-    console.log(`[startup] Gemini: ${isAiEnabled() ? `configured (${env.gemini.model})` : 'not configured — rule-based analysis only'}`);
+    console.log(`[startup] Portfolio AI: ${isAiEnabled() ? `configured (${env.gemini.model})` : 'not configured — rule-based analysis only'}`);
+    console.log(
+      `[startup] Project Builder AI: ${
+        isProjectAiConfigured() ? `configured (${env.ai.provider}/${projectModel()})` : 'not configured — generation disabled'
+      }`
+    );
     console.log(
       `[startup] Billing: Razorpay ${
         isRazorpayConfigured() ? 'configured' : 'not configured'

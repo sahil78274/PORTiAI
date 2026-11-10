@@ -260,12 +260,13 @@ const startGeminiStub = () =>
             candidates: [{ content: { parts: [{ text }] }, finishReason: 'STOP' }],
           });
 
-        if (prompt.startsWith('Plan a portfolio project')) {
+        if (prompt.startsWith('Plan a ')) {
           return sendText(JSON.stringify(PLAN));
         }
 
         if (prompt.startsWith('Write the code for this project')) {
-          const requested = /Write ONLY these files now: (.+)/.exec(prompt)?.[1]?.split(',').map((item) => item.trim()) || [];
+          const requested =
+            /Write ONLY (?:this file|these files) now: (.+)/.exec(prompt)?.[1]?.split(',').map((item) => item.trim()) || [];
           return sendText(
             JSON.stringify({
               files: requested.map((pathName) => ({ path: pathName, content: fileContent(pathName) })),
@@ -781,6 +782,11 @@ await test('generation metadata is available and reports configured AI', async (
   assert.equal(res.status, 200);
   assert.equal(res.body.data.aiAvailable, true);
   assert.ok(res.body.data.stacks.some((stack) => stack.id === 'html-css-js'));
+  assert.deepEqual(
+    res.body.data.modes.map((mode) => mode.id),
+    ['starter', 'standard', 'advanced']
+  );
+  assert.ok(res.body.data.timeoutSeconds >= 30);
 });
 
 await test('a premium user generates a complete project and spends one credit', async () => {

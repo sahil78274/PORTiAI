@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { env } from '../config/env.js';
 import { AiProject, PROJECT_COMPLEXITIES } from '../models/AiProject.js';
 import { AiGeneration } from '../models/AiGeneration.js';
 import { Portfolio } from '../models/Portfolio.js';
@@ -15,6 +16,7 @@ import {
   safeProjectPath,
   AI_PROJECT_ERRORS,
   PROJECT_STACKS as STACKS,
+  COMPLEXITY_PROFILES,
 } from '../services/projectBuilderService.js';
 import { AiUnavailableError, isProjectAiConfigured } from '../services/aiProvider.js';
 
@@ -46,18 +48,28 @@ const addToPortfolioSchema = z.object({
 /** Maps provider failures to honest API responses without leaking internals. */
 const handleAiError = (res, error) => {
   if (error instanceof AiUnavailableError) {
-    const status =
-      error.code === 'NOT_CONFIGURED' || error.code === 'INVALID_KEY'
-        ? 503
-        : ['RATE', 'QUOTA', 'TIMEOUT'].includes(error.code)
-          ? 429
-          : 502;
+    const statusMap = {
+      NOT_CONFIGURED: 503,
+      INVALID_KEY: 503,
+      PERMISSION: 503,
+      MODEL_NOT_FOUND: 503,
+      RATE: 429,
+      QUOTA: 429,
+      TIMEOUT: 504,
+      UNAVAILABLE: 503,
+      TRUNCATED: 502,
+      BLOCKED: 422,
+      BAD_RESPONSE: 502,
+      INCOMPLETE_PROJECT: 502,
+    };
+    const status = statusMap[error.code] || 502;
     return res.status(status).json({
       success: false,
       error: {
         code: error.code || 'AI_UNAVAILABLE',
         message: error.message || AI_PROJECT_ERRORS.UNAVAILABLE,
-        aiAvailable: isProjectAiConfigured() && !['NOT_CONFIGURED', 'INVALID_KEY'].includes(error.code),
+        aiAvailable: isProjectAiConfigured() && !['NOT_CONFIGURED', 'INVALID_KEY', 'PERMISSION', 'MODEL_NOT_FOUND'].includes(error.code),
+        ...(error.retryAfterSeconds ? { retryAfterSeconds: error.retryAfterSeconds } : {}),
       },
     });
   }
@@ -89,8 +101,10 @@ const recordGeneration = async ({ userId, projectId, kind, stack, result, starte
     status,
     errorCode: errorCode || '',
     promptChars: result?.promptChars || 0,
-    outputChars: result?.outputChars || 0,
-    durationMs: Date.now() - startedAt,
+    outputChars: Array.isArray(result?.files)
+      ? result.files.reduce((sum, file) => sum + (file.content?.length || 0), 0)
+      : 0,
+    durationMs: result?.stats?.durationMs || Date.now() - startedAt,
   }).catch(() => {
     /* auditing must never fail a generation */
   });
@@ -108,10 +122,14 @@ export const credits = asyncHandler(async (req, res) => {
 /** GET /api/ai-projects */
 export const listProjects = asyncHandler(async (req, res) => {
   assertPremiumAccess(req.user);
-  const [projects, creditsSummary] = await Promise.all([
+  const [found, creditsSummary] = await Promise.all([
     AiProject.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(60),
     getAiCredits(req.user),
   ]);
+  const projects = [];
+  for (const project of found) {
+    projects.push(await failStaleProject(project));
+  }
   res.json({
     success: true,
     data: { projects: projects.map((project) => project.toSummaryJSON()), credits: creditsSummary },
@@ -121,7 +139,8 @@ export const listProjects = asyncHandler(async (req, res) => {
 /** GET /api/ai-projects/:id */
 export const getProject = asyncHandler(async (req, res) => {
   assertPremiumAccess(req.user);
-  const project = await findOwnedProject(req.params.id, req.user._id);
+  const found = await findOwnedProject(req.params.id, req.user._id);
+  const project = await failStaleProject(found);
   res.json({
     success: true,
     data: {
@@ -132,12 +151,40 @@ export const getProject = asyncHandler(async (req, res) => {
   });
 });
 
+const STALE_AFTER_MS = () => env.ai.projectTimeoutMs + 120000;
+
+const isStaleGenerating = (project) =>
+  project?.status === 'generating' &&
+  Date.now() - new Date(project.updatedAt).getTime() > STALE_AFTER_MS();
+
+/** Marks a generation abandoned by a crashed/restarted process and refunds it once. */
+const failStaleProject = async (project) => {
+  if (!isStaleGenerating(project)) return project;
+  const refundable = Number(project.creditsUsed) > 0;
+  const updated = await AiProject.findOneAndUpdate(
+    { _id: project._id, status: 'generating' },
+    {
+      $set: {
+        status: 'failed',
+        creditsUsed: 0,
+        errorCode: 'INTERRUPTED',
+        errorMessage: 'The previous generation was interrupted before it finished. The credit was returned.',
+      },
+    },
+    { new: true }
+  );
+  if (updated && refundable) await refundAiCredit(project.userId);
+  return updated || project;
+};
+
 /**
  * POST /api/ai-projects/generate
  *
- * Premium-only, credit-metered and idempotent per `requestId`. The project is
- * stored only after the provider returns a validated project; a failure is
- * recorded in the audit trail and the credit is refunded.
+ * Premium-only, credit-metered and idempotent per `requestId`. A project record
+ * is created before the provider call so concurrent double-clicks are stopped
+ * by the unique (userId, requestId) index. The project only becomes `ready`
+ * after every manifest file has been generated and validated; failures are
+ * recorded and the credit is refunded.
  */
 export const generate = asyncHandler(async (req, res) => {
   assertPremiumAccess(
@@ -146,56 +193,79 @@ export const generate = asyncHandler(async (req, res) => {
   );
 
   if (!isProjectAiConfigured()) {
-    throw ApiError.serviceUnavailable(
-      'AI project generation is not configured on this server. Add GEMINI_API_KEY (or set AI_PROVIDER=openai and OPENAI_API_KEY) to the backend environment.',
-      'AI_NOT_CONFIGURED'
-    );
+    throw ApiError.serviceUnavailable(AI_PROJECT_ERRORS.NOT_CONFIGURED, 'AI_NOT_CONFIGURED');
   }
 
   const input = generateSchema.parse(req.body || {});
   const stack = STACKS[input.stack];
 
-  const existing = input.requestId
-    ? await AiProject.findOne({ userId: req.user._id, requestId: input.requestId })
-    : null;
-
-  if (existing) {
-    if (existing.status === 'ready') {
-      return res.json({
+  const respondWithExisting = async (existing) => {
+    const current = await failStaleProject(existing);
+    if (current.status === 'ready') {
+      res.json({
         success: true,
         data: {
-          project: existing.toOwnerJSON(),
+          project: current.toOwnerJSON(),
           credits: await getAiCredits(req.user),
           replayed: true,
         },
       });
+      return true;
     }
-    if (existing.status === 'generating' && Date.now() - new Date(existing.updatedAt).getTime() < 120000) {
+    if (current.status === 'generating') {
       throw ApiError.conflict('This project is already being generated. Wait for it to finish.');
     }
-    if (existing.status === 'generating') {
-      existing.status = 'failed';
-      existing.errorMessage = 'The previous attempt was interrupted.';
-      await existing.save();
-    }
-    await existing.deleteOne();
+    await current.deleteOne();
+    return false;
+  };
+
+  if (input.requestId) {
+    const existing = await AiProject.findOne({ userId: req.user._id, requestId: input.requestId });
+    if (existing && (await respondWithExisting(existing))) return;
   }
 
-  const creditsBefore = await consumeAiCredit(req.user);
   const startedAt = Date.now();
+  let project;
+  try {
+    project = await AiProject.create({
+      userId: req.user._id,
+      requestId: input.requestId || undefined,
+      title: 'Generating project…',
+      idea: input.idea,
+      stack: input.stack,
+      stackLabel: stack.label,
+      complexity: input.complexity,
+      designPreferences: input.designPreferences,
+      status: 'generating',
+      creditsUsed: 0,
+    });
+  } catch (error) {
+    // A concurrent request won the unique requestId race. Replay/stop instead
+    // of spending a second credit.
+    if (error?.code === 11000 && input.requestId) {
+      const existing = await AiProject.findOne({ userId: req.user._id, requestId: input.requestId });
+      if (existing && (await respondWithExisting(existing))) return;
+      throw ApiError.conflict('A generation with this request id is already running. Wait for it to finish.');
+    }
+    throw error;
+  }
 
-  const project = await AiProject.create({
-    userId: req.user._id,
-    requestId: input.requestId || undefined,
-    title: 'Generating project…',
-    idea: input.idea,
-    stack: input.stack,
-    stackLabel: stack.label,
-    complexity: input.complexity,
-    designPreferences: input.designPreferences,
-    status: 'generating',
-    creditsUsed: 1,
-  });
+  let credits;
+  try {
+    credits = await consumeAiCredit(req.user);
+  } catch (error) {
+    await project.deleteOne().catch(() => {});
+    throw error;
+  }
+
+  try {
+    project.creditsUsed = 1;
+    await project.save();
+  } catch (error) {
+    await refundAiCredit(req.user._id).catch(() => {});
+    await project.deleteOne().catch(() => {});
+    throw error;
+  }
 
   try {
     const result = await generateProject({
@@ -203,6 +273,7 @@ export const generate = asyncHandler(async (req, res) => {
       stack: input.stack,
       complexity: input.complexity,
       designPreferences: input.designPreferences,
+      requestId: input.requestId || project._id.toString(),
     });
 
     project.title = result.title;
@@ -210,6 +281,7 @@ export const generate = asyncHandler(async (req, res) => {
     project.techStack = result.techStack;
     project.dependencies = result.dependencies;
     project.setupSteps = result.setupSteps;
+    project.apiEndpoints = result.apiEndpoints || [];
     project.files = result.files;
     project.entryFile = result.entryFile;
     project.readme = result.readme;
@@ -239,12 +311,18 @@ export const generate = asyncHandler(async (req, res) => {
         project: project.toOwnerJSON(),
         issues: result.issues,
         credits: await getAiCredits(req.user),
-        creditsBefore,
+        creditsBefore: {
+          ...credits,
+          used: Math.max(0, credits.used - 1),
+          remaining: credits.remaining + 1,
+        },
+        stats: result.stats,
       },
     });
   } catch (error) {
     await refundAiCredit(req.user._id);
     project.status = 'failed';
+    project.creditsUsed = 0;
     project.errorCode = error.code || 'GENERATION_FAILED';
     project.errorMessage = String(error.message || 'Generation failed').slice(0, 600);
     await project.save().catch(() => {});
@@ -286,6 +364,7 @@ export const regenerateProjectFile = asyncHandler(async (req, res) => {
       filePath: path,
       instruction: input.instruction,
       mode: input.mode,
+      requestId: project._id.toString(),
     });
 
     const file = project.files.find((item) => item.path === path);
@@ -376,6 +455,7 @@ export const regenerateProject = asyncHandler(async (req, res) => {
       stack: project.stack,
       complexity: project.complexity,
       designPreferences: project.designPreferences,
+      requestId: project._id.toString(),
     });
 
     project.title = result.title;
@@ -383,6 +463,7 @@ export const regenerateProject = asyncHandler(async (req, res) => {
     project.techStack = result.techStack;
     project.dependencies = result.dependencies;
     project.setupSteps = result.setupSteps;
+    project.apiEndpoints = result.apiEndpoints || [];
     project.files = result.files;
     project.entryFile = result.entryFile;
     project.readme = result.readme;
@@ -508,7 +589,14 @@ export const meta = asyncHandler(async (req, res) => {
     data: {
       stacks: Object.entries(STACKS).map(([id, stack]) => ({ id, label: stack.label, kind: stack.kind, guidance: stack.guidance })),
       complexities: PROJECT_COMPLEXITIES,
+      modes: PROJECT_COMPLEXITIES.map((id) => ({
+        id,
+        label: COMPLEXITY_PROFILES[id].label,
+        guidance: COMPLEXITY_PROFILES[id].guidance,
+      })),
       aiAvailable: isProjectAiConfigured(),
+      provider: env.ai.provider,
+      timeoutSeconds: Math.round(env.ai.projectTimeoutMs / 1000),
     },
   });
 });

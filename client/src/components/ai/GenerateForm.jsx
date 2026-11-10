@@ -46,7 +46,7 @@ const EXAMPLES = [
  * Generation form. The server validates the same fields, enforces the premium
  * entitlement and spends the credit — this form only collects intent.
  */
-export default function GenerateForm({ meta, credits, aiAvailable, onGenerate, busy, phase, error }) {
+export default function GenerateForm({ meta, credits, aiAvailable, onGenerate, busy, phase, error, errorCode }) {
   const stacks = meta?.stacks?.length ? meta.stacks : FALLBACK_STACKS;
   const [idea, setIdea] = useState('');
   const [stack, setStack] = useState('html-css-js');
@@ -59,12 +59,25 @@ export default function GenerateForm({ meta, credits, aiAvailable, onGenerate, b
   const exhausted = credits && credits.limit > 0 && credits.remaining <= 0;
   const disabled = busy || !aiAvailable || exhausted || tooShort;
 
-  const submit = (event) => {
-    event.preventDefault();
+  const submitInput = () => {
     setTouched(true);
     if (disabled) return;
     onGenerate({ idea: idea.trim(), stack, complexity, designPreferences: designPreferences.trim() });
   };
+
+  const submit = (event) => {
+    event.preventDefault();
+    submitInput();
+  };
+
+  const retry = () => submitInput();
+
+  const refundNote =
+    errorCode === 'AI_CREDITS_EXHAUSTED'
+      ? 'Your monthly allowance is used up. Existing projects can still be edited, previewed and downloaded.'
+      : errorCode === 'CLIENT_TIMEOUT' || errorCode === 'NETWORK_ERROR'
+        ? 'The request may not have reached the server. Check your projects before starting another one.'
+        : 'No partial project was saved. If the provider failed, your credit was refunded automatically.';
 
   return (
     <form onSubmit={submit} className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -201,9 +214,15 @@ export default function GenerateForm({ meta, credits, aiAvailable, onGenerate, b
             <div>
               <p className="font-medium">The project was not generated</p>
               <p className="mt-0.5">{error}</p>
-              <p className="mt-1 text-[11px] opacity-80">
-                Your credit was refunded automatically if the provider failed.
-              </p>
+              <p className="mt-1 text-[11px] opacity-80">{refundNote}</p>
+              <button
+                type="button"
+                onClick={retry}
+                disabled={disabled}
+                className="mt-2 rounded-md border border-danger/30 bg-surface px-2.5 py-1 text-[11px] font-medium text-danger hover:bg-dangerSoft disabled:opacity-50"
+              >
+                Try again
+              </button>
             </div>
           </div>
         ) : null}
@@ -214,7 +233,7 @@ export default function GenerateForm({ meta, credits, aiAvailable, onGenerate, b
             <div>
               <p className="font-medium">AI generation is not configured on this server</p>
               <p className="mt-0.5">
-                An administrator needs to set <code className="font-mono">GEMINI_API_KEY</code> (or{' '}
+                An administrator needs to set <code className="font-mono">GEMINI_PROJECT_API_KEY</code> (or{' '}
                 <code className="font-mono">AI_PROVIDER=openai</code> with <code className="font-mono">OPENAI_API_KEY</code>).
                 Nothing is charged while it is unavailable.
               </p>
@@ -229,8 +248,8 @@ export default function GenerateForm({ meta, credits, aiAvailable, onGenerate, b
         </button>
         {busy ? (
           <p className="text-center text-[11px] leading-5 text-muted">
-            A complete project takes 30–120 seconds. Keep this tab open — you can cancel by leaving the page, and the
-            credit is refunded if generation fails.
+            A complete project usually takes 30–180 seconds; full-stack projects can take up to four minutes. Keep this tab open. If the
+            provider fails or a file is missing, nothing partial is saved and the credit is refunded.
           </p>
         ) : null}
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -82,6 +82,17 @@ export default function ProjectWorkspace({
 
   const files = project?.files || [];
   const groups = useMemo(() => groupFiles(files), [files]);
+
+  /*
+   * Regenerating the whole project replaces the file list. Reset the selected
+   * file to the new entry point so the editor never points at a stale path.
+   */
+  useEffect(() => {
+    setDraft(null);
+    setSelectedPath(project?.entryFile || project?.files?.[0]?.path || '');
+    if (project?.previewSupported) setTab('preview');
+  }, [project?.id, project?.generatedAt, project?.entryFile, project?.previewSupported]);
+
   const selectedFile = files.find((file) => file.path === selectedPath) || files[0] || null;
   const content = draft ?? selectedFile?.content ?? '';
   const dirty = draft !== null && draft !== (selectedFile?.content ?? '');
@@ -248,7 +259,8 @@ export default function ProjectWorkspace({
           <button
             type="button"
             onClick={() => setRegenAllOpen(true)}
-            className="btn-ghost btn-sm text-muted hover:text-ink"
+            disabled={regeneratingAll}
+            className="btn-ghost btn-sm text-muted hover:text-ink disabled:opacity-50"
           >
             <RefreshCcw size={12} aria-hidden="true" />
             Regenerate all

@@ -45,7 +45,7 @@ a successful payment.
 | Public portfolio + blog | Done | `/p/:slug` and `/p/:slug/blog`, rendered by the chosen template from saved data, SEO title/description, no dashboard chrome |
 | Settings | Done | Profile, password change, appearance and notification preferences, account deletion with password confirmation |
 | AI generation | Done | Biography, summary, project description, achievement, skills, blog text, section copy, chat-builder drafting; validated JSON; quota handling |
-| AI Project Builder | Done | Premium-only `/dashboard/ai-builder`: idea → stack (HTML/CSS/JS, React, React+Express, MERN, Python) → complexity/design prefs → complete generated files, README and setup steps. Organised file tree, code editor with manual save, AI regenerate/modify one file, full regeneration, ZIP download, sandboxed static preview where the stack allows it, monthly credits, and one-click add to a portfolio. Free accounts get a professional locked screen; the API returns `403 PREMIUM_REQUIRED` |
+| AI Project Builder | Done | Premium-only `/dashboard/ai-builder`: idea → stack (HTML/CSS/JS, React, React+Express, MERN, Python) → **Starter / Standard / Advanced** complexity → complete generated files, README and setup steps. Two-stage plan → file-batch pipeline with a validated manifest, individual retries for missing/truncated files, JSON-mode Gemini calls on a **dedicated project key**, no partial projects, monthly credits, full regeneration and per-file AI edits. Organised file tree, manual save, ZIP download, sandboxed static preview, and one-click add to a portfolio. Free accounts get a professional locked screen; the API returns `403 PREMIUM_REQUIRED` |
 | Project images | Done | JPG/PNG/WebP upload per project with 16:9 preview, replace, remove, alt text, type/size validation and automatic resizing. The server verifies ownership, stores only the URL + `imageMeta`, and every template renders a cover with `object-fit: cover` or a designed placeholder |
 | Admin dashboard | Done | `/dashboard/admin` (and `/api/admin/*`) for subscribers, monthly/yearly/active/cancelled/expired counts, revenue, AI generation and credit usage, failed payments and webhook health. Restricted to `role=admin` or `ADMIN_EMAILS`; no secrets in any response |
 | Documentation | Done | README, API reference, analyzer rubric, deployment guide, testing log, project report outline |
@@ -98,8 +98,13 @@ Google AI Studio and change over time. Current documentation lists the Flash, Fl
 and Gemma models as free-capable, and **Pro-tier models have been removed from the free tier**
 (only Flash / Flash-Lite remain free as of 2026). Practical consequences for this project:
 
-* Keep `GEMINI_MODEL` on a Flash or Flash-Lite model. A Pro model will return 404 for a free key,
-  and the app will say so instead of failing silently.
+* Keep `GEMINI_PROJECT_MODEL` and `GEMINI_PORTFOLIO_MODEL` on a Flash or Flash-Lite model. A Pro model
+  can be unavailable to a free key, and the app will say so instead of failing silently.
+* Use **two keys**: `GEMINI_PROJECT_API_KEY` for the Project Builder and `GEMINI_PORTFOLIO_API_KEY`
+  for bios/analysis. Quota is counted per Google Cloud project, but keeping the keys separate means one
+  feature cannot exhaust the other. `GEMINI_API_KEY` remains a legacy fallback for both.
+* Project generation disables Gemini 2.5 hidden thinking by default (`GEMINI_PROJECT_THINKING_BUDGET=0`)
+  so the output budget belongs to JSON and files, not internal reasoning tokens.
 * Quotas are counted **per Google Cloud project**, not per key, and reset at midnight Pacific time.
 * The backend enforces its own per-account ceiling (`AI_DAILY_REQUEST_CAP`, default 200/day) and a
   per-minute rate limit (`AI_RATE_LIMIT_PER_MIN`, default 12) so one demo account cannot burn the
@@ -214,8 +219,10 @@ Useful environment variables (full list in `server/.env.example`):
 PORT=5000
 NODE_ENV=development
 MONGODB_URI=your_mongodb_connection_string
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_PORTFOLIO_API_KEY=your_portfolio_gemini_key
+GEMINI_PROJECT_API_KEY=your_project_builder_gemini_key
+GEMINI_PORTFOLIO_MODEL=gemini-2.5-flash
+GEMINI_PROJECT_MODEL=gemini-2.5-flash
 CLIENT_URL=http://localhost:5173
 SESSION_SECRET=replace_with_a_long_random_secret
 AI_DAILY_REQUEST_CAP=200
@@ -296,19 +303,24 @@ In production the frontend and the API are separate origins, so the variable mus
 | `PORT` | production | Port the API listens on (Render sets this) |
 | `NODE_ENV` | production | `development` / `production`; drives cookie flags and error verbosity |
 | `MONGODB_URI` | production | MongoDB Atlas connection string |
-| `GEMINI_API_KEY` | for AI | Server-side Gemini key. Missing key ⇒ AI endpoints and the Project Builder return 503 with a clear message; the rule-based analyzer still works |
+| `GEMINI_PROJECT_API_KEY` | for the Project Builder | Dedicated server-side Gemini key for file/code generation. Missing key ⇒ Project Builder returns 503; portfolio AI is unaffected |
+| `GEMINI_PORTFOLIO_API_KEY` | for portfolio AI | Dedicated key for bios, summaries, descriptions and analysis. Missing key ⇒ those buttons return 503 |
+| `GEMINI_API_KEY` | no | Legacy fallback for both keys when the dedicated variables are empty |
+| `GEMINI_PROJECT_MODEL` / `GEMINI_PORTFOLIO_MODEL` | no | Model ids for each integration; default `gemini-2.5-flash`. Use Flash or Flash-Lite |
+| `GEMINI_PROJECT_THINKING_BUDGET` | no | Gemini 2.5 thinking tokens for the Project Builder. `0` disables them (recommended), `-1` uses the provider default |
 | `AI_PROVIDER` | no | `gemini` (default) or `openai` (any OpenAI-compatible endpoint) |
 | `OPENAI_API_KEY` / `OPENAI_BASE_URL` | no | Required only when `AI_PROVIDER=openai` |
-| `AI_MODEL` | no | Optional model override for the project builder |
+| `AI_MODEL` | no | Optional model override for the project builder when `AI_PROVIDER=openai` |
 | `AI_PROJECT_CREDITS_MONTHLY` | no | AI Project Builder credits per user per month, default 20 |
-| `AI_PROJECT_TIMEOUT_MS` | no | Provider timeout for one generation stage, default 55000 |
+| `AI_PROVIDER_TIMEOUT_MS` | no | Timeout for one provider request (plan or file batch), default 75000 |
+| `AI_PROJECT_TIMEOUT_MS` | no | Overall generation budget including planning, batches and retries, default 240000 |
+| `AI_PROVIDER_RETRIES` | no | Bounded retries for transient provider failures, default 1 |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | for payments | Razorpay API credentials. The secret stays on the server; only `key_id` reaches Checkout.js |
 | `RAZORPAY_WEBHOOK_SECRET` | for payments | Signing secret for `/api/subscription/webhook/razorpay` |
 | `RAZORPAY_PLAN_ID_MONTHLY` / `_YEARLY` | no | Reuse existing Razorpay plan ids instead of creating them |
 | `PREMIUM_PRICE_INTRO` / `_MONTHLY` / `_YEARLY` / `_YEARLY_ORIGINAL` | no | Server-side price overrides (defaults 9 / 299 / 3050 / 3588) |
 | `ADMIN_EMAILS` | no | Comma-separated emails allowed to open the admin dashboard |
-| `GEMINI_MODEL` | no | Default `gemini-2.5-flash`; must be enabled for your key |
-| `GEMINI_TIMEOUT_MS` | no | Request timeout, default 25000 |
+| `GEMINI_TIMEOUT_MS` | no | Portfolio AI request timeout, default 25000 |
 | `CLIENT_URL` | yes | Comma-separated allowed frontend origins (CORS), no trailing slash |
 | `SESSION_SECRET` | yes | Long random string used to sign session tokens |
 | `SESSION_DAYS` | no | Session lifetime, default 7 |
@@ -332,8 +344,9 @@ and visible to any visitor. The Gemini key and the session secret stay on the se
 Full request/response documentation: [`docs/API.md`](docs/API.md).
 
 Tests: `cd client && npm test` (62 catalogue/theme/draft checks), `cd client && npm run smoke` (renders
-all 106 templates and every route to static HTML), `cd server && npm test` (109 HTTP checks against a
-real database — 73 API + 36 commerce/AI) covering Razorpay verification, webhooks, AI generation, image ownership and admin reporting. `npm test` runs both suites.
+all 106 templates and every route to static HTML), `cd server && npm test` (**132 checks** — 73 API +
+36 commerce/AI + 23 Project Builder pipeline) covering Razorpay verification, webhooks, all three
+generation modes, retries/truncation, image ownership and admin reporting. `npm test` runs all three server suites.
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
@@ -500,8 +513,8 @@ admin panel.
 
 ## 8. AI behaviour and quota handling
 
-* The Gemini key is read from `process.env.GEMINI_API_KEY` **on the server only**; the browser talks
-  exclusively to `/api/ai/*`.
+* Gemini keys are read **on the server only**; the browser talks exclusively to `/api/ai/*`. The
+  Project Builder uses `GEMINI_PROJECT_API_KEY`; portfolio writing uses `GEMINI_PORTFOLIO_API_KEY`.
 * Prompts are constrained: the model receives only the facts the user entered, with an explicit
   instruction not to invent degrees, employers, certifications, awards or skills.
 * Responses are requested as JSON, parsed defensively (code fences tolerated), then validated with Zod
@@ -512,9 +525,12 @@ admin panel.
   | --- | --- | --- | --- |
   | No key configured | 503 | `NOT_CONFIGURED` | "AI is not configured", everything else keeps working |
   | Daily/per-minute quota | 429 | `QUOTA` / `RATE` | Clear message + retry button, retry-after shown when provided |
-  | Timeout | 502 | `TIMEOUT` | Retry offered |
+  | Timeout | 504 | `TIMEOUT` | Retry offered; the credit is refunded |
   | Empty/invalid output | 502 | `BAD_RESPONSE` | "Could not be used, try regenerating" |
-  | Provider 5xx | 502 | `UNAVAILABLE` | Retry offered |
+  | Truncated output (`MAX_TOKENS`) | 502 | `TRUNCATED` | Retried per file, then refunded if still truncated |
+  | Incomplete manifest | 502 | `INCOMPLETE_PROJECT` | Nothing partial is saved; credit refunded |
+  | Provider 5xx | 503 | `UNAVAILABLE` | One bounded retry, then a clear message |
+  | Invalid key / API not enabled / model missing | 503 | `INVALID_KEY` / `PERMISSION` / `MODEL_NOT_FOUND` | Names the environment variable to check |
 
 * The analyzer **always** computes the deterministic score first. If AI enrichment fails, the rule
   result is returned with a label stating AI feedback was not used. AI contributions appear as
@@ -528,10 +544,11 @@ Both suites were executed in this environment; see [`docs/TESTING.md`](docs/TEST
 commands and output.
 
 ```bash
-cd server && npm test                              # 109 HTTP checks (73 API + 36 commerce/AI): real Express app, real MongoDB, stub Gemini + Razorpay
-cd client && npm test                              # 10 unit checks: 9-template registry, normalisation, fallback
+cd server && npm test                              # 132 checks (73 API + 36 commerce/AI + 23 pipeline): real Express app + MongoDB, Gemini/Razorpay stubs
+cd client && npm test                              # 62 catalogue/theme/draft checks
 cd client && npm run build                         # production build (passes cleanly)
-GEMINI_API_KEY=… node server/scripts/check-gemini.mjs   # one real request to Google, with translated errors
+GEMINI_PORTFOLIO_API_KEY=… node server/scripts/check-gemini.mjs            # portfolio key/model
+GEMINI_PROJECT_API_KEY=… node server/scripts/check-gemini.mjs --project    # Project Builder key + JSON mode
 ```
 
 The API suite covers registration, duplicate email, validation errors, login failure parity, logout
@@ -561,10 +578,12 @@ Step-by-step instructions (MongoDB Atlas, Gemini key, Render, Vercel, CORS, post
 troubleshooting) are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Short version:
 
 1. **MongoDB Atlas** — free M0 cluster, database user, network access, copy the SRV string.
-2. **Gemini** — create a key in AI Studio; confirm the model id is enabled for your project.
+2. **Gemini** — create two keys in AI Studio (portfolio + Project Builder) and confirm the model ids
+   are enabled for your project.
 3. **Render** — new Web Service from the repo, root directory `server`, build `npm install`,
-   start `npm start`, health check `/api/health`; set `MONGODB_URI`, `GEMINI_API_KEY`,
-   `SESSION_SECRET`, `CLIENT_URL` (your Vercel URL), `NODE_ENV=production`.
+   start `npm start`, health check `/api/health`; set `MONGODB_URI`, `GEMINI_PROJECT_API_KEY`,
+   `GEMINI_PORTFOLIO_API_KEY`, their model variables, `SESSION_SECRET`, `CLIENT_URL` (your Vercel URL),
+   `NODE_ENV=production`.
 4. **Vercel** — import `client/`, framework preset Vite, set `VITE_API_BASE_URL` to
    `https://<your-api>.onrender.com/api`, deploy.
 5. Update `CLIENT_URL` on Render to the final Vercel domain, then check `/api/health`, register,

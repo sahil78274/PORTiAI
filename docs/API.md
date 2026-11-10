@@ -377,11 +377,14 @@ Same as `POST /api/portfolios/:id/analyze` but takes `portfolioId` in the body:
 | 429 | `AI_DAILY_CAP_REACHED` | Account hit `AI_DAILY_REQUEST_CAP` | Show reset information, keep non-AI features |
 | 429 | `QUOTA` | Provider daily quota exhausted | Message + retry |
 | 429 | `RATE` | Provider per-minute limit | Message + retry (`retryAfterSeconds` when given) |
-| 502 | `TIMEOUT` | Provider slower than `GEMINI_TIMEOUT_MS` | Retry |
+| 504 | `TIMEOUT` | Provider slower than the configured timeout | Retry |
 | 502 | `BAD_RESPONSE` | Empty or unparsable output | "Try regenerating" |
-| 502 | `UNAVAILABLE` | Provider 5xx / network | Retry |
-| 503 | `NOT_CONFIGURED` | No `GEMINI_API_KEY` | "AI is not configured" |
-| 503 | `INVALID_KEY` | Key rejected (401/403/400) | Point at server configuration |
+| 502 | `TRUNCATED` | `MAX_TOKENS` cut off an unusable response | Retried per file by the builder; otherwise retry |
+| 503 | `UNAVAILABLE` | Provider 5xx / network after a bounded retry | Retry |
+| 503 | `NOT_CONFIGURED` | No project/portfolio Gemini key | "AI is not configured" |
+| 503 | `INVALID_KEY` | Key rejected (401/400/403) | Point at server configuration |
+| 503 | `PERMISSION` | Key lacks access / API disabled (403) | Enable the Generative Language API |
+| 503 | `MODEL_NOT_FOUND` | Model not available to this key (404) | Set a Flash/Flash-Lite model id |
 
 Provider messages, keys and stack traces are never echoed to the client.
 
@@ -724,13 +727,15 @@ Premium only. Every endpoint below first calls `assertPremiumAccess` and returns
 **403 `PREMIUM_REQUIRED`** for a free account, even if the UI were bypassed. The AI provider key is read
 on the server only.
 
+Generation uses `GEMINI_PROJECT_API_KEY` / `GEMINI_PROJECT_MODEL` by default (not the portfolio key).
 Errors: **503 `AI_NOT_CONFIGURED`** when no provider key exists, **429 `AI_CREDITS_EXHAUSTED`** before the
-provider is called, **429** for provider quota/rate limits, **502** for unusable provider output. A failed
-generation refunds the credit.
+provider is called, **429 `QUOTA`/`RATE`** for provider limits, **504 `TIMEOUT`**, and **502**
+`TRUNCATED` / `BAD_RESPONSE` / `INCOMPLETE_PROJECT` for unusable or partial output. A failed generation
+refunds the credit; a project record is never returned as `ready` with missing files.
 
 ### `GET /api/ai-projects/meta`
 
-`{ stacks: [{ id, label, kind, guidance }], complexities: ["starter","standard","advanced"], aiAvailable }`.
+`{ stacks: [{ id, label, kind, guidance }], complexities: ["starter","standard","advanced"], modes: [{ id, label, guidance }], aiAvailable, provider, timeoutSeconds }`.
 
 ### `GET /api/ai-projects/credits`
 
@@ -750,10 +755,21 @@ Body:
 }
 ```
 
-Spends one credit, stores a `generating` project, calls the configured provider (plan → files), validates
-every file and returns `201 { project, issues, credits }`. The same `(userId, requestId)` is idempotent:
-a replay returns the existing project without spending another credit. File content is complete source
-code plus a README and setup steps; nothing is invented locally.
+Spends one credit, stores a `generating` project, then runs the provider pipeline: structured plan →
+validated manifest → file batches. Each batch is parsed and checked against the manifest; missing,
+empty or truncated files are retried individually with a focused prompt. Only after every file is
+present and the project passes validation does it become `ready` and return
+`201 { project, issues, credits, creditsBefore, stats }`.
+
+`complexity` is honoured in both the plan and the files: **Starter** is the smallest complete version,
+**Standard** adds multiple components/views and loading/error states, **Advanced** requires a
+production-shaped full-stack project (client, Express API, validation, database models, auth when
+requested). The stack is never silently changed.
+
+The same `(userId, requestId)` is idempotent: a replay returns the existing project without spending
+another credit, and a concurrent duplicate receives **409**. File content is complete source code plus
+a deterministic README and setup steps; nothing is invented locally. Provider planning/pipeline logs
+identify `requestId`, stack, mode, stage/batch and model, but never prompts, keys or generated code.
 
 ### Other project routes
 
