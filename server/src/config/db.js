@@ -85,6 +85,8 @@ export async function connectDatabase() {
   const { AiProject } = await import('../models/AiProject.js');
   const { AiGeneration } = await import('../models/AiGeneration.js');
   const { WebhookEvent } = await import('../models/WebhookEvent.js');
+  const { AdminAuditLog } = await import('../models/AdminAuditLog.js');
+  const { TemplateSetting } = await import('../models/TemplateSetting.js');
   await Promise.all([
     User.syncIndexes(),
     Portfolio.syncIndexes(),
@@ -94,6 +96,8 @@ export async function connectDatabase() {
     AiProject.syncIndexes(),
     AiGeneration.syncIndexes(),
     WebhookEvent.syncIndexes(),
+    AdminAuditLog.syncIndexes(),
+    TemplateSetting.syncIndexes(),
   ]);
 
   return mongoose.connection;

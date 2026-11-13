@@ -51,6 +51,15 @@ const userSchema = new mongoose.Schema(
      * client request can change it.
      */
     role: { type: String, enum: ['user', 'admin'], default: 'user', index: true },
+    /**
+     * Account status. `suspended` accounts cannot sign in and any live session
+     * is rejected by `requireAuth`. Only an administrator can change this via
+     * the admin API; no client request can set it.
+     */
+    status: { type: String, enum: ['active', 'suspended'], default: 'active', index: true },
+    suspendedAt: { type: Date, default: null },
+    /** Last successful sign-in. Used for admin "recently active" reporting. */
+    lastLoginAt: { type: Date, default: null },
     /** Razorpay customer id, reused so renewals attach to the same customer. */
     razorpayCustomerId: { type: String, trim: true, default: '', index: true },
     /**
@@ -83,6 +92,7 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     premiumUntil: this.premiumUntil || null,
     role: this.role || 'user',
     isAdmin: this.role === 'admin',
+    status: this.status || 'active',
     createdAt: this.createdAt,
   };
 };

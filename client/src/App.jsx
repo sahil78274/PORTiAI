@@ -1,9 +1,23 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import MarketingLayout from './layouts/MarketingLayout.jsx';
 import AuthLayout from './layouts/AuthLayout.jsx';
 import DashboardLayout from './layouts/DashboardLayout.jsx';
 import ProtectedRoute from './components/dashboard/ProtectedRoute.jsx';
+import AdminRoute from './components/admin/AdminRoute.jsx';
+import AdminLayout from './components/admin/AdminLayout.jsx';
+import AdminLogin from './pages/admin/AdminLogin.jsx';
+import AdminOverview from './pages/admin/Overview.jsx';
+import AdminUsers from './pages/admin/Users.jsx';
+import AdminPortfolios from './pages/admin/Portfolios.jsx';
+import AdminAiBuilder from './pages/admin/AiBuilder.jsx';
+import AdminSubscriptions from './pages/admin/Subscriptions.jsx';
+import AdminPayments from './pages/admin/Payments.jsx';
+import AdminBlog from './pages/admin/Blog.jsx';
+import AdminTemplates from './pages/admin/Templates.jsx';
+import AdminAnalytics from './pages/admin/Analytics.jsx';
+import AdminReports from './pages/admin/Reports.jsx';
+import AdminSettings from './pages/admin/Settings.jsx';
 
 import Landing from './pages/Landing.jsx';
 import FeaturesPage from './pages/FeaturesPage.jsx';
@@ -51,10 +65,28 @@ export default function App() {
         </Route>
 
         <Route element={<AuthLayout />}>
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/signup" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+        </Route>
+
+        <Route element={<AdminRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminOverview />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/portfolios" element={<AdminPortfolios />} />
+            <Route path="/admin/ai-builder" element={<AdminAiBuilder />} />
+            <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+            <Route path="/admin/payments" element={<AdminPayments />} />
+            <Route path="/admin/blog" element={<AdminBlog />} />
+            <Route path="/admin/templates" element={<AdminTemplates />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          </Route>
         </Route>
 
         {/* Public portfolio + blog render on their own, without app chrome. */}

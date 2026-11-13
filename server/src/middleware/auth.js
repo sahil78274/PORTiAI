@@ -53,6 +53,10 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
   if ((user.tokenVersion ?? 0) !== (payload.tv ?? 0)) {
     throw ApiError.unauthorized('This session has been signed out. Please sign in again.');
   }
+  // A suspended account loses access immediately, even with a live cookie.
+  if (user.status === 'suspended') {
+    throw ApiError.forbidden('This account has been suspended. Contact support if you believe this is a mistake.');
+  }
 
   // ADMIN_EMAILS is an environment allow-list; promote the stored role once so
   // the admin panel is reachable even before the grant script is run.
@@ -81,7 +85,7 @@ export const optionalAuth = asyncHandler(async (req, _res, next) => {
   try {
     const payload = jwt.verify(token, env.sessionSecret, { issuer: 'portiai' });
     const user = await User.findById(payload.sub).select('+tokenVersion');
-    if (user && (user.tokenVersion ?? 0) === (payload.tv ?? 0)) req.user = user;
+    if (user && user.status !== 'suspended' && (user.tokenVersion ?? 0) === (payload.tv ?? 0)) req.user = user;
   } catch {
     /* ignore invalid token for optional routes */
   }

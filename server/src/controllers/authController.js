@@ -68,7 +68,12 @@ export const login = asyncHandler(async (req, res) => {
   const matches = await bcrypt.compare(password, user.passwordHash);
   if (!matches) throw invalid;
 
+  if (user.status === 'suspended') {
+    throw ApiError.forbidden('This account has been suspended. Contact support if you believe this is a mistake.');
+  }
+
   await applyAdminAllowList(user);
+  await User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
 
   const token = signSessionToken(user);
   setSessionCookie(res, token);
