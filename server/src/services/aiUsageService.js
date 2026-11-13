@@ -18,6 +18,8 @@ usageSchema.index({ userId: 1, day: 1 }, { unique: true });
 
 const AiUsage = mongoose.models.AiUsage || mongoose.model('AiUsage', usageSchema);
 
+export { AiUsage };
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 export const getAiUsageToday = async (userId) => {

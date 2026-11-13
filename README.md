@@ -47,8 +47,8 @@ a successful payment.
 | AI generation | Done | Biography, summary, project description, achievement, skills, blog text, section copy, chat-builder drafting; validated JSON; quota handling |
 | AI Project Builder | Done | Premium-only `/dashboard/ai-builder`: idea → stack (HTML/CSS/JS, React, React+Express, MERN, Python) → **Starter / Standard / Advanced** complexity → complete generated files, README and setup steps. Two-stage plan → file-batch pipeline with a validated manifest, individual retries for missing/truncated files, JSON-mode Gemini calls on a **dedicated project key**, no partial projects, monthly credits, full regeneration and per-file AI edits. Organised file tree, manual save, ZIP download, sandboxed static preview, and one-click add to a portfolio. Free accounts get a professional locked screen; the API returns `403 PREMIUM_REQUIRED` |
 | Project images | Done | JPG/PNG/WebP upload per project with 16:9 preview, replace, remove, alt text, type/size validation and automatic resizing. The server verifies ownership, stores only the URL + `imageMeta`, and every template renders a cover with `object-fit: cover` or a designed placeholder |
-| Admin dashboard | Done | `/dashboard/admin` (and `/api/admin/*`) for subscribers, monthly/yearly/active/cancelled/expired counts, revenue, AI generation and credit usage, failed payments and webhook health. Restricted to `role=admin` or `ADMIN_EMAILS`; no secrets in any response |
-| Documentation | Done | README, API reference, analyzer rubric, deployment guide, testing log, project report outline |
+| Admin panel | Done | Dedicated `/admin/login` and `/admin/dashboard` with responsive navigation, real database overview, user/subscription/payment/AI/portfolio/blog/template management, CSV reports, profile/password settings and audit log. Every `/api/admin/*` route is protected by database-verified admin authorization; no secrets are exposed |
+| Documentation | Done | README, API reference, analyzer rubric, deployment guide, testing log, project report outline, and [admin provisioning/operations](docs/ADMIN.md) |
 
 ### Route map
 
@@ -64,7 +64,9 @@ a successful payment.
 | `/dashboard/analyzer`, `/dashboard/blog`, `/dashboard/blog/:id` | signed in |
 | `/dashboard/publish/:id`, `/dashboard/settings` | signed in (owner only) |
 | `/dashboard/billing`, `/dashboard/ai-builder` | signed in |
-| `/dashboard/admin` | signed in as an administrator (`role=admin` or `ADMIN_EMAILS`) |
+| `/admin/login` | public login form; administrator role is verified by the API |
+| `/admin/dashboard`, `/admin/users`, `/admin/portfolios`, `/admin/ai-builder`, `/admin/subscriptions`, `/admin/payments`, `/admin/blog`, `/admin/templates`, `/admin/analytics`, `/admin/reports`, `/admin/settings` | signed in as an administrator (`role=admin` or `ADMIN_EMAILS`); normal users return to `/dashboard` |
+| `/dashboard/admin` | legacy in-dashboard admin overview (kept for compatibility) |
 
 Things that are deliberately **not** implemented, and the UI says so instead of pretending:
 

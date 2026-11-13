@@ -6,6 +6,16 @@ import { normalizePortfolioBody } from '../validators/portfolioInput.js';
 import { defaultPortfolioContent, TEMPLATE_DEFAULTS, normalizeTemplateId } from '../utils/portfolioDefaults.js';
 import { assertTemplateAccess } from '../services/subscriptionService.js';
 import { attachProjectImageMeta, assertPhotoOwnership } from '../services/projectImageService.js';
+import { TemplateSetting } from '../models/TemplateSetting.js';
+
+/** Blocks new selections of templates an administrator has disabled. */
+const assertTemplateEnabled = async (templateId) => {
+  if (!templateId) return;
+  const setting = await TemplateSetting.findOne({ templateId }).lean();
+  if (setting && setting.enabled === false) {
+    throw ApiError.badRequest('That template is currently unavailable. Please choose another template.');
+  }
+};
 
 const ID_PATTERN = /^[a-f0-9]{24}$/i;
 
@@ -93,6 +103,7 @@ export const createPortfolio = asyncHandler(async (req, res) => {
   const canonicalTemplate = normalizeTemplateId(body.templateId || body.template);
   // Premium designs are gated server-side, not in the browser.
   assertTemplateAccess(req.user, canonicalTemplate);
+  await assertTemplateEnabled(canonicalTemplate);
   if (canonicalTemplate) {
     content.templateId = canonicalTemplate;
     const defaults = TEMPLATE_DEFAULTS[canonicalTemplate];
@@ -136,6 +147,7 @@ export const updatePortfolio = asyncHandler(async (req, res) => {
   // controlled by dedicated endpoints.
   const updates = normalizePortfolioBody(req.body || {});
   assertTemplateAccess(req.user, updates.templateId);
+  await assertTemplateEnabled(updates.templateId);
 
   /*
    * Project screenshots: prove the upload belongs to this account and copy the
