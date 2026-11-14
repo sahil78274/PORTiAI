@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, Check, FileText, Monitor, Palette, PenLine, Rows3, Wand2 } from 'lucide-react';
 import TemplateGallery from '../components/templates/TemplateGallery.jsx';
-import TemplateThumb from '../components/templates/TemplateThumb.jsx';
+import HeroTemplateShowcase from '../components/marketing/HeroTemplateShowcase.jsx';
 import { TEMPLATE_CATALOGUE, TEMPLATE_COUNT, PREMIUM_TEMPLATE_COUNT, FREE_TEMPLATE_COUNT } from '../data/templateCatalogue.js';
 import { TEMPLATE_STYLES } from '../data/templateStyles.js';
 import { filterTemplates } from '../utils/templateQuery.js';
@@ -51,7 +51,7 @@ export default function Landing() {
   const { user } = useAuth();
   const startHref = user ? '/dashboard/create' : '/signup';
 
-  const strip = useMemo(() => filterTemplates(TEMPLATE_CATALOGUE, { sort: 'featured' }).slice(0, 3), []);
+  const showcase = useMemo(() => filterTemplates(TEMPLATE_CATALOGUE, { sort: 'featured' }), []);
 
   useEffect(() => {
     const id = location.hash?.replace('#', '');
@@ -100,28 +100,8 @@ export default function Landing() {
               </ul>
             </div>
 
-            {/* Three real templates, full-bleed, immediately in view. */}
-            <div className="grid w-full grid-cols-3 gap-2.5 lg:max-w-[520px]">
-              {strip.map((template) => (
-                <Link
-                  key={template.id}
-                  to={`/templates/${template.id}`}
-                  className="group overflow-hidden rounded-md border border-line bg-surface transition-colors hover:border-lineStrong"
-                >
-                  <div className="border-b border-line">
-                    <TemplateThumb template={template} designWidth={820} designHeight={1040} />
-                  </div>
-                  <span className="flex items-center justify-between gap-1 px-2 py-1.5">
-                    <span className="truncate text-[11px] font-medium text-inkSoft transition-colors group-hover:text-ink">
-                      {template.name}
-                    </span>
-                    <span className="shrink-0 text-[10px] uppercase tracking-[0.08em] text-faint">
-                      {template.tier === 'free' ? 'Free' : 'Paid'}
-                    </span>
-                  </span>
-                </Link>
-              ))}
-            </div>
+            {/* Real templates, full-bleed, immediately in view; rotates through the catalogue. */}
+            <HeroTemplateShowcase templates={showcase} />
           </div>
         </div>
       </section>
